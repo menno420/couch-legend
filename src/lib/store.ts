@@ -1,10 +1,14 @@
 import { create } from 'zustand'
 import {
-  advance, applyOffline, computeRates, defaultSave, newlyEarned, prestigeGain,
-  bulkCost, maxAffordable, type OfflineSummary, type SaveState,
+  advance, applyOffline, computeRates, defaultSave, prestigeGain,
+  type OfflineSummary, type SaveState,
 } from './engine'
 import {
-  ACHIEVEMENTS, GENERATORS, INTERJECTIONS, JOBS, MOODS, NEWS_LINES, RITUALS,
+  applyHit, applyPrestige, purchaseGenerator, purchaseJob, purchaseRitual,
+  collectAchievements as collectPure,
+} from './actions'
+import {
+  ACHIEVEMENTS, INTERJECTIONS, MOODS, NEWS_LINES,
   moodFor,
 } from './content'
 import { loadSave, persistSave, pickSave, requestPersistence, importCode } from './save'
@@ -47,14 +51,14 @@ interface AchievementResult {
 }
 
 function collectAchievements(save: SaveState, toasts: Toast[]): AchievementResult {
-  const fresh = newlyEarned(save)
+  const { save: collected, fresh } = collectPure(save)
   if (fresh.length === 0) return { save, toasts, fresh: false }
   let next = toasts
   for (const id of fresh) {
     const def = ACHIEVEMENTS.find(a => a.id === id)
     if (def) next = pushToast(next, def.name, def.blurb)
   }
-  return { save: { ...save, achievements: [...save.achievements, ...fresh] }, toasts: next, fresh: true }
+  return { save: collected, toasts: next, fresh: true }
 }
 
 /** NEW: mood transitions produce a revelation toast the first time. */
@@ -158,22 +162,13 @@ export const useGame = create<GameStore>()((set, get) => ({
     ensureAudio()
     const s = get()
     const r = computeRates(s)
-    const high = s.high + r.hitHigh
     const quote = INTERJECTIONS[Math.floor(Math.random() * INTERJECTIONS.length)]
     const floaters: Floater[] = [
       ...s.floaters,
       { id: `f${serial++}`, text: `+${r.hitPower < 10 ? r.hitPower.toFixed(1) : Math.round(r.hitPower)}`, kind: 'nug' as const, x, y, born: performance.now() },
       { id: `f${serial++}`, text: quote, kind: 'quote' as const, x: x + (Math.random() * 40 - 20), y: y - 18, born: performance.now() },
     ].slice(-14)
-    const next: SaveState = {
-      ...pickSave(s),
-      nugs: s.nugs + r.hitPower,
-      cash: s.cash + r.hitCash,
-      high,
-      peakHigh: Math.max(s.peakHigh, high),
-      buzz: s.buzz + r.hitBuzz,
-      totalHits: s.totalHits + 1,
-    }
+    const next = applyHit(pickSave(s))
     const ach = collectAchievements(next, s.toasts)
     const mood = collectMoodChange(s.peakHigh, ach.save, ach.toasts)
     if (s.sound) puffSound()
@@ -183,13 +178,8 @@ export const useGame = create<GameStore>()((set, get) => ({
 
   buyGenerator: (id) => {
     const s = get()
-    const def = GENERATORS.find(g => g.id === id)
-    if (!def || s.high < def.unlockHigh) return
-    const owned = s.generators[id] ?? 0
-    const qty = s.buyQty === 'max' ? Math.max(1, maxAffordable(def.baseCost, def.costScale, owned, s.nugs)) : s.buyQty
-    const cost = bulkCost(def.baseCost, def.costScale, owned, qty)
-    if (s.nugs < cost || qty <= 0) return
-    const next: SaveState = { ...pickSave(s), nugs: s.nugs - cost, generators: { ...s.generators, [id]: owned + qty } }
+    const next = purchaseGenerator(pickSave(s), id, s.buyQty)
+    if (!next) return
     const ach = collectAchievements(next, s.toasts)
     if (s.sound) blipSound()
     if (ach.fresh && s.sound) chimeSound()
@@ -198,13 +188,8 @@ export const useGame = create<GameStore>()((set, get) => ({
 
   buyJob: (id) => {
     const s = get()
-    const def = JOBS.find(j => j.id === id)
-    if (!def || s.high < def.unlockHigh) return
-    const owned = s.jobs[id] ?? 0
-    const qty = s.buyQty === 'max' ? Math.max(1, maxAffordable(def.baseCost, def.costScale, owned, s.cash)) : s.buyQty
-    const cost = bulkCost(def.baseCost, def.costScale, owned, qty)
-    if (s.cash < cost || qty <= 0) return
-    const next: SaveState = { ...pickSave(s), cash: s.cash - cost, jobs: { ...s.jobs, [id]: owned + qty } }
+    const next = purchaseJob(pickSave(s), id, s.buyQty)
+    if (!next) return
     const ach = collectAchievements(next, s.toasts)
     if (s.sound) blipSound()
     if (ach.fresh && s.sound) chimeSound()
@@ -213,20 +198,8 @@ export const useGame = create<GameStore>()((set, get) => ({
 
   buyRitual: (id) => {
     const s = get()
-    const def = RITUALS.find(r => r.id === id)
-    if (!def || s.high < def.unlockHigh) return
-    const level = s.rituals[id] ?? 0
-    if (level >= def.maxLevel) return
-    const cost = def.costs[level]
-    if (cost == null) return
-    const funds = def.currency === 'nugs' ? s.nugs : s.cash
-    if (funds < cost) return
-    const next: SaveState = {
-      ...pickSave(s),
-      rituals: { ...s.rituals, [id]: level + 1 },
-      nugs: def.currency === 'nugs' ? s.nugs - cost : s.nugs,
-      cash: def.currency === 'cash' ? s.cash - cost : s.cash,
-    }
+    const next = purchaseRitual(pickSave(s), id)
+    if (!next) return
     const ach = collectAchievements(next, s.toasts)
     if (s.sound) blipSound()
     if (ach.fresh && s.sound) chimeSound()
@@ -266,15 +239,8 @@ export const useGame = create<GameStore>()((set, get) => ({
   prestige: () => {
     const s = get()
     const gain = prestigeGain(pickSave(s))
-    if (gain <= 0) return
-    const next: SaveState = {
-      ...defaultSave(Date.now()),
-      enlightenment: s.enlightenment + gain,
-      achievements: s.achievements,
-      sound: s.sound,
-      booted: true,
-      startedAt: s.startedAt,
-    }
+    const next = applyPrestige(pickSave(s), Date.now())
+    if (!next) return
     const ach = collectAchievements(next, s.toasts)
     if (s.sound) chimeSound()
     set({
