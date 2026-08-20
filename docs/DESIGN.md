@@ -177,7 +177,19 @@ already gives Android users install-to-home-screen.
 4. **Audio breadth** — one puff/chime/blip set today; a low ambient loop is
    the obvious next cue. (The estate has an `audio-prompt` method for this.)
 
-## 9 · Verification
+## 9 · Phase 2 — the life-story direction (recorded 2026-08-20)
+
+The owner has directed the next evolution: **many stages telling a whole
+story** (starting ~age 18 with cigarettes, then finding weed, onward), an
+**endless-feeling loop with fair upgrades**, and a **simulator built before
+any stage content** so the design is tested, not guessed. The directive, the
+open design questions, the spider-swing lessons and the simulator sketch live
+in [`planning/2026-08-20-life-story-direction.md`](planning/2026-08-20-life-story-direction.md) —
+the design session amends **this** document with what it decides (stage
+system, north-star sentence, fairness metrics), keeping § 1's no-fail
+no-attendance spirit unless the owner says otherwise.
+
+## 10 · Verification
 
 `pnpm check` = typecheck + unit tests + production build; CI runs exactly this
 (one required-check candidate, per the estate's one-check convention). The
