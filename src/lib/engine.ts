@@ -51,9 +51,30 @@ export function migrateSave(raw: Partial<SaveState>): SaveState {
   }
 }
 
+/**
+ * Optional tuning overrides for the two growth curves. The default —
+ * `PROTO_TUNING` — reproduces the prototype's behavior exactly (pinned by
+ * test), so nothing in the shipped game changes by this parameter existing.
+ * The balance simulator sweeps candidates through it; adopting one later is
+ * a deliberate one-line change of these defaults plus updated pins.
+ */
+export interface Tuning {
+  /** Clarity per point beyond the knee counts as (excess)^softExp. */
+  clarityKnee: number
+  claritySoftExp: number
+  /** Milestone doublings per item stop after this many (2^cap max). */
+  milestoneCapDoublings: number
+}
+
+export const PROTO_TUNING: Tuning = {
+  clarityKnee: Infinity,
+  claritySoftExp: 1,
+  milestoneCapDoublings: Infinity,
+}
+
 /** Every 25 owned units of a generator or job doubles its output. */
-export function milestoneMult(count: number): number {
-  return 2 ** Math.floor(count / 25)
+export function milestoneMult(count: number, t: Tuning = PROTO_TUNING): number {
+  return 2 ** Math.min(Math.floor(count / 25), t.milestoneCapDoublings)
 }
 
 /** Total cost of buying `qty` units starting from `owned` (geometric series). */
@@ -89,8 +110,10 @@ export function buzzMultiplier(buzz: number): number {
   return 1 + Math.sqrt(Math.max(0, buzz)) * 0.12
 }
 
-export function clarityMultiplier(enlightenment: number): number {
-  return 1 + enlightenment * 0.18
+export function clarityMultiplier(enlightenment: number, t: Tuning = PROTO_TUNING): number {
+  const effective = Math.min(enlightenment, t.clarityKnee)
+    + Math.max(0, enlightenment - t.clarityKnee) ** t.claritySoftExp
+  return 1 + effective * 0.18
 }
 
 export interface Rates {
@@ -114,9 +137,9 @@ export interface Rates {
 
 const lv = (o: Record<string, number>, id: string) => o[id] ?? 0
 
-export function computeRates(s: SaveState): Rates {
+export function computeRates(s: SaveState, t: Tuning = PROTO_TUNING): Rates {
   const ach = achievementMults(s)
-  const clarity = clarityMultiplier(s.enlightenment)
+  const clarity = clarityMultiplier(s.enlightenment, t)
   const buzzMult = buzzMultiplier(s.buzz) * ach.buzz
   const playlist = 1 + lv(s.rituals, 'playlist') * 0.08
   const plants = 1 + lv(s.rituals, 'plants') * 0.12
@@ -136,7 +159,7 @@ export function computeRates(s: SaveState): Rates {
   let nugRate = 0
   for (const g of GENERATORS) {
     const n = lv(s.generators, g.id)
-    nugRate += g.baseRate * n * milestoneMult(n)
+    nugRate += g.baseRate * n * milestoneMult(n, t)
   }
   nugRate *= nugMult
 
@@ -144,7 +167,7 @@ export function computeRates(s: SaveState): Rates {
   let highRate = 0
   for (const j of JOBS) {
     const n = lv(s.jobs, j.id)
-    cashRate += j.cashRate * n * milestoneMult(n)
+    cashRate += j.cashRate * n * milestoneMult(n, t)
     highRate += j.highRate * n
   }
   cashRate *= cashMult
@@ -174,15 +197,15 @@ export function computeRates(s: SaveState): Rates {
 
 export const PRESTIGE_MIN_PEAK = 400
 
-export function prestigeGain(s: SaveState): number {
+export function prestigeGain(s: SaveState, t: Tuning = PROTO_TUNING): number {
   if (s.peakHigh < PRESTIGE_MIN_PEAK) return 0
-  const r = computeRates(s)
+  const r = computeRates(s, t)
   return Math.max(0, Math.floor(Math.sqrt(s.peakHigh / 90) * r.prestigeBonus) - s.enlightenment)
 }
 
 /** Advance the simulation by dt seconds (mutates nothing; returns a new state). */
-export function advance(s: SaveState, dt: number): SaveState {
-  const r = computeRates(s)
+export function advance(s: SaveState, dt: number, t: Tuning = PROTO_TUNING): SaveState {
+  const r = computeRates(s, t)
   const auto = r.autoHits * dt
   const high = s.high + r.highRate * dt + auto * r.hitHigh
   return {
@@ -210,8 +233,8 @@ export interface OfflineSummary {
  * offline cap is lost; what remains earns at offline efficiency. Buzz relaxes
  * exponentially toward its lamp/roommate steady state.
  */
-export function applyOffline(s: SaveState, elapsed: number): { save: SaveState; summary: OfflineSummary | null } {
-  const r = computeRates(s)
+export function applyOffline(s: SaveState, elapsed: number, t: Tuning = PROTO_TUNING): { save: SaveState; summary: OfflineSummary | null } {
+  const r = computeRates(s, t)
   const effective = Math.min(elapsed, r.offlineCap) * r.offlineEff
   if (elapsed < 8 || effective <= 2) return { save: s, summary: null }
   const auto = r.autoHits * effective
