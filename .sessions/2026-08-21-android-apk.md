@@ -110,13 +110,21 @@ phone-shaped viewport, which is not Android System WebView:
 Getting those five answered is the entire point of the milestone, and they are
 the inputs milestone B is blocked on.
 
-**Codex trail — 2 rounds answered, 6 findings, dispositions countable.** A
-third round was requested on `7c3c8e6` (the merge-tree fix) and **never
-answered** — no review, no 👍, 20 minutes against the ~7 minutes rounds 1 and 2
-each took. That silence is recorded as a null, not read as a clean bill: Codex
-is inconsistent on this repo (it produced nothing at all on #9 and #10). So the
-merge-tree job carries two rounds of scrutiny on its predecessors and none on
-itself, beyond being green on both jobs.
+**Codex trail — 3 rounds, 6 findings, dispositions countable.** Round 3 on
+`7c3c8e6` (the merge-tree fix) came back **clean**: *"Didn't find any major
+issues"*, at `22:02:40Z` against a `21:59:22Z` request — **3 m 18 s**, faster
+than either earlier round.
+
+**⚠ This paragraph originally recorded round 3 as never answered, and that was
+wrong — a measurement error, not a Codex failure.** The poll watched
+`/pulls/11/reviews` and `/pulls/11/comments`. **A clean Codex verdict has no
+findings to attach, so it is posted as an ISSUE comment** —
+`/issues/{n}/comments` — an endpoint the poll never read. The session then
+merged believing round 3 was outstanding and wrote the null into this card and
+into the owner's reply. The correction is filed as a capability entry so the
+next session polls the right endpoint; the earlier inference that "Codex is
+inconsistent here" was also built on this same blind spot and should not be
+carried forward without re-checking #9 and #10 the same way.
 
 - `[survived]` ×1 — *"AppTheme's `colorPrimary`/`colorPrimaryDark`/`colorAccent`
   are undefined, `assembleDebug` will fail"* (P1). Refuted three ways: those
