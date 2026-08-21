@@ -1,7 +1,7 @@
 # Looks pass — Lucid Chronicle
 
-> **Status:** owner-approved direction with a working visual and narrative
-> treatment finalized by this looks pass on 2026-08-21. Later implementation
+> **Status:** `binding` — owner-approved direction with a working visual and
+> narrative treatment finalized by this looks pass on 2026-08-21. Later implementation
 > and art sessions may refine the treatment without changing the owner
 > direction. This does **not** adopt a balance change, a quest economy, a
 > substance effect, or a new prestige route.

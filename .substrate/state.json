@@ -1,0 +1,155 @@
+{
+  "graduation": {
+    "criteria": {
+      "blocking_questions": 0,
+      "critical_slots_filled_pct": 0.8
+    },
+    "soft_target_sessions": 50
+  },
+  "graduation_proposed": false,
+  "kit_version": "1.21.0",
+  "last_compaction_session": 0,
+  "mode": "guided",
+  "mode_history": [],
+  "open_questions": [],
+  "planted_doc_hashes": {
+    ".claude/CLAUDE.md": "3c7bacf2e2e0e09c382b60e63cdac08fb2d84acb0972a6f23ca23456974aab5e",
+    ".session-journal.md": "da7082c310d357adc6f66d1e9113e1d8142e438f654424d7aaebe4fec3dd98c6",
+    "CONSTITUTION.md": "ca623bd5422518554b49c35c66a481aaa85318b9ea531668cdab8b55f12e4dd5",
+    "control/README.md": "13fc7c14ba05672d392d200541a53a6ead50966e00bdee66437568619a7e6eb4",
+    "control/claims/README.md": "52f604ecfba47554bad6af0e8a15021badb8d3d4d624cca6905d1ff9c889a6d6",
+    "control/inbox.md": "fa200c9902aefc9e1955d31fe26a809f51b6abb34951715b6c08f92acb3d123d",
+    "control/status.md": "93f043d7a25dcc96e5cfe08fbf913b925b2d91b715c17de461533e0ad855cbfb",
+    "docs/AGENT_ORIENTATION.md": "897358af3357bc3bc605e35741b7de74c06c10e567523fc4cf455b8e87c37cc9",
+    "docs/CAPABILITIES.md": "89c1e46016a7ee4f4ead93f8436c834bec07fa5eaf5aeaf5cf03f3b7ff8ca701",
+    "docs/ROUTINES.md": "2a3b35cdf77da4eed50eeda5dd664ca34af48045c52cdfcb815a0f8ab8566537",
+    "docs/SKILLS.md": "e1efa85e836e11dbd124c08db713823fd549f88d696bdd76e274135df002605d",
+    "docs/ai-project-workflow.md": "d4acfc726e68e63f188687189c01f9efe38a26a0adaf7d06b56e9ea204cfe3ae",
+    "docs/architecture.md": "d405c19d33c62689f4528e5ad853b1dddb8d3236dea7a6957f845d562263ba34",
+    "docs/collaboration-model.md": "b99432ab344a145ec5b7f497b2e8c9f82f5fa8349ff862090aaf07dccd46bfc1",
+    "docs/current-state.md": "ebca11e988f12b0c143f8af394cd84cdc588bd3275185d6bc5d9c94064707f97",
+    "docs/decisions.md": "75b8fdb72b788a8e4ff154d47344bd08e709364f46b9b029a423ae3108f6acb8",
+    "docs/helper-policy.md": "b13b15b88402ab4a6864a47df244ff3e25a8166343b544c77580dc91738f1fa1",
+    "docs/ideas/README.md": "b98b97c9b7f070b71f9c116325944d7c5e4f24a9ef5b46ff2dff63f72b33ecac",
+    "docs/owner-profile.md": "414cfe1ac016fc14c65233e727b115f0d69904f499d375f0616646a52310f6fd",
+    "docs/ownership.md": "dd3e9ba87f76d9b8023db8431a5836551a252c537943d9cc3330399b52e866a2",
+    "docs/question-router.md": "8e67505d7af86815153bcfead4b0d2375bdcbd8e870584b2e3da16b695702fda",
+    "docs/reading-path.md": "4c24b98cd4e5b09a5d8754780002e2fb1889afb2d1493968ab5330d86e1b8330",
+    "docs/repo-navigation-map.md": "e2f684498c48bef025a34d68e9d673b51b10333c108994ecec701ab86a5ed334",
+    "docs/runtime_contracts.md": "1dc3fd83baeb5e75459a6b2f7b5927ad615ed8742c473a2c70ace83075573fd5",
+    "docs/seat-digest.md": "2ef3f714a330aad65a7b6fce74bafa851821016c27d75a0d47cf6725c2d024a9",
+    "scripts/env-setup.sh": "cd2145129fcba288ff9399ad44146a09017d85813e282c16bcba22340b613a2c"
+  },
+  "project_id": "4b0c77630cf5",
+  "promotion_rights": "propose",
+  "quiet_sessions": 0,
+  "reflection_buffer": {
+    "active_count": 0,
+    "last_mined": null
+  },
+  "review_log": [],
+  "session_count": 0,
+  "slot_values": {
+    "architecture_layers": {
+      "question_id": "Q-004",
+      "source": "user",
+      "value": "Content tables (src/lib/content.ts \u2014 every table and tuning number) -> pure engine (src/lib/engine.ts \u2014 formulas and derived state, no IO/DOM) -> action layer (src/lib/actions.ts \u2014 the extracted pure mutation seam) -> store + persistence (src/lib/store.ts zustand, src/lib/save.ts) -> React UI (src/App.tsx, src/components/) -> PWA shell (index.html, public/). The simulator (src/lib/sim/, pnpm sim) consumes the same engine + action layer \u2014 never a second implementation. Imports point left-to-right only; docs/DESIGN.md is the binding mechanics map."
+    },
+    "doc_roots": {
+      "question_id": "Q-007",
+      "source": "user",
+      "value": "docs"
+    },
+    "drift_resolution": {
+      "question_id": "Q-011",
+      "source": "user",
+      "value": "The live tree wins over every doc; docs/DESIGN.md wins on intended mechanics. On disagreement: measure the tree first, then either fix the code to the decided design or correct the decision record in DESIGN.md \u2014 never silently, and never a tuning change without simulator evidence. Known instance of the pattern: the Lore-permanence defect is recorded in DESIGN.md section 9.2 with its fix path rather than patched ad hoc."
+    },
+    "fleet_dark_repos": {
+      "question_id": "Q-016",
+      "source": "user",
+      "value": "None that this repo's work touches. The estate's parked and frozen repos are indexed with one line each in fleet-manager docs/ESTATE.md; the standing hard rail estate-wide: superbot's live Discord worker and its two Postgres databases are never touched uninvited."
+    },
+    "fleet_siblings": {
+      "question_id": "Q-015",
+      "source": "user",
+      "value": "fleet-manager (the estate hub and records home \u2014 its docs/repos/couch-legend/ folder is the cross-session entry point; owner sessions boot there); substrate-kit (this kit's home); product-forge/phone-controller (the signed-APK release rails the Android/Capacitor shell will reuse, DESIGN.md section 7); spider-swing (the estate's other live game \u2014 shares the image-prompt/asset-pipeline art method via fleet-manager skills)."
+    },
+    "fleet_status_command": {
+      "question_id": "Q-014",
+      "source": "user",
+      "value": "None \u2014 the seat-era roster machinery is retired (2026-08-07). Estate state is read, not generated: fleet-manager docs/ESTATE.md (the index) + docs/current-state.md; kit adopter currency is regenerated only inside substrate-kit (python3 dist/bootstrap.py currency, read-only over the fleet)."
+    },
+    "integration_mode": {
+      "question_id": "Q-001",
+      "source": "user",
+      "value": "guided"
+    },
+    "mutation_seam": {
+      "question_id": "Q-009",
+      "source": "user",
+      "value": "All game-state mutations go through the pure action layer (src/lib/actions.ts), consumed identically by the zustand store and the simulator; UI components dispatch actions and never write game state directly. Tuning numbers live in src/lib/content.ts and change only with simulator evidence inside DESIGN.md section 9.6 fairness rails."
+    },
+    "new_area_ownership": {
+      "question_id": "Q-013",
+      "source": "user",
+      "value": "A new area (mechanic, currency, tab, platform shell) is decided in docs/DESIGN.md BEFORE code lands \u2014 the repo's founding rule: mechanics mapped and decided first. Anything touching balance or pacing needs simulator evidence (pnpm sim) against the section 9.6 rails before adoption."
+    },
+    "owner_profile": {
+      "question_id": "Q-008",
+      "source": "user",
+      "value": "Non-coder product owner; supplies judgment, direction and taste \u2014 he plays the game and states direction live (the 2026-08-21 looks pass approved the Lucid Chronicle treatment this way). Explain mechanisms in plain language, give recommendations with a default rather than option menus, ask immediately on genuine forks and keep working. Canonical profile: fleet-manager docs/owner-profile.md + docs/intent.md section 7."
+    },
+    "ownership_model": {
+      "question_id": "Q-006",
+      "source": "user",
+      "value": "Single owner (menno420) owns product, design and every ruling. docs/DESIGN.md is the binding mechanics map \u2014 every resource, loop, formula and table is decided there (section 9 = the life-story stage system; section 9.6 = the numeric fairness rails). Sessions decide implementation detail, decide-and-flag reversible design choices, and put genuine product forks to the owner."
+    },
+    "primary_language": {
+      "question_id": "Q-003",
+      "source": "user",
+      "value": "TypeScript 5.9 \u2014 Vite 7 + React 19 web app, Node >=20 with pnpm; the game engine and simulator are pure TypeScript. Python 3 only for the vendored substrate-kit bootstrap."
+    },
+    "project_name": {
+      "question_id": "Q-002",
+      "source": "user",
+      "value": "Couch Legend"
+    },
+    "review_ritual": {
+      "question_id": "Q-010",
+      "source": "user",
+      "value": "Codex reviews every PR \u2014 trigger on open, draft-to-ready, or the literal comment '@codex review'; it answers in about 5.5 minutes with findings as INLINE comments (read /pulls/N/comments, a bare summary is not the review). Never merge a PR you asked it to review before it answers; a review binds the exact head SHA. Tuning changes carry simulator evidence; the owner playtests feel. Required checks on main: ci (pnpm check) and substrate-gate."
+    },
+    "staleness_review": {
+      "question_id": "Q-012",
+      "source": "user",
+      "value": "docs/current-state.md is re-trued at each session close; DESIGN.md sections carry their decision dates. Cross-session thread state lives in fleet-manager docs/repos/couch-legend/ and is refreshed by that repo's session-close Layer-2 step. Config staleness bar: 14 days (substrate.config.json cadence)."
+    },
+    "verify_command": {
+      "question_id": "Q-005",
+      "source": "user",
+      "value": "pnpm check (tsc --noEmit + vitest run + vite build \u2014 the one product gate, CI job 'ci'); kit discipline: python3 bootstrap.py check --strict; balance evidence: pnpm sim"
+    }
+  },
+  "slots": {
+    "architecture_layers": "filled",
+    "doc_roots": "filled",
+    "drift_resolution": "filled",
+    "fleet_dark_repos": "filled",
+    "fleet_siblings": "filled",
+    "fleet_status_command": "filled",
+    "integration_mode": "filled",
+    "mutation_seam": "filled",
+    "new_area_ownership": "filled",
+    "owner_profile": "filled",
+    "ownership_model": "filled",
+    "primary_language": "filled",
+    "project_name": "filled",
+    "review_ritual": "filled",
+    "staleness_review": "filled",
+    "verify_command": "filled"
+  },
+  "stage": "integration",
+  "stance": "analysis",
+  "version": 1
+}
