@@ -51,3 +51,38 @@ describe('replay parity — prestige session (seeded near-gate save)', () => {
     }
   })
 })
+
+// The brief's § 6 validation sentence, operationalized: the hand-played
+// session's progression curve must sit inside the simulator's strategy
+// envelope. The compared axis is LIFETIME High (monotone for every player) —
+// instantaneous high sawtooths for eager-prestige archetypes and would punch
+// holes in a naive envelope; this trace never prestiged, so its high IS its
+// lifetime curve. Wallets are excluded by design — residual funds depend on
+// which items a player bought, not on how much play happened. ±10% margin on
+// the bounds absorbs seed jitter.
+import { runSim } from '../src/lib/sim/sim'
+import { POLICIES } from '../src/lib/sim/policies'
+
+describe('strategy envelope — the hand-played curve sits inside it', () => {
+  const trace = load('handplay-2026-08-20.json')
+  const t0 = trace.actions.find(a => a.kind === 'begin')!.wall
+  const snaps = trace.snapshots
+    .filter(s => s.save.lastTick > t0 + 60_000)
+    .sort((a, b) => a.save.lastTick - b.save.lastTick)
+  const horizon = Math.ceil((snaps[snaps.length - 1].save.lastTick - t0) / 1000)
+  const names = ['click-heavy', 'spend-everything', 'balanced', 'save-for-tiers', 'no-prestige', 'idle-only'] as const
+  const runs = names.map(n => runSim({ policy: POLICIES[n], seed: 11, dt: 1, horizon, recordEvery: 15 }))
+  const lifeHighAt = (r: (typeof runs)[number], t: number) =>
+    (r.series.filter(p => p.t <= t).at(-1) ?? r.series[0]).lifeHigh
+
+  it('at every snapshot past the first minute', () => {
+    for (const sn of snaps) {
+      const t = (sn.save.lastTick - t0) / 1000
+      const values = runs.map(r => lifeHighAt(r, t))
+      const lo = Math.min(...values) * 0.9
+      const hi = Math.max(...values) * 1.1
+      expect(sn.save.high, `t=${t.toFixed(0)}s lifeHigh=${sn.save.high.toFixed(0)} envelope=[${lo.toFixed(0)}, ${hi.toFixed(0)}]`).toBeGreaterThanOrEqual(lo)
+      expect(sn.save.high, `t=${t.toFixed(0)}s`).toBeLessThanOrEqual(hi)
+    }
+  })
+})

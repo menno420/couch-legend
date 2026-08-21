@@ -212,7 +212,9 @@ function analyze(stages: StageDef[], prefix: 'baseline' | 'tuned') {
     const worstByArc: Record<number, number> = { 1: 0, 2: 0, 3: 0 }
     for (const r of rs) {
       for (const d of r.deadSpans) {
-        const lh = r.series.find(pt => pt.t >= d.t)?.lifeHigh ?? 0
+        // Bucket by the state at the span's START: last sample at or before
+        // it (falling back to the final sample for spans past the series).
+        const lh = (r.series.filter(pt => pt.t <= d.t).at(-1) ?? r.series.at(-1))?.lifeHigh ?? 0
         const st = stages.filter(s2 => lh >= s2.minLifeHigh).at(-1) ?? stages[0]
         worstByArc[st.arc] = Math.max(worstByArc[st.arc], d.span)
       }

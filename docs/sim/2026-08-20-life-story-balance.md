@@ -86,6 +86,14 @@ is handled; only false records had to be annotated.
 
 Zero page errors in both sessions.
 
+**And the envelope check the brief's sentence literally asks for** (added in
+Codex review — the replay above validates the engine/action seam, not the
+harness): the hand-played session's lifetime-High curve sits inside the
+simulator's six-archetype strategy envelope at every snapshot past the first
+minute (`tests/replay.test.ts`, ±10 % bound margin; the compared axis is
+lifetime High because instantaneous High sawtooths for eager-prestige
+archetypes — this trace never prestiged, so its High is its lifetime curve).
+
 ### 1.3 What the instrument abstracts away
 
 Strategy players are archetypes (attendance × click rate × buy rule ×
@@ -192,6 +200,15 @@ The curve is **bi-phasic** — explosive first day (the sub-knee era), then a
 steady ~×1.1–1.2/day — so thresholds follow the economy players actually
 experience rather than a tidy geometric ladder.
 
+The simulated economy is today's item availability, and after Codex review
+that is the **decided** system, not an approximation: DESIGN § 9.4's
+corrected rule makes stage assignments for existing content era *framing*
+(scenes/beats), never availability gates — the first draft's two-key gating
+of existing items would have locked the playtested opening behind a
+~30-minute stage and invalidated these curves. Real stage gates exist only
+on not-yet-authored **additive** content (arc-1 prologue, arc-3 batches),
+which can only speed pacing, bounded and re-checkable at implementation.
+
 Median reach times (exact crossing events, three seeds; `ext` = extrapolated
 on that run's final-3-day growth, REASONED not measured — `pnpm sim analyze
 tuned` prints the full table):
@@ -222,20 +239,30 @@ two refinements are called out because they moved:
   across strategies" conflated being-away-for-an-hour with prestige skill.
 - **F3 attended dead-time — approve.** Worst attended stretch with no
   offered move: balanced 9.9 m · click-heavy-patient 37.5 m (the deep-tail
-  post-reset warm-up) · every eager/greedy lane ≤ 20 s. *Refinement:* "a
+  post-reset warm-up) · every eager/greedy lane ≤ 50 s. *Refinements:* "a
   move" includes a lit Wake & Bake a patient player declines — strategy
-  patience is not dead air; and stretches are attended-time only (the first
+  patience is not dead air; stretches are attended-time only (the first
   cut of this metric silently accumulated away-time across check-in
-  sessions and read hours where the player felt minutes).
+  sessions and read hours where the player felt minutes); and spans are
+  bucketed by the stage at their **start** (Codex caught the first
+  analyzer bucketing on the sample after the start, which could misfile a
+  span across an arc boundary).
 - **F4 check-ins — approve.** 95.9–100 % of check-ins offer a move.
 - **F5 felt upgrades — approve.** Weakest first purchase in every lane:
   Infinite Playlist at **8 %** (on a visible rate), 4× the 2 % floor. No
   purchase buys nothing.
-- **F6 the prestige promise — approve as restated, and the restatement is
-  a real trade.** Rebuild ratios: median 0.82–0.96× early (≤ 80 banked),
-  0.90–1.00× late. The prototype's compounding "dramatically hotter" is
-  gone by design — it WAS the runaway. Late cycles pay in story cadence;
-  DESIGN § 9.5 records the trade for the owner to feel and veto.
+- **F6 the prestige promise — approve as restated, with the rail scoped in
+  review.** The rail (median rebuild ≤ 0.95× the previous cycle) applies to
+  **patient-discipline lanes** — measured 0.90–0.93 late, inside it. Eager
+  gain-1 cycling sits at 1.00 structurally (prestiging the instant +1
+  lights makes the cycle BE the rebuild, under any tuning), so it is
+  excluded from the ratio rail by mechanism and its hotness shows as
+  shorter absolute cycles; Codex correctly refused the first draft, which
+  stated the rail unqualified and then approved past three lanes at 1.00.
+  Banked Clarity strictly grows in every lane. The prototype's compounding
+  "dramatically hotter" is gone by design — it WAS the runaway. Late cycles
+  pay in story cadence; DESIGN § 9.5 records the trade for the owner to
+  feel and veto.
 
 **Overall verdict on the proposal (tuning candidate + stage table):
 approve** — with the § 6 limits, and with adoption deliberately left to the
@@ -289,9 +316,11 @@ implementation session (the live game is untouched this session).
    in `tests/tuning.test.ts` to the adopted constants.
 2. **Add the stage schema**: `lifeHigh` (save v2 + migration per DESIGN
    § 9.4), the `STAGES` table lifted from
-   `src/lib/sim/stage-proposal.ts` into `content.ts`, two-key gating per
-   `PROPOSED_STAGE_GATES`, revelations re-keyed to `lifeHigh` (fixing the
-   Lore-tab permanence defect DESIGN § 9.2 records).
+   `src/lib/sim/stage-proposal.ts` into `content.ts`, era framing per
+   `PROPOSED_STAGE_FRAMING` (existing items keep today's availability —
+   real stage gates only on new additive content, per the corrected § 9.4
+   rule), revelations re-keyed to `lifeHigh` (fixing the Lore-tab
+   permanence defect DESIGN § 9.2 records).
 3. **Author arc-1 content** (a small prologue table: 2 generators, 1 job,
    1 ritual is enough for stages 1–3 at the fitted thresholds) and the
    per-stage beats; arc-3 batches A–D can trail.

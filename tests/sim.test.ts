@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest'
 import { runSim } from '../src/lib/sim/sim'
 import { POLICIES } from '../src/lib/sim/policies'
-import { PROPOSED_STAGES, PROPOSED_STAGE_GATES } from '../src/lib/sim/stage-proposal'
+import { PROPOSED_STAGES, PROPOSED_STAGE_FRAMING } from '../src/lib/sim/stage-proposal'
 import { GENERATORS, JOBS, RITUALS } from '../src/lib/content'
 
 describe('determinism', () => {
@@ -50,14 +50,14 @@ describe('stage table', () => {
     expect(new Set(PROPOSED_STAGES.map(s => s.id)).size).toBe(18)
     expect(new Set(PROPOSED_STAGES.map(s => s.scene)).size).toBe(18)
   })
-  it('every existing content id has a stage gate, and every gate is a real stage', () => {
+  it('every existing content id has an era framing, and every framing target is a real stage', () => {
     const stageIds = new Set(PROPOSED_STAGES.map(s => s.id))
     const contentIds = [...GENERATORS, ...JOBS, ...RITUALS].map(d => d.id)
     for (const id of contentIds) {
-      expect(PROPOSED_STAGE_GATES[id], `gate for ${id}`).toBeDefined()
-      expect(stageIds.has(PROPOSED_STAGE_GATES[id]), `gate target for ${id}`).toBe(true)
+      expect(PROPOSED_STAGE_FRAMING[id], `framing for ${id}`).toBeDefined()
+      expect(stageIds.has(PROPOSED_STAGE_FRAMING[id]), `framing target for ${id}`).toBe(true)
     }
-    for (const target of Object.values(PROPOSED_STAGE_GATES)) {
+    for (const target of Object.values(PROPOSED_STAGE_FRAMING)) {
       expect(stageIds.has(target)).toBe(true)
     }
   })

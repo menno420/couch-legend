@@ -57,13 +57,14 @@ export function stageForLifeHigh(lifeHigh: number, stages: StageDef[] = PROPOSED
 }
 
 /**
- * Proposed era gates for the EXISTING content tables (two-key visibility:
- * high >= unlockHigh AND stage reached). Existing unlockHigh values are
- * unchanged — the stage key only frames when an item can first appear in the
- * story, it never moves an item later than its High gate for a player who is
- * already past the stage.
+ * Era FRAMING for the EXISTING content tables — which stage's scene and
+ * beats reference each item. NOT an availability gate: existing items keep
+ * `high >= unlockHigh` as their only key, exactly as playtested (DESIGN
+ * § 9.4 — real stage gates exist only for not-yet-authored additive content:
+ * the arc-1 prologue and the arc-3 batches). The simulator therefore
+ * correctly models the proposed system by simulating today's availability.
  */
-export const PROPOSED_STAGE_GATES: Record<string, string> = {
+export const PROPOSED_STAGE_FRAMING: Record<string, string> = {
   // generators
   tray: 'the-couch', piece: 'the-couch', gravity: 'rituals-of-the-room',
   vape: 'long-sunday', volcano: 'long-sunday', closet: 'green-thumbs',

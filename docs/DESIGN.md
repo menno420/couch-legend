@@ -250,12 +250,25 @@ itself — then plateaus into comfort before the next stage opens
 (spider-swing lesson 5: plateau + pressure from elsewhere, never runaway
 scaling within a stage).
 
-### 9.4 Composition rules (DECIDED)
+### 9.4 Composition rules (DECIDED — the gate rule corrected in adversarial review)
 
-- **Two-key visibility:** an item appears when `high ≥ unlockHigh` (the
-  existing within-afternoon gate, unchanged) **and** its stage has been
-  reached (`PROPOSED_STAGE_GATES`). For any player already past a stage the
-  second key is permanently open — nothing currently reachable moves later.
+- **Stage gates bind only content that does not exist yet.** Arc-1 prologue
+  rows and arc-3 batches (A–D) carry a real stage key: they appear when
+  their stage is reached (and their own High gate passes). They are
+  **additive** — new income sources on top of the existing economy, never a
+  lock on it.
+- **For the existing 34 items the stage assignment is era FRAMING, not a
+  gate**: it names which stage's scene and beats reference the item, and
+  nothing about availability changes — `high ≥ unlockHigh` remains the only
+  key, exactly as playtested. *(The first draft of this rule gated existing
+  items on stage too; Codex review of the balance PR caught what that would
+  do — lock the playtested opening behind a ~30-minute stage threshold and
+  invalidate every fitted curve. Rejected: era-locking the shelf guts the
+  tuned opening. The shop's items are props of one life; stages recolor the
+  room, not the shelf.)* This also keeps the simulator's economy model
+  correct by construction: the proposal's numbers describe today's
+  availability, and future additive content can only speed pacing, bounded
+  and re-checkable at implementation.
 - **Content extends tables, never components** (§ 5 discipline holds: stages
   are one new typed table + one field, not a rewrite).
 - **Stage entry is a story beat** — a permanent revelation-class line plus
@@ -311,7 +324,7 @@ tuning — future tuning changes must stay inside them, with sim evidence:
 3. **Dead-time bound (attended):** no attended stretch in which the game
    offers no move — nothing affordable AND Wake & Bake unlit — longer than
    **5 min in arc 1 · 25 min in arc 2 · 45 min in arc 3** (measured worsts:
-   3.6 m / 20 m / 37.5 m, all on the deep-tail post-reset warm-up § 9.5
+   30 s / 20 m / 37.5 m — the deep ones all on the post-reset warm-up § 9.5
    names).
 4. **Check-in bound (away play):** ≥ **90 %** of check-ins offer a move
    (measured 95.9–100 %).
@@ -320,11 +333,15 @@ tuning — future tuning changes must stay inside them, with sim evidence:
    (measured floor: 8 %, Infinite Playlist) — no purchase that buys nothing
    (spider-swing § 2.6's trap, kept out by measurement).
 6. **The prestige promise, restated to what a bounded curve can keep:**
-   banked Clarity strictly grows every cycle, the next afternoon regains its
-   previous peak at median ≤ **0.95×** the previous cycle's time, and the
-   late loop pays out in story cadence (§ 9.5). The prototype's implicit
-   "dramatically hotter every time" was the runaway itself and is
-   deliberately given up.
+   banked Clarity strictly grows every cycle; for **patient-discipline
+   lanes** the next afternoon regains its previous peak at median ≤
+   **0.95×** the previous cycle's time (measured 0.90–0.93); and the late
+   loop pays out in story cadence (§ 9.5). Eager gain-1 cycling is excluded
+   from the ratio rail by mechanism, not mercy: prestiging the moment +1
+   lights pins rebuild ≈ cycle length under *any* tuning (the cycle IS the
+   rebuild), and its hotness expresses as shorter absolute cycles instead.
+   The prototype's implicit "dramatically hotter every time" was the
+   runaway itself and is deliberately given up.
 
 ### 9.7 The per-stage visual plan (DECIDED plan; production is later work)
 
