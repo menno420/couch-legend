@@ -12,10 +12,11 @@ improvising (grounded-skills plan §7.2).
 ## What this does
 
 Drives the session's work to a terminal, verified state on two rails:
-the born-red gate (card first, flip last) and landing your own green PR
-(merge it directly once required checks pass, or let the server-side
-auto-merge-enabler land it — either is fine). Everything else is ordered
-steps.
+the born-red gate (card first, flip last) and landing your own green PR.
+**In THIS repo you merge it yourself** — no auto-merge enabler is installed
+and the repository's Allow-auto-merge setting is OFF (the enabler workflow
+is deliberately staged-only under `.substrate/ci/`; seed card 2026-08-21) —
+so nothing lands the PR for you. Everything else is ordered steps.
 
 ## Instructions
 
@@ -30,8 +31,9 @@ steps.
    draft) immediately: the open PR + the claim are the in-flight signal
    parallel sessions collide without.
 3. Land your own green PR — merging is normal agent work. Once the required
-   checks are green, merge it directly (MCP/REST), or let the server-side
-   auto-merge-enabler land it; either is fine. Only a `do-not-automerge`-
+   checks (`ci` + `substrate-gate`) are green, merge it directly (MCP/REST)
+   — there is no enabler here, so an unmerged green PR stays open forever.
+   Only a `do-not-automerge`-
    labelled PR waits for the owner. Read a red on a born-red head as the
    designed hold, not a CI failure: verify any red against the job log
    before diagnosing — alias/mirror jobs echo the required check without
@@ -48,15 +50,16 @@ steps.
    wall; see `control/README.md`) — Withdraw stale asks; groom one idea
    forward; add one new 💡 idea you genuinely believe in; write the ⟲
    previous-session review.
-6. Verify — `pnpm check (tsc --noEmit + vitest run + vite build — the one product gate, CI job 'ci'); kit discipline: python3 bootstrap.py check --strict; balance evidence: pnpm sim` and `python3 bootstrap.py check --strict`;
+6. Verify — `pnpm check` (the product gate) and `python3 bootstrap.py check --strict`;
    if those are the same command, also run the repo's other boot-file gates
    (the collision otherwise drops a gate silently).
    The only acceptable pre-flip red is the designed born-red hold naming
    this session's own card.
 7. Flip as the deliberate LAST step — flip the card badge to `complete`,
-   delete your own claim file, push. Green then merges server-side; a
-   flipped-early card merges a partial PR (the failure the gate exists
-   for), and an unpushed flip leaves the PR red forever.
+   delete your own claim file, push — **then merge the PR yourself once the
+   required checks report green on the flip head** (step 3; nothing merges
+   it for you here). A flipped-early card merges a partial PR (the failure
+   the gate exists for), and an unpushed flip leaves the PR red forever.
 
 ## Report format (card close-out)
 

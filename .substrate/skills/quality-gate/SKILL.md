@@ -7,7 +7,8 @@ description: "Run the project's full verification before pushing and report what
 
 Prove a change is good before pushing Couch Legend.
 
-1. Run `pnpm check (tsc --noEmit + vitest run + vite build — the one product gate, CI job 'ci'); kit discipline: python3 bootstrap.py check --strict; balance evidence: pnpm sim` — the project's full verification (tests + lint/types).
+1. Run `pnpm check` — the product gate (tsc --noEmit + vitest run + vite
+   build; exactly what the required `ci` check runs).
 2. Run `python3 bootstrap.py check --strict` — doc + session-log hygiene. If
    step 1 already IS this command, do not stop at one gate: run the repo's
    remaining gates named in its boot file instead (fleet-manager lesson

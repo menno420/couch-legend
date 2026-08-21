@@ -73,4 +73,4 @@ Then it retargets the baton so the next session lands on the freshly-scoped slic
 Report the item, its origin trail, the fuller picture, the classification with reason, and the
 recipe or owner ask verbatim, plus the baton line you wrote.
 
-Declared capabilities: read (the origin refs, the backlog, the docs-gate rules).
+Declared capabilities: read (the origin refs, the backlog, the docs-gate rules), edit (the backlog doc + the status heartbeat its steps update).

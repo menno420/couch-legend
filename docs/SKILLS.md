@@ -23,14 +23,14 @@ deriving the procedure from scratch.
 | `continuation-prompt` | Carry a session into a fresh one — verify state at HEAD, commit what belongs in the repo, and emit a paste-ready prompt that transfers intent without narrowing it. | `read`, `edit`, `run` | `git fetch origin main && git log -1 --oneline origin/main`<br>`pnpm check` |
 | `upgrade-distribution` | Roll a kit release out to one adopter repo — download, sha256 three-way, banked rollback, carve-out scan, born-red PR, tree-verified merge. | `read`, `edit`, `run` | `git fetch origin main && git reset --hard origin/main`<br>`gh release download vX.Y.Z --repo menno420/substrate-kit --pattern 'bootstrap.py*' --pattern 'release.json'`<br>`sha256sum bootstrap.py.new`<br>`python3 bootstrap.py.new upgrade`<br>`pnpm check`<br>`python3 bootstrap.py check --strict`<br>`git fetch origin main && git log -1 --oneline origin/main`<br>`git commit --allow-empty` |
 | `release` | Cut + publish a substrate-kit release — version bump PR, workflow_dispatch publish, three-way asset verification, adopter distribution wave. | `read`, `edit`, `run` | `python3 src/build_bootstrap.py`<br>`git diff --exit-code dist/bootstrap.py`<br>`python3 -m pytest tests/ -q`<br>`python3 -m ruff check src/engine/`<br>`python3 src/build_release_json.py --version X.Y.Z --verify-only`<br>`python3 dist/bootstrap.py check --strict`<br>`gh workflow run release.yml -f version=X.Y.Z`<br>`git fetch --tags && git tag -l vX.Y.Z`<br>`gh release view vX.Y.Z`<br>`python3 dist/bootstrap.py currency` |
-| `intake` | Turn a fragmented owner ask into main ideas, a restated fuller picture, a skill-index map, and structured-choice owner questions — before building (understand-and-reflect, executable). | `read` | — |
-| `scope-backlog-item` | Turn a raw backlog item into a turnkey recipe or an owner ask — chase its origin, state the fuller picture, classify buildable/owner-gated/dead, write the sized recipe with acceptance + traps, and retarget the baton. Makes the standing 'when no executable work is left, plan' order turnkey. | `read` | — |
+| `intake` | Turn a fragmented owner ask into main ideas, a restated fuller picture, a skill-index map, and structured-choice owner questions — before building (understand-and-reflect, executable). | `read`, `edit` | — |
+| `scope-backlog-item` | Turn a raw backlog item into a turnkey recipe or an owner ask — chase its origin, state the fuller picture, classify buildable/owner-gated/dead, write the sized recipe with acceptance + traps, and retarget the baton. Makes the standing 'when no executable work is left, plan' order turnkey. | `read`, `edit` | — |
 | `chase-references` | Resolve every reference in the ask before acting — inventory, resolve or search each one, report unfindables explicitly, state the assembled picture back (Q-0273 seed skill). | `read` | — |
 | `prep-owner-steps` | Hand the owner finished steps, not directions — deep links, paste-ready blobs, his path walked once, one batched sitting, payoff + verification stated (Q-0273 seed skill). | `read` | — |
 | `rationalize` | The checkpoint at natural pauses — should this action also be executed? does this lesson deserve a permanent home shippable NOW? Route via the table (Q-0273). | `read` | — |
 | `quality-gate` | Run the project's full verification before pushing and report what must be fixed. | `read`, `run` | `pnpm check`<br>`python3 bootstrap.py check --strict` |
 | `review` | Review the branch diff against the binding contracts; comment with a verdict and fixes, no edits. | `read`, `comment` | — |
-| `repo-health` | Audit doc + session-log hygiene (bootstrap check) and summarize drift. | `read`, `run` | `python3 bootstrap.py check` |
+| `repo-health` | Audit doc + session-log hygiene (bootstrap check) and summarize drift. | `read`, `run`, `edit` | `python3 bootstrap.py check` |
 | `deep-research` | Fan out web research, adversarially verify sources, and synthesize a cited report. | `read`, `run` | — |
 | `question` | Answer a direct question concisely from memory and source; make no changes. | `read` | — |
 | `analysis` | Read-only deep-dive: investigate and report findings without changing anything. | `read` | — |
@@ -62,6 +62,18 @@ deriving the procedure from scratch.
   `substrate.config.json` sets a custom `state_dir`, substitute it for
   `.substrate` in the loop (staging follows the configured dir; the loop
   cannot, because this index renders before the config is read).
+- **Local amendments (re-apply after any upgrade / staged re-copy —
+  diff before you copy):** this repo layers fixes on seven kit-named
+  skills, live AND staged, until the kit ships them upstream
+  (fleet-manager worklist rows 24–32): the four annotated-verify command
+  spans split into executable commands (`quality-gate` step 1,
+  `session-close` step 6, `continuation-prompt` DONE-WHEN,
+  `upgrade-distribution` step 7); `session-close` rewritten to
+  land-it-yourself (this repo has NO auto-merge enabler — three sites);
+  `edit` capability declared where steps write (`scope-backlog-item`,
+  `repo-health`, `intake` — and their rows above). A copy loop or
+  `skills --build` that drops these must re-apply them in the same
+  session.
 - **Precedence:** a skill's declared capability **wins over the ambient
   stance** (an invoked `session-close` may write the session log even under
   a `review` stance); stances stay advisory for anything a skill has not

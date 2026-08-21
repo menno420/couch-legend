@@ -39,7 +39,7 @@ tree, never a registry line or a PR read.
    and `diverged` docs are LOCAL MODIFICATIONS the upgrade must not
    clobber; list them verbatim in the PR body. `template-improved` applies
    only under `--apply-docs` and only to consumer-untouched docs.
-7. Verify + flip — `pnpm check (tsc --noEmit + vitest run + vite build — the one product gate, CI job 'ci'); kit discipline: python3 bootstrap.py check --strict; balance evidence: pnpm sim` and
+7. Verify + flip — `pnpm check` and
    `python3 bootstrap.py check --strict` green
    — if those are the same command, run the repo's other boot-file gates too (own card's designed hold
    excepted); flip the card `complete`, delete the claim, push.

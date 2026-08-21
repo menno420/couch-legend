@@ -67,4 +67,4 @@ Print: MAIN IDEAS (numbered) · FULLER PICTURE (short prose) · MAP (idea →
 skill/pattern/new) · [POSSIBILITY SPACE if triggered] · DECISIONS FLAGGED ·
 QUESTIONS FOR OWNER (structured choices, or `none`).
 
-Declared capabilities: read (the index, the ledger, the profile).
+Declared capabilities: read (the index, the ledger, the profile), edit (it may append a routed question to the question router).

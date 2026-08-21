@@ -71,26 +71,14 @@
 
 ## Boot read path
 
-Read in this order at session start. **This is the one list** — the task router
-at `docs/AGENT_ORIENTATION.md` points here rather than repeating it, so a boot
-set can never exist in two places that disagree.
-
-1. This file — the working agreement + autonomy rails.
-2. `docs/current-state.md` — the living status ledger. Source and merged PRs
-   always win over it.
-3. `docs/CAPABILITIES.md` — verified session capabilities and walls. THE
-   DISCOVERY RULE lives there: append what you verify, never a limitation.
-
-Then `docs/AGENT_ORIENTATION.md` when a task needs a route into the deeper
-docs — it is a router, not boot reading.
-
-<!-- Keep every path above resolvable: check_boot_path asserts this section
-     exists and that each path it names is on disk. A boot pointer into a
-     missing file is the exact defect measured across 11 adopter trees on
-     2026-08-06 — 0 of 11 had a boot path that resolved, because the 07-12
-     fix repointed the router at this agreement before the agreement had a
-     list to point at. Add repo-specific boot docs here; never move the list
-     back into the router. -->
+**The one canonical list lives in the working agreement —
+`.claude/CLAUDE.md` § "Boot read path"** (that file is the boot surface the
+orientation router points to, and the boot-path checker validates it there).
+This file deliberately does not repeat the list: in this repo both this
+constitution and the working agreement exist, and two rendered boot lists
+had already disagreed by the seed PR's second review (couch-legend #5 R2 —
+one named `docs/CAPABILITIES.md`, the other `docs/DESIGN.md`). One list,
+one home; this section is a pointer on purpose.
 
 ## Autonomy rails — act vs. ask
 

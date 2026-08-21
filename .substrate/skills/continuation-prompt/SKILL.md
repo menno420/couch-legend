@@ -57,7 +57,8 @@ owner asked for — the next session executes the prompt, not the conversation.
    - **YOUR FIRST STEP** — one concrete action that verifies the state above
      rather than trusting it.
    - **DONE WHEN** — acceptance plus this repo's real verify command,
-     `pnpm check (tsc --noEmit + vitest run + vite build — the one product gate, CI job 'ci'); kit discipline: python3 bootstrap.py check --strict; balance evidence: pnpm sim`.
+     `pnpm check` (the product gate) + `python3 bootstrap.py check --strict`
+     (the kit gate); balance claims carry `pnpm sim` evidence.
    - **OUT OF SCOPE** — always present; the cheapest correction available.
 
 4. **The comprehension exception — when reading IS the job.** Default READ

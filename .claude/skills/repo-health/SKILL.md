@@ -12,4 +12,4 @@ Audit Couch Legend's documentation + session-log hygiene.
 2. Summarize the drift: orphaned docs, missing badges, incomplete logs.
 3. Fix the small ones (link the orphan, badge the doc); capture the rest as ideas.
 
-Declared capabilities: run.
+Declared capabilities: run, edit (step 3 fixes the doc findings it reports).
