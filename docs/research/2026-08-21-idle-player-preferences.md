@@ -1,6 +1,6 @@
 # Idle-player preferences — visible progress pass
 
-> **Status:** `researched decision` · 2026-08-21
+> **Status:** `reference` · researched decision · 2026-08-21
 >
 > This pass asks one narrow question: which repeatedly reported idle-game
 > preference can improve the shipped interface without changing Couch Legend's

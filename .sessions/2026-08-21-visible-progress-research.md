@@ -89,3 +89,7 @@ green on the flip head.
 
 - `2269acd` — clean exact-head review, 0 findings, 0 review threads; bot 👍
   and no major issues verdict at 2026-08-21T20:34Z.
+- `f6f8eb9` flip gate — product `ci` passed; `substrate-gate` correctly caught
+  three missing/invalid standard badge tokens in the new research/idea docs.
+  Corrected on the following metadata-only head before merge; no game file
+  changed.

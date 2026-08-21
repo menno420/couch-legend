@@ -9,6 +9,8 @@ outcome: open
 
 # Plain-language purchase impact
 
+> **Status:** `ideas`
+
 ## Intake
 
 Idle players repeatedly object to upgrades whose effect is hard to predict

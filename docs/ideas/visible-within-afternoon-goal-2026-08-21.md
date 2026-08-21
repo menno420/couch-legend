@@ -9,6 +9,8 @@ outcome: shipped
 
 # Visible within-afternoon goal
 
+> **Status:** `ideas`
+
 ## Intake
 
 Research what players value in clicker/idle games, then use the strongest safe
