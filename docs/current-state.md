@@ -12,20 +12,32 @@ The reconstructed mechanics base (2026-08-20, PR "solid mechanics base"):
 pure engine + content tables pinned by the vitest suite (`pnpm test` for the
 live count — never a frozen number in prose), deployed and playing at
 <https://menno420.github.io/couch-legend/>. `docs/DESIGN.md` is the binding
-mechanics map; the prototype's late-game tuning is **measured broken**
-(runaway — see `docs/sim/2026-08-20-life-story-balance.md`) with a tested fix
-proposed and deliberately not yet adopted.
+mechanics map; since 2026-08-21 the engine's default is the **adopted**
+sim-tested knee+cap curve (the prototype's measured late-game runaway is
+braked; `PROTO_TUNING` preserved for the replay fixtures and the baseline
+dataset — evidence `docs/sim/2026-08-20-life-story-balance.md` +
+`docs/sim/2026-08-21-adoption-check.md`).
 
 ## In flight
 
-- substrate-kit v1.21.0 adoption (this ledger's planting session, 2026-08-21)
-  — the kit gate joins `ci` as a required check on `main`.
+- (nothing — the life-story implementation session landed; the Android
+  shell is next, below)
 
 ## Recently shipped (newest first)
 
+- **The life story lands** (the implementation session, 2026-08-21):
+  adopted tuning as the engine default + updated pins; save v2 `lifeHigh`
+  with migration; `STAGES` + era framing + re-keyed revelations (the
+  Lore-permanence defect closed); arc-1 prologue content (Cousin's Pinch,
+  Borrowed Grinder, Corner Store Shift, The Green Lighter — stage-gated
+  additive rows, sim-checked); the `STAGE_PRESENTATION` registry activating
+  #4's scene packages; the chapter-turn shell with reduced-motion fallback;
+  Chronicle chapters.
+- **substrate-kit v1.21.0 adoption** (#5, 2026-08-21): the kit gate joins
+  `ci` as a required check on `main`; born-red cards; land-it-yourself.
 - **Opening story scene packages** (#4, 2026-08-21): first three Arc-1
-  lucid/baked chapter packages + `SceneMotion`; assets dormant until the
-  `lifeHigh` stage schema lands.
+  lucid/baked chapter packages + `SceneMotion` — activated by the
+  implementation session above.
 - **The Lucid Chronicle looks pass** (#3, 2026-08-21, owner-approved):
   the visual/narrative treatment contract —
   `docs/design/2026-08-21-looks-pass.md`.
@@ -36,11 +48,12 @@ proposed and deliberately not yet adopted.
 
 ## Next (the owner's stated order)
 
-The Claude implementation session: adopt the tested tuning, add the
-`lifeHigh` save-v2 stage schema + `STAGE_PRESENTATION` registry (re-keying
-revelations — the Lore-permanence defect DESIGN § 9.2 records), author arc-1
-beats. Checklist: `docs/sim/2026-08-20-life-story-balance.md` § 7. The
-Android/Capacitor shell follows (DESIGN § 7).
+The **Android/Capacitor shell** (DESIGN § 7): wrap this exact build, sign
+and release APKs from CI on the phone-controller pattern. Alongside it, the
+open content work in DESIGN § 9.8 — arc-3 batches and the remaining 15
+scene packages (image-prompt/asset-pipeline route with owner QA, slot by
+slot into the registry's placeholder entries) — and the owner's feel pass
+on the tuned late game.
 
 ## Review rhythm
 
