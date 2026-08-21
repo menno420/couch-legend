@@ -1,1 +1,0 @@
-- `claude/lifehigh-arc1` · **life-story implementation: adopt tested tuning, lifeHigh save v2 + STAGES, arc-1 prologue, STAGE_PRESENTATION seam (balance doc §7 items 1-4)** · src/lib + src/components + tests + docs/sim · 2026-08-21

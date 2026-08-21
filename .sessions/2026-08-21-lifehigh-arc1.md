@@ -1,7 +1,8 @@
 # 2026-08-21 — The life-story implementation session (lifeHigh + arc 1)
 
-> **Status:** `in-progress` — branch `claude/lifehigh-arc1`. Born-red until
-> the close-out below is written and every §7 item is verified landed.
+> **Status:** `complete` — branch `claude/lifehigh-arc1`, PR #7. Born-red
+> until this flip; the full close-out and the three-round Codex trail are
+> below.
 
 - **📊 Model:** fable-5 · feature build
 
@@ -59,10 +60,11 @@ authored-content budget is designed in.
 
 **Verify (each command run, real exit codes):**
 
-- `pnpm check` → exit 0 (tsc + 89/89 vitest + build)
+- `pnpm check` → exit 0 at every round head; at the flip head: tsc + 90/90
+  vitest + build, exit 0
 - `python3 bootstrap.py check --strict` → exit 1 pre-flip, exactly the
-  designed born-red hold naming this card; re-run green expected at flip
-  (recorded below when run)
+  designed born-red hold naming this card; exit 0 at the flip (recorded in
+  the flip commit)
 - `pnpm sim invariance` / `dtsense` / `adopted 14 2` / `analyze adopted` —
   outputs in `docs/sim/2026-08-21-adoption-check.md`; all six § 9.6 rails
   hold; closest bound: arc-3 attended dead time 44.8 m of 45 m
