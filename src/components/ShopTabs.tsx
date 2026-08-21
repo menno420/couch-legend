@@ -4,6 +4,7 @@ import { useGame, type BuyQty, type Tab } from '../lib/store'
 import { GENERATORS, JOBS, RITUALS, stageUnlocked } from '../lib/content'
 import { bulkCost, maxAffordable, milestoneMult } from '../lib/engine'
 import { fmt, fmtRate } from '../lib/format'
+import { isUnlockNameRevealed } from '../lib/progress'
 import { Button, cx } from './ui'
 
 const QTYS: BuyQty[] = [1, 10, 100, 'max']
@@ -161,7 +162,7 @@ export function GrowTab() {
     <Section icon={<Leaf className="size-4" aria-hidden />} title="Grow" hint="Idle nugs. Buy them once, forget them forever." qty>
       {GENERATORS.filter(g => stageUnlocked(lifeHigh, g.stage)).map(g => {
         const locked = high < g.unlockHigh
-        const deepLocked = locked && high < g.unlockHigh * 0.45
+        const deepLocked = locked && !isUnlockNameRevealed(high, g.unlockHigh)
         const owned = generators[g.id] ?? 0
         const qty = buyQty === 'max' ? Math.max(1, maxAffordable(g.baseCost, g.costScale, owned, nugs)) : buyQty
         const cost = bulkCost(g.baseCost, g.costScale, owned, qty)
@@ -195,7 +196,7 @@ export function WorkTab() {
     <Section icon={<Briefcase className="size-4" aria-hidden />} title="Work" hint="Jobs that happen while you stare at the lamp." qty>
       {JOBS.filter(j => stageUnlocked(lifeHigh, j.stage)).map(j => {
         const locked = high < j.unlockHigh
-        const deepLocked = locked && high < j.unlockHigh * 0.45
+        const deepLocked = locked && !isUnlockNameRevealed(high, j.unlockHigh)
         const owned = jobs[j.id] ?? 0
         const qty = buyQty === 'max' ? Math.max(1, maxAffordable(j.baseCost, j.costScale, owned, cash)) : buyQty
         const cost = bulkCost(j.baseCost, j.costScale, owned, qty)
@@ -230,7 +231,7 @@ export function RitualsTab() {
     <Section icon={<Sparkles className="size-4" aria-hidden />} title="Rituals" hint="Set-and-forget. This is the idle part.">
       {RITUALS.filter(r => stageUnlocked(lifeHigh, r.stage)).map(r => {
         const locked = high < r.unlockHigh
-        const deepLocked = locked && high < r.unlockHigh * 0.45
+        const deepLocked = locked && !isUnlockNameRevealed(high, r.unlockHigh)
         const level = rituals[r.id] ?? 0
         const cost = level >= r.maxLevel ? null : r.costs[level]
         const maxed = cost == null

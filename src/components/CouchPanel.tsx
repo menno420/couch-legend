@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { Cloudy } from 'lucide-react'
 import { useGame } from '../lib/store'
-import { moodFor, nextMood, STAGES, stageForLifeHigh } from '../lib/content'
+import { moodFor, STAGES, stageForLifeHigh } from '../lib/content'
 import { anchorPresentation, presentationFor, resolveArt } from '../lib/presentation'
 import { fmt } from '../lib/format'
+import { useAfternoonProgressSnapshot } from './AfternoonProgress'
 import { SceneMotion } from './SceneMotion'
 import { Button, Panel } from './ui'
 
@@ -18,7 +19,7 @@ export function CouchPanel() {
   const hit = useGame(s => s.hit)
 
   const mood = moodFor(high)
-  const upcoming = nextMood(high)
+  const afternoon = useAfternoonProgressSnapshot()
   const stage = stageForLifeHigh(lifeHigh)
   const stageNumber = String(STAGES.findIndex(s => s.id === stage.id) + 1).padStart(2, '0')
 
@@ -39,7 +40,6 @@ export function CouchPanel() {
       img.src = resolveArt(src)
     }
   }, [stage.id])
-
   const bakedOpacity = Math.min(1, buzz / 80)
   const hazeOpacity = Math.min(0.55, 0.08 + buzz / 220)
   const accentVars = (pres.accent
@@ -146,10 +146,25 @@ export function CouchPanel() {
             <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-muted sm:text-sm">{mood.blurb}</p>
           </div>
         </div>
-        {upcoming ? (
-          <div className="scene-glass pointer-events-none absolute bottom-3 right-3 max-w-[calc(100%_-_1.5rem)] rounded-full px-3 py-1.5 text-right text-xs text-subtle sm:bottom-4 sm:right-4">
-            Next · <span className="text-portal">{upcoming.name}</span>
-            <span className="tabular-nums text-muted"> at {fmt(upcoming.minHigh)}</span>
+        {afternoon.phase !== 'complete' ? (
+          <div
+            className="scene-glass pointer-events-none absolute bottom-3 right-3 max-w-[calc(100%_-_1.5rem)] rounded-[14px] px-3 py-2 text-left sm:bottom-4 sm:right-4"
+            aria-hidden="true"
+          >
+            <p className="text-xs font-medium uppercase tracking-[0.14em] text-accent">
+              {afternoon.phase === 'reached' ? 'Just arrived' : 'Next this afternoon'}
+            </p>
+            <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-fg">
+              {afternoon.phase === 'reached'
+                ? afternoon.goals.flatMap(goal => goal.milestones).map(item => item.label).join(' + ')
+                : afternoon.goal.milestones.map(item => item.label).join(' + ')}
+              <span className="tabular-nums text-muted">
+                {' · High '}
+                {fmt(afternoon.phase === 'reached'
+                  ? afternoon.goals[afternoon.goals.length - 1].atHigh
+                  : afternoon.goal.atHigh)}
+              </span>
+            </p>
           </div>
         ) : null}
       </div>

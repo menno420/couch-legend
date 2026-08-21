@@ -45,6 +45,9 @@ shell over this build — DESIGN.md § 7).
 - **Prestige legibility** — the Lore tab shows the current Clarity multiplier
   and what it becomes after the pending Wake & Bake.
 - **Tab signals** — a quiet dot marks tabs holding something affordable.
+- **A visible next step** — the High panel previews the nearest currently
+  available mood or shop unlock on one within-afternoon progress rail, without
+  spoiling distant names or future chapters.
 - **Keyboard + accessibility** — Space/Enter take a hit; aria labels on icon
   controls; `prefers-reduced-motion` respected.
 - **Installable PWA** — manifest + icons; add-to-home-screen works on Android

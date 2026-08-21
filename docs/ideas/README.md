@@ -44,6 +44,11 @@ frontmatter keeps the score.
 
 (Captured ideas, each with a state and a next destination — none left at `raw`.)
 
+- [Visible within-afternoon goal](visible-within-afternoon-goal-2026-08-21.md)
+  — promoted into the current researched presentation pass.
+- [Plain-language purchase impact](plain-language-purchase-impact-2026-08-21.md)
+  — routed to a structured presentation plan after the life-story UI settles.
+
 ## Shipped (survive window open)
 
 (Promoted ideas whose PR merged; the revert-scan flips them `survived`

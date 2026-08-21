@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useGame } from './lib/store'
 import { CouchPanel } from './components/CouchPanel'
 import { StatsPanel } from './components/StatsPanel'
+import { AfternoonProgressProvider } from './components/AfternoonProgress'
 import { GrowTab, RitualsTab, TabBar, WorkTab } from './components/ShopTabs'
 import { LoreTab } from './components/LoreTab'
 import { ChapterTurn } from './components/ChapterTurn'
@@ -62,10 +63,12 @@ export default function App() {
           <NewsLine />
           <OfflineBanner />
           <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-start">
-            <div className="flex flex-col gap-4 pb-14 lg:sticky lg:top-4 lg:self-start lg:pb-0">
-              <CouchPanel />
-              <StatsPanel />
-            </div>
+            <AfternoonProgressProvider>
+              <div className="flex flex-col gap-4 pb-14 lg:sticky lg:top-4 lg:self-start lg:pb-0">
+                <CouchPanel />
+                <StatsPanel />
+              </div>
+            </AfternoonProgressProvider>
             <div className="flex flex-col gap-3">
               <div className="safe-sticky sticky z-20 -mx-1 bg-gradient-to-b from-bg via-bg/95 to-transparent px-1 pb-2 pt-3 backdrop-blur-sm sm:rounded-b-xl">
                 <TabBar />
