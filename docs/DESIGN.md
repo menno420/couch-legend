@@ -159,14 +159,43 @@ src/components/*     React UI         — web adapter
   offline start, and later notifications/haptics — all Capacitor plugins.
 - `vite.config.ts` already accepts `VITE_BASE=./` for a file-served shell.
 
-*Rejected:* full Kotlin rewrite (mechanics fork risk, no benefit at this
-scale); TWA/Bubblewrap (needs a public HTTPS origin at runtime and Play's PWA
-criteria; weaker offline story than bundling the assets).
+*Rejected:* a Godot or other engine rewrite (it would fork the tested
+TypeScript engine, simulator, saves and panel UI without a rendering need that
+justifies it); full Kotlin rewrite (the same mechanics-fork risk); TWA/Bubblewrap
+(needs a public HTTPS origin at runtime and Play's PWA criteria; weaker offline
+story than bundling the assets).
 
 Steps when the Android slice is picked up: add `android/` via Capacitor,
 bundle `dist/`, wire the signing keystore as repo secrets
 (phone-controller pattern), release APKs from CI. Until then the PWA manifest
 already gives Android users install-to-home-screen.
+
+**WORKING ANDROID HANDOFF:** before the first Android release build, add one
+centralized platform seam — not native conditionals scattered through
+components:
+
+- preserve the current versioned JSON codec, migrations and portable save code,
+  but put persistence behind an asynchronous `SaveRepository` boundary (native
+  Preferences is asynchronous); the web backend adapts `localStorage`, while
+  the native backend uses Capacitor Preferences and performs a one-time import
+  if its WebView storage contains an older save. Browser and installed-app
+  storage do not magically sync; the portable code remains the manual bridge;
+- route browser visibility and Capacitor app-state events through one
+  pause/resume service: pause flushes, resume applies elapsed offline progress
+  exactly once, advances the saved timestamp, then flushes again;
+- keep safe-area, Android Back, share/clipboard, haptics and optional local
+  notifications in platform adapters with web fallbacks;
+- build web and Android from the same `dist` and commit, with local fonts and
+  art and `VITE_BASE=./`; do not maintain a second native presentation.
+
+These are working integration constraints, not functionality present in the
+web prototype today; the Android session may refine the adapter interfaces while
+preserving one engine, one save format and one presentation. That slice must add
+device tests for pause/resume, upgrade over an installed build,
+force-stop/reopen, denied notification permission, Back, system bars, audio
+interruptions and airplane-mode cold launch. Store listing, content-rating and
+policy review happen before release, once the authored adult story content is
+known.
 
 ## 8 · Open design questions (OPEN — decided later, on purpose)
 
@@ -186,10 +215,12 @@ already gives Android users install-to-home-screen.
 The owner's phase-2 directive ([the brief](planning/2026-08-20-life-story-direction.md))
 made Couch Legend a **life story**: ~18 stages from a first cigarette at
 about age 18, through finding weed, to wherever the couch goes after. This
-section records the decided *system*. Stage **content** (flavor text, art,
-the arc-3 tables) is deliberately not built yet — the balance simulator and
-the tested proposal come first, per the brief; sim evidence for every number
-lives in [`sim/2026-08-20-life-story-balance.md`](sim/2026-08-20-life-story-balance.md).
+section records the decided *system*. The broad visual and story treatment is
+now set by the [Lucid Chronicle looks contract](design/2026-08-21-looks-pass.md);
+exact flavor copy, art and the arc-3 content tables are deliberately not built
+yet. The balance simulator and tested proposal came first, per the brief; sim
+evidence for every number lives in
+[`sim/2026-08-20-life-story-balance.md`](sim/2026-08-20-life-story-balance.md).
 
 ### 9.1 North star (DECIDED — one measurable sentence, validated in simulation)
 
@@ -240,9 +271,9 @@ The shape:
 
 | Arc | Stages | What it is |
 |---|---|---|
-| **1 · Sparks** | 1–3 | Before the couch: the parking-lot first light, corner-store nights, somebody's cousin's couch — where the weed is found. Thin dedicated starter content (a few prologue habits/jobs); completes inside the first half hour. |
+| **1 · Sparks** | 1–3 | Before the Couch Era: the couch begins discarded at parking-lot first light, passes through corner-store nights, then reaches somebody's cousin's living room — where the weed is found. Thin dedicated starter content (a few prologue habits/jobs); completes inside the first half hour. |
 | **2 · The Couch Era** | 4–13 | The existing game, framed as ten eras: the current 12/12/10 content tables distributed across the arc by the stage gates below. No existing number changes. |
-| **3 · The Legend** | 14–18 | Past the couch: four new content batches (A–D, authored later) and the terminal stage, **The Long Afternoon**, which is explicitly endless. |
+| **3 · The Legend** | 14–18 | Beyond the ordinary room: four new content batches (A–D, authored later) and the terminal stage, **The Long Afternoon**, which is explicitly endless. |
 
 **Per-stage pressure (the plateau rule):** each stage introduces exactly one
 new emphasis — a content batch, an automation class, the prestige unlock
@@ -384,27 +415,48 @@ tuning — future tuning changes must stay inside them, with sim evidence:
 ### 9.7 The per-stage visual plan (DECIDED plan; production is later work)
 
 - **18 scene backdrops**, one per stage (`scene` keys in the stage table):
-  the same room/couch through a life — parking-lot dusk → corner store →
-  cousin's living room → the apartment aging and accreting objects through
-  arc 2 → the cosmic rooms of arc 3. **The couch is the continuity object.**
+  the same couch across changing places — parking-lot dusk → corner store →
+  cousin's living room → an apartment that ages and accrues objects → evidence
+  room → storefront → state room → lunar lounge → mythic canopy → the cosmic
+  rooms of arc 3. **The couch is the continuity object.**
 - The existing two-state mood crossfade (`couch-lucid`/`couch-baked`) stays
-  the *within-afternoon* layer, over whichever stage backdrop is active;
-  the current pair remains the arc-2 anchor and the style reference for
-  every generated scene.
+  the *within-afternoon* layer. Because the current anchors are opaque
+  paintings, every stage is one registered composition with two matching
+  states rather than a third opaque backdrop under one global pair. The
+  current pair remains the arc-2 anchor and the style reference for every
+  generated scene.
 - Production route (later sessions): the estate's `image-prompt` family +
   `asset-pipeline` per delivered image, anchored on the existing art;
-  contract = the current scene panel's aspect and crop, `art/stage-<id>.jpg`.
-  Then the owner's ChatGPT-Work pass fine-tunes looks, then Claude sessions
-  improve freely (owner's stated division of labor).
+  contract = an opaque sRGB 3:4 pair at minimum 900 × 1200,
+  `public/art/stages/<stage-id>-lucid.jpg` and
+  `public/art/stages/<stage-id>-baked.jpg`, with identical dimensions,
+  composition, couch silhouette/position and focal crop. Only light, haze and
+  dream details change. Both 4:5 mobile and 3:4 larger crops must pass review.
+- A single `STAGE_PRESENTATION` registry owns pair paths or an explicit
+  `placeholder` status, alt text, focal position and scene accent. It loads the
+  current pair, preloads only the next, lazy-loads the rest, resolves paths
+  through `BASE_URL`, and falls back to the last valid/current anchor rather
+  than a blank scene. Components do not carry stage-specific path conditionals.
+- For delivered entries, registry tests require both files, equal paired
+  dimensions and valid focal metadata. Placeholder entries deliberately use the
+  current anchor pair until their art passes review. Art production records
+  encoded size and decode cost on representative phones before setting a
+  delivery budget; this plan does not invent one before the 36 files exist.
+- The owner's 2026-08-21 looks pass precedes implementation and art production:
+  it is the style contract those later sessions follow. The 36 state images
+  are produced and owner-reviewed later, pair by pair.
 
-### 9.8 Still OPEN after this pass (deliberately)
+### 9.8 Still OPEN after the looks pass (deliberately)
 
 - Arc-1 and arc-3 content tables (numbers proposed in the results doc get
   authored into `content.ts` with flavor by the implementation session).
-- Per-stage beats, news lines, achievement extensions — content work.
+- The broad stage treatment and chapter-turn presentation are set by the looks
+  contract. Exact stage copy, news lines, dialogue, Postcard vignettes and
+  achievement extensions remain implementation content work; rewards or new
+  state are not implied.
 - Clarity spend shop (§ 8.1) — unchanged, evidence says not yet needed.
-- Whether stage entry deserves a celebration moment beyond the toast
-  (small UI design, the implementation session's call).
+- Exact chapter-turn timing and responsive treatment may be refined during
+  implementation, while preserving its reduced-motion fallback.
 
 ## 10 · Verification
 

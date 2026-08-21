@@ -12,15 +12,15 @@ export function QtyPicker() {
   const qty = useGame(s => s.buyQty)
   const setQty = useGame(s => s.setBuyQty)
   return (
-    <div className="flex rounded-md border border-border bg-elevated p-0.5">
+    <div className="surface-card interactive-frame flex rounded-[11px] p-0.5">
       {QTYS.map(q => (
         <button
           key={String(q)}
           type="button"
           onClick={() => setQty(q)}
           className={cx(
-            'h-8 min-w-10 rounded-[6px] px-2.5 text-xs font-medium tabular-nums transition-colors duration-150',
-            qty === q ? 'bg-accent text-accent-fg' : 'text-muted hover:text-fg',
+            'h-8 min-w-10 rounded-[8px] px-2.5 text-xs font-medium tabular-nums transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/80 focus-visible:ring-offset-1 focus-visible:ring-offset-elevated',
+            qty === q ? 'bg-accent text-accent-fg shadow-sm' : 'text-muted hover:bg-surface hover:text-fg',
           )}
         >
           {q === 'max' ? 'Max' : `×${q}`}
@@ -55,31 +55,36 @@ export function TabBar() {
   const tab = useGame(s => s.tab)
   const setTab = useGame(s => s.setTab)
   const signals = useTabSignals()
-  const tabs: { id: Tab; label: string }[] = [
-    { id: 'grow', label: 'Grow' },
-    { id: 'work', label: 'Work' },
-    { id: 'rituals', label: 'Rituals' },
-    { id: 'lore', label: 'Lore' },
+  const tabs: { id: Tab; label: string; icon: ReactNode }[] = [
+    { id: 'grow', label: 'Grow', icon: <Leaf className="size-4" aria-hidden /> },
+    { id: 'work', label: 'Work', icon: <Briefcase className="size-4" aria-hidden /> },
+    { id: 'rituals', label: 'Rituals', icon: <Sparkles className="size-4" aria-hidden /> },
+    { id: 'lore', label: 'Chronicle', icon: <ScrollText className="size-4" aria-hidden /> },
   ]
   return (
-    <div className="flex rounded-lg border border-border bg-surface p-1">
+    <nav className="tab-rail interactive-frame flex rounded-[16px] border bg-surface/95 p-1" aria-label="Game sections">
       {tabs.map(t => (
         <button
           key={t.id}
           type="button"
           onClick={() => setTab(t.id)}
+          aria-current={tab === t.id ? 'page' : undefined}
           className={cx(
-            'relative h-11 flex-1 rounded-md text-sm font-medium transition-colors duration-150',
-            tab === t.id ? 'bg-accent text-accent-fg' : 'text-muted hover:text-fg',
+            'relative flex h-13 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-[12px] px-1 text-xs font-medium transition-[background-color,color,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/90 focus-visible:ring-offset-1 focus-visible:ring-offset-surface sm:h-11 sm:flex-row sm:gap-1.5 sm:text-sm',
+            tab === t.id ? 'bg-accent text-accent-fg shadow-[0_6px_18px_color-mix(in_oklab,var(--color-accent)_18%,transparent)]' : 'text-muted hover:bg-elevated hover:text-fg',
           )}
         >
+          {t.icon}
           {t.label}
           {signals[t.id] && tab !== t.id ? (
-            <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-accent" aria-label="Something affordable" />
+            <span className="absolute right-1.5 top-1.5 grid size-4 place-items-center rounded-full bg-accent text-xs font-semibold leading-none text-accent-fg">
+              <span aria-hidden>+</span>
+              <span className="sr-only">Something affordable</span>
+            </span>
           ) : null}
         </button>
       ))}
-    </div>
+    </nav>
   )
 }
 
@@ -98,10 +103,10 @@ interface RowProps {
 
 function ShopRow({ name, blurb, owned, meta, cost, canAfford, locked, maxed, currency = 'nugs', onBuy }: RowProps) {
   return (
-    <div className={cx('flex items-stretch gap-3 rounded-lg border border-border bg-elevated p-3', locked && 'opacity-60')}>
+    <div className={cx('surface-card flex items-stretch gap-3 rounded-[14px] p-3 transition-[border-color,box-shadow] duration-200', canAfford && !locked && !maxed && 'shop-ready', locked && 'surface-card-muted')}>
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-2">
-          <p className="truncate font-medium text-fg">{name}</p>
+          <p className={cx('truncate font-medium', locked ? 'text-muted' : 'text-fg')}>{name}</p>
           <p className="shrink-0 text-xs tabular-nums text-muted">{owned > 0 ? `×${fmt(owned, 0)}` : meta}</p>
         </div>
         <p className="mt-0.5 line-clamp-2 text-sm text-muted">{blurb}</p>
@@ -112,14 +117,14 @@ function ShopRow({ name, blurb, owned, meta, cost, canAfford, locked, maxed, cur
         variant={canAfford ? 'primary' : 'secondary'}
         disabled={locked || maxed || !canAfford}
         onClick={onBuy}
-        className="h-11 min-w-[5.5rem] shrink-0 flex-col gap-0 rounded-md px-3"
+        className="h-11 min-w-[5.5rem] shrink-0 flex-col gap-0 rounded-[11px] px-3"
       >
         {maxed ? (
           <span>Done</span>
         ) : (
           <>
             <span className="text-sm leading-none tabular-nums">{fmt(cost)}</span>
-            <span className="text-[10px] uppercase tracking-wider opacity-80">{currency}</span>
+            <span className="text-xs uppercase tracking-[0.08em] opacity-85">{currency}</span>
           </>
         )}
       </Button>
@@ -130,10 +135,10 @@ function ShopRow({ name, blurb, owned, meta, cost, canAfford, locked, maxed, cur
 function Section({ icon, title, hint, qty, children }: { icon: ReactNode; title: string; hint: string; qty?: boolean; children: ReactNode }) {
   return (
     <div className="flex h-full flex-col">
-      <div className="mb-3 flex items-end justify-between gap-3">
+      <div className="mb-3 flex flex-col items-start gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="flex items-center gap-2 font-display text-xl font-semibold text-fg">
-            <span className="text-accent">{icon}</span>
+          <h2 className="flex items-center gap-2 font-display text-xl font-semibold tracking-[-0.015em] text-fg">
+            <span className="inline-flex size-8 items-center justify-center rounded-[10px] bg-accent/10 text-accent">{icon}</span>
             {title}
           </h2>
           <p className="mt-1 text-sm text-muted">{hint}</p>

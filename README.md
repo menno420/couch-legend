@@ -66,6 +66,7 @@ Deploys to GitHub Pages from `main` via `.github/workflows/pages.yml`;
 src/lib/       platform-neutral game core (content, engine, save, format)
 src/components React UI (web adapter)
 docs/DESIGN.md the binding mechanics map — read before changing any number
+docs/design/2026-08-21-looks-pass.md approved direction + working Lucid Chronicle contract
 docs/ORIGIN.md how a one-prompt prototype became this repo
 tests/         the engine suite that pins the design
 ```

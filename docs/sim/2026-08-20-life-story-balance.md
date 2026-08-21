@@ -375,7 +375,11 @@ implementation session (the live game is untouched this session).
 3. **Author arc-1 content** (a small prologue table: 2 generators, 1 job,
    1 ritual is enough for stages 1–3 at the fitted thresholds) and the
    per-stage beats; arc-3 batches A–D can trail.
-4. **Art per stage** through the estate's image-prompt / asset-pipeline
-   method (DESIGN § 9.7), then the owner's ChatGPT-Work looks pass.
+4. **Implement the 2026-08-21 looks contract** as the centralized theme and
+   `STAGE_PRESENTATION` seam, using the current anchor pair/placeholders for
+   arc 1, plus the chapter-turn shell and its reduced-motion fallback. The
+   owner's looks pass now precedes implementation; actual registered lucid/baked
+   art pairs remain a later image-prompt / asset-pipeline pass with owner visual
+   QA (DESIGN § 9.7). Do not create the 36 state images in this session.
 5. Keep `pnpm check` as the one gate; the sim tests keep the simulator
    honest against every future engine change.
