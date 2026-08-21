@@ -132,3 +132,5 @@ as venue `any`.)
 (Hand-filled by sessions, per the discovery rule. Seed rows above are
 kit-owned — they refresh at upgrade between the fence markers; local
 findings go here, below the fence.)
+
+- 2026-08-21 · capability · any · Headless end-to-end smoke of the production build works from a remote session booted on another repo: `pnpm preview` + npm-installed `playwright-core` + the pre-installed Chromium at `/opt/pw-browsers/chromium` as `executablePath`, driving localStorage-seeded saves through boot, v1→v2 migration, an offline chapter turn, a stage-gated purchase and the Chronicle · 22/22 assertions + 4 screenshots on the `claude/lifehigh-arc1` head (this session's card) · workaround notes: `playwright-core` skips the browser-download postinstall; seed saves via `page.addInitScript` before first navigation; assertions on persisted state must wait past the 2.5 s save flush.
