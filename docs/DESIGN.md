@@ -315,21 +315,27 @@ tuning — future tuning changes must stay inside them, with sim evidence:
    stage — patient play in ≤ **16 days**, eager-prestige play in ≤ **5
    weeks**, and even the degenerate archetypes (hoard-everything,
    never-prestige) in ≤ **11 weeks** (tail-growth extrapolation, labeled
-   REASONED in the results doc). One boundary, measured and stated rather
-   than hidden: a fresh save that **never clicks even once** never starts —
-   no hit means no High and no nugs, so nothing ever unlocks (pinned by
-   test). That is pillar 1 as a fact: the game begins with a hit. Every
-   archetype that has ever taken one is never walled.
+   REASONED in the results doc). The minimum-start boundary, measured and
+   stated rather than hidden (and sharpened twice in review — "one hit is
+   enough" was also false): a fresh save with **fewer than 4 hits** freezes
+   forever (High < 4 locks every job, nugs < 10 lock the first generator,
+   and nothing replenishes either); **4–9 hits** open the cash/jobs half
+   only — an unbounded but generator-less life; **10 hits** open the full
+   game. All three bands pinned by test. That is pillar 1 as a fact: the
+   game begins with a few hits, and every archetype past that threshold is
+   never walled.
 2. **Spread bounds:** across the attendance axis at comparable discipline,
    per-stage median reach-time ratio ≤ **4×** at arc 2's midpoint,
    tightening to ≤ **1.5×** by arc 3 (measured 3.3× → 1.27×). Across the
    discipline axis, eager trails patient ≤ **3×** per authored stage
    (measured ≤ 2.6×).
-3. **Dead-time bound (attended):** no attended stretch in which the game
-   offers no move — nothing affordable AND Wake & Bake unlit — longer than
-   **5 min in arc 1 · 25 min in arc 2 · 45 min in arc 3** (measured worsts:
-   30 s / 20 m / 37.5 m — the deep ones all on the post-reset warm-up § 9.5
-   names).
+3. **Dead-time bound (attended):** for every playing archetype (rail 1's
+   boundary — the zero-click wall lane's attended blocks are fully dead by
+   definition), no attended stretch in which the game offers no move —
+   nothing affordable, Wake & Bake unlit, and no prestige taken — longer
+   than **5 min in arc 1 · 25 min in arc 2 · 45 min in arc 3** (measured
+   worsts: 30 s / 20 m / 37.5 m — the deep ones all on the post-reset
+   warm-up § 9.5 names).
 4. **Check-in bound (away play):** ≥ **90 %** of check-ins offer a move,
    for every playing archetype (measured 95.9–100 %; the zero-click wall
    lane is outside "playing" by rail 1's boundary).
@@ -347,13 +353,19 @@ tuning — future tuning changes must stay inside them, with sim evidence:
 6. **The prestige promise, restated to what a bounded curve can keep:**
    banked Clarity strictly grows every cycle; for **patient-discipline
    lanes** the next afternoon regains its previous peak at median ≤
-   **0.95×** the previous cycle's time (measured 0.90–0.93); and the late
-   loop pays out in story cadence (§ 9.5). Eager gain-1 cycling is excluded
-   from the ratio rail by mechanism, not mercy: prestiging the moment +1
-   lights pins rebuild ≈ cycle length under *any* tuning (the cycle IS the
-   rebuild), and its hotness expresses as shorter absolute cycles instead.
-   The prototype's implicit "dramatically hotter every time" was the
-   runaway itself and is deliberately given up.
+   **0.95×** the previous cycle's time (measured 0.90–0.93, with the 1–3
+   unrecovered cycles per ~50–70 counted, never dropped); and the late
+   loop pays out in story cadence (§ 9.5). Eager gain-1 cycling is
+   excluded from the ratio rail by **measured mechanism**: ~91 % of its
+   cycles end *below* the previous peak entirely (2 858 of 3 149
+   click-heavy cycles unrecovered — Meditation-Cushion and achievement
+   bonuses relight +1 at ever-lower peaks), so "rebuild time" is undefined
+   for that discipline; its progression is banked-count accumulation
+   across micro-cycles, not peak-chasing. *(This rail's first version
+   claimed the eager ratio "pins at 1.00" — counting the
+   previously-dropped unrecovered cycles, a review catch, showed the
+   truth is starker.)* The prototype's implicit "dramatically hotter
+   every time" was the runaway itself and is deliberately given up.
 
 ### 9.7 The per-stage visual plan (DECIDED plan; production is later work)
 

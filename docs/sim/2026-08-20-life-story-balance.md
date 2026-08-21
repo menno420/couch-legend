@@ -235,21 +235,26 @@ two refinements are called out because they moved:
 
 - **F1 reachability — approve, with its boundary measured and stated.**
   Patient ≤ 15 d (ext), eager ≤ ~30–32 d (ext), degenerate archetypes
-  ≤ ~72 d (ext) — nothing that plays is ever walled. The boundary (added in
-  Codex review, which correctly refused "nothing walls" while the idle
-  archetype quietly clicked 0.2 Hz): a fresh save that **never clicks even
-  once** never starts — no hit, no High, no nugs, nothing unlocks. Measured
-  by the `zero-click` lane and pinned by test (24 h simulated: High 0,
-  nugs 0, zero purchases; only the passive cash trickle moves). That is
-  pillar 1 as a fact — the game begins with a hit — and making zero-click
-  viable would need a High or nug trickle, a tuning change rejected as
-  hollowing the game's first verb.
+  ≤ ~72 d (ext) — nothing past the start threshold is ever walled. The
+  boundary took two review rounds to state honestly: round 2 refused
+  "nothing walls" while the idle archetype quietly clicked 0.2 Hz (the
+  `zero-click` lane and its pin came from that); round 3 refused the
+  replacement claim "one hit is enough" — correctly: **1–3 hits freeze
+  forever** (High < 4 locks every job, nugs < 10 lock the tray, neither
+  replenishes), **4–9 hits** open only the cash/jobs half (unbounded,
+  generator-less), **10 hits** open the full game. All three bands are
+  pinned by engine-level tests. Making the sub-threshold bands viable
+  would need a High or nug trickle — a tuning change rejected as hollowing
+  pillar 1, the game's first verb.
 - **F2 spread — approve.** Attendance axis (patient): 3.3× at Long Sunday
   → 1.27× by arc 3. Discipline axis: eager trails ≤ 2.6× per stage.
   *Refinement:* the two axes are bounded separately; a single flat "≤ 6×
   across strategies" conflated being-away-for-an-hour with prestige skill.
-- **F3 attended dead-time — approve.** Worst attended stretch with no
-  offered move: balanced 9.9 m · click-heavy-patient 37.5 m (the deep-tail
+- **F3 attended dead-time — approve** (scoped, like F1/F4, to playing
+  archetypes — the zero-click wall lane's attended blocks are fully dead
+  by definition, measured at the 9.9 m attended-block length). Worst
+  attended stretch with no offered move, a taken prestige now counting as
+  one: balanced 9.9 m · click-heavy-patient 37.5 m (the deep-tail
   post-reset warm-up) · every eager/greedy lane ≤ 50 s. *Refinements:* "a
   move" includes a lit Wake & Bake a patient player declines — strategy
   patience is not dead air; stretches are attended-time only (the first
@@ -276,13 +281,17 @@ two refinements are called out because they moved:
   an inline `1 + e·0.18` — Codex caught that adopting the knee would have
   desynced the display from the engine.)
 - **F6 the prestige promise — approve as restated, with the rail scoped in
-  review.** The rail (median rebuild ≤ 0.95× the previous cycle) applies to
-  **patient-discipline lanes** — measured 0.90–0.93 late, inside it. Eager
-  gain-1 cycling sits at 1.00 structurally (prestiging the instant +1
-  lights makes the cycle BE the rebuild, under any tuning), so it is
-  excluded from the ratio rail by mechanism and its hotness shows as
-  shorter absolute cycles; Codex correctly refused the first draft, which
-  stated the rail unqualified and then approved past three lanes at 1.00.
+  review twice.** The rail (median rebuild ≤ 0.95× the previous cycle)
+  applies to **patient-discipline lanes** — measured 0.90–0.93 late,
+  inside it, with the 1–3 unrecovered cycles per ~50–70 now counted
+  instead of dropped. The eager exclusion's rationale was itself corrected
+  by a review catch: round 2 refused the unqualified rail (three lanes
+  read 1.00); the survivorship fix from round 3 then showed the eager
+  truth is starker than "ratio 1.00" — **~91 % of eager cycles never
+  regain the previous peak at all** (2 858 of 3 149 click-heavy cycles
+  unrecovered; Meditation-Cushion and achievement bonuses relight +1 at
+  ever-lower peaks), so rebuild time is undefined for that discipline and
+  its progression is banked-count accumulation across micro-cycles.
   Banked Clarity strictly grows in every lane. The prototype's compounding
   "dramatically hotter" is gone by design — it WAS the runaway. Late cycles
   pay in story cadence; DESIGN § 9.5 records the trade for the owner to

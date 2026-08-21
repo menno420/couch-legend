@@ -100,3 +100,30 @@ describe('the zero-click wall (a stated boundary, not an oversight)', () => {
     expect(r.final.cash).toBeGreaterThan(0)
   })
 })
+
+import { advance, applyHit, collectAchievements, purchaseGenerator, purchaseJob } from '../src/lib/actions'
+import { defaultSave } from '../src/lib/engine'
+
+describe('the minimum-start boundary (Codex R3: one hit is not enough)', () => {
+  // Direct engine math, no harness: the wall band and its exit, pinned.
+  it('1-3 hits freeze forever: High < 4 locks jobs, nugs < 10 lock the tray', () => {
+    let s = collectAchievements({ ...defaultSave(0), booted: true }).save
+    for (let i = 0; i < 3; i++) s = applyHit(s)
+    s = advance(s, 2 * 3600) // two idle hours change nothing that matters
+    expect(s.high).toBeCloseTo(3, 6) // no job → no highRate
+    expect(s.nugs).toBeCloseTo(3, 6) // no generator, no further hits
+    expect(purchaseGenerator(s, 'tray', 1)).toBeNull() // 3 < 10 nugs
+    expect(purchaseJob(s, 'thinker', 1)).toBeNull() // High 3 < 4
+  })
+  it('4 hits open the jobs half: the cash trickle buys the first job and High starts moving', () => {
+    let s = collectAchievements({ ...defaultSave(0), booted: true }).save
+    for (let i = 0; i < 4; i++) s = applyHit(s)
+    s = advance(s, 120) // the passive trickle tops up the 8-cash job cost
+    const hired = purchaseJob(s, 'thinker', 1)
+    expect(hired).not.toBeNull()
+    const later = advance(hired!, 3600)
+    expect(later.high).toBeGreaterThan(4) // job highRate now climbs
+    // The grow half stays shut without more hits: nugs frozen below the tray.
+    expect(purchaseGenerator(later, 'tray', 1)).toBeNull()
+  })
+})
