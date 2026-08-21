@@ -62,7 +62,9 @@ buzz-driven multiplier feeds back into everything. Fixed-timestep simulation at
 
 At `peakHigh ≥ 400`, **Wake & Bake** becomes available: reset high, buzz, nugs,
 cash, generators, jobs and rituals; keep achievements ("lore"), revelations and
-sound preference; bank **Clarity**. Clarity multiplies nug output, cash output,
+sound preference; bank **Clarity**. *(Known gap: the current Lore view keys
+revelations on `peakHigh`, which this reset zeroes — so today they do not
+actually survive; § 9.2 records the defect and the `lifeHigh` fix path.)* Clarity multiplies nug output, cash output,
 hit power and job high-rate permanently (+18 % each per point).
 
 ## 4 · The formulas (DECIDED — pinned by `tests/engine.test.ts`)
@@ -108,7 +110,9 @@ section fixes the *shapes* so a port (e.g. Android) can be verified against it.
   Pillow Throne), buzz income (Lava Lamp), offline (Blackout Curtains),
   hit scaling (Sunday Forever), prestige yield (Meditation Cushion).
 - **9 moods** (Lucid 0 → Couch Legend 100 K) — each carries a one-line
-  **revelation** unlocked permanently at first reach (kept through prestige).
+  **revelation** unlocked at first reach; *meant* to be permanent through
+  prestige (see the § 3.3 known gap — the permanence lands with § 9.2's
+  `lifeHigh` re-key).
 - **33 achievements**, many carrying small permanent multipliers
   (nug/cash/buzz) so lore is also progression.
 - **25 ambient news lines**, **8 hit interjections**.
@@ -177,17 +181,204 @@ already gives Android users install-to-home-screen.
 4. **Audio breadth** — one puff/chime/blip set today; a low ambient loop is
    the obvious next cue. (The estate has an `audio-prompt` method for this.)
 
-## 9 · Phase 2 — the life-story direction (recorded 2026-08-20)
+## 9 · The life-story stage system (DECIDED 2026-08-20 — design; content follows)
 
-The owner has directed the next evolution: **many stages telling a whole
-story** (starting ~age 18 with cigarettes, then finding weed, onward), an
-**endless-feeling loop with fair upgrades**, and a **simulator built before
-any stage content** so the design is tested, not guessed. The directive, the
-open design questions, the spider-swing lessons and the simulator sketch live
-in [`planning/2026-08-20-life-story-direction.md`](planning/2026-08-20-life-story-direction.md) —
-the design session amends **this** document with what it decides (stage
-system, north-star sentence, fairness metrics), keeping § 1's no-fail
-no-attendance spirit unless the owner says otherwise.
+The owner's phase-2 directive ([the brief](planning/2026-08-20-life-story-direction.md))
+made Couch Legend a **life story**: ~18 stages from a first cigarette at
+about age 18, through finding weed, to wherever the couch goes after. This
+section records the decided *system*. Stage **content** (flavor text, art,
+the arc-3 tables) is deliberately not built yet — the balance simulator and
+the tested proposal come first, per the brief; sim evidence for every number
+lives in [`sim/2026-08-20-life-story-balance.md`](sim/2026-08-20-life-story-balance.md).
+
+### 9.1 North star (DECIDED — one measurable sentence, validated in simulation)
+
+> **Every way of playing reaches every stage: an attended first session finds
+> weed inside its first half hour, each stage settles into comfort before the
+> next one introduces its pressure, a balanced player closes the authored
+> story in about two weeks, and nearly every check-in — and every attended
+> stretch within its stage's bound — offers something real to buy, feel, or
+> reach.**
+
+Chosen, then validated — not assumed from genre folklore (spider-swing's
+research: there is no defensible universal pacing law). Measured under the
+proposed tuning (median, seeded): the weed pivot at 6–29 min for every
+attended archetype, the authored story closing at ~11.8 d (heavy patient
+play), ~14 d (balanced), ~15 d (pure check-in idle), and ≥ 96 % of check-ins
+offering a move. Evidence: the results doc § 5.
+
+### 9.2 The axis: `lifeHigh` — and the reconciled pillar (DECIDED)
+
+- **`lifeHigh`** = every point of High ever earned, summed across the whole
+  save, **never reduced by anything** — a new save field. Stages key on it
+  and nothing else: the story is the *life*, and it only moves forward.
+- **Wake & Bake resets an afternoon, never the story.** Prestige mechanics
+  are untouched; the fiction is re-framed: each prestige is one afternoon of
+  the same life, lived hotter. The story axis (stages) rides `lifeHigh`,
+  which prestige cannot lower.
+- **Pillar 4 reconciled, not dropped.** "One afternoon, forever" was the
+  prototype's fiction and the story frame supersedes it; its *mechanical*
+  spirit — no energy, no attendance demands, no fail state — is unchanged
+  and now reads: **"No afternoon ever fails."** The click stays sacred
+  (pillar 1), numbers still serve mood (pillar 2), away time is still
+  respected (pillar 3).
+- **Moods stay the within-afternoon ladder** (weather); **stages are the
+  across-afternoon ladder** (chapters). Both display; they never compete.
+- **Revelations re-key from `peakHigh` to `lifeHigh`.** This also fixes a
+  real defect found during this design pass: the Lore tab promises
+  *"revelations survive Wake & Bake"* but filters on `peakHigh`, which
+  prestige resets — today they demonstrably do not survive. `lifeHigh` makes
+  the promise true structurally. (Fix ships with the stage implementation,
+  not before — one migration, one schema bump.)
+
+### 9.3 The 18 stages in three arcs (DECIDED structure; names are working titles)
+
+The canonical table (ids, thresholds, pressures, scene keys) lives in
+[`../src/lib/sim/stage-proposal.ts`](../src/lib/sim/stage-proposal.ts) —
+content-table form, lifted into `content.ts` by the implementation session.
+The shape:
+
+| Arc | Stages | What it is |
+|---|---|---|
+| **1 · Sparks** | 1–3 | Before the couch: the parking-lot first light, corner-store nights, somebody's cousin's couch — where the weed is found. Thin dedicated starter content (a few prologue habits/jobs); completes inside the first half hour. |
+| **2 · The Couch Era** | 4–13 | The existing game, framed as ten eras: the current 12/12/10 content tables distributed across the arc by the stage gates below. No existing number changes. |
+| **3 · The Legend** | 14–18 | Past the couch: four new content batches (A–D, authored later) and the terminal stage, **The Long Afternoon**, which is explicitly endless. |
+
+**Per-stage pressure (the plateau rule):** each stage introduces exactly one
+new emphasis — a content batch, an automation class, the prestige unlock
+itself — then plateaus into comfort before the next stage opens
+(spider-swing lesson 5: plateau + pressure from elsewhere, never runaway
+scaling within a stage).
+
+### 9.4 Composition rules (DECIDED — the gate rule corrected in adversarial review)
+
+- **Stage gates bind only content that does not exist yet.** Arc-1 prologue
+  rows and arc-3 batches (A–D) carry a real stage key: they appear when
+  their stage is reached (and their own High gate passes). They are
+  **additive** — new income sources on top of the existing economy, never a
+  lock on it.
+- **For the existing 34 items the stage assignment is era FRAMING, not a
+  gate**: it names which stage's scene and beats reference the item, and
+  nothing about availability changes — `high ≥ unlockHigh` remains the only
+  key, exactly as playtested. *(The first draft of this rule gated existing
+  items on stage too; Codex review of the balance PR caught what that would
+  do — lock the playtested opening behind a ~30-minute stage threshold and
+  invalidate every fitted curve. Rejected: era-locking the shelf guts the
+  tuned opening. The shop's items are props of one life; stages recolor the
+  room, not the shelf.)* This also keeps the simulator's economy model
+  correct by construction: the proposal's numbers describe today's
+  availability, and future additive content can only speed pacing, bounded
+  and re-checkable at implementation.
+- **Content extends tables, never components** (§ 5 discipline holds: stages
+  are one new typed table + one field, not a rewrite).
+- **Stage entry is a story beat** — a permanent revelation-class line plus
+  the scene change (content later; the system reserves the slot).
+- **Save v2 migration:** add `lifeHigh`, initialized to
+  `max(high, peakHigh)` for existing saves — a conservative floor (past
+  prestiged afternoons are unrecoverable from a v1 save; the story starts
+  from the current afternoon). Flagged as MEDIUM, reversible-by-generosity.
+
+### 9.5 What "endless" means after stage 18 (DECIDED, sim-evidenced)
+
+**The terminal era is the prestige loop itself, kept fair by construction:**
+cost curves never end, milestone doublings continue to their cap, Clarity
+keeps growing (strictly, every cycle), and `lifeHigh` keeps counting. At
+simulated day 14 the loop still moves — patient play banks 1–2 prestiges a
+day, ≥ 96 % of check-ins offer a move, and lifeHigh still grows ~×1.1–1.2 a
+day, comfortably inside the number formatter's ~10³⁶ ceiling for months.
+
+**The trade the tempered curve makes, stated plainly:** under the prototype's
+runaway curve every Wake & Bake made the next afternoon *dramatically*
+hotter; under the proposed brake the next afternoon regains its peak only
+somewhat faster (median 0.85–0.95× the previous cycle). Late-game cycling
+therefore pays in **story** — a stage every day or two at authored pacing —
+rather than in compounding speed. That is deliberate: stages are what make
+the tempered prestige loop worth walking, and the runaway alternative burns
+through all authored content inside a day. The designed relief valves if the
+tail ever drags in real play: the **Clarity spend shop** (§ 8.1, still OPEN)
+and further arc-3 content batches — both slots exist, neither is needed by
+current evidence.
+
+### 9.6 Fairness, operationalized (DECIDED — the metrics ARE the definition)
+
+"Fair upgrades / endless feeling" compiles to six numeric checks, measured
+per archetype in the simulator (idle-only · click-heavy ·
+click-heavy-patient · balanced · spend-everything · save-for-tiers ·
+no-prestige). Two strategy axes are deliberately distinguished:
+**attendance/clicking/spending** (how you play an afternoon) and **prestige
+discipline** (when you end one) — the second is skill expression and is
+bounded separately rather than flattened. The bounds below are **regression
+rails snapped just above the accepted measured behavior** of the proposed
+tuning — future tuning changes must stay inside them, with sim evidence:
+
+1. **Reachability:** every archetype that plays reaches every authored
+   stage — patient play in ≤ **16 days**, eager-prestige play in ≤ **5
+   weeks**, and even the degenerate archetypes (hoard-everything,
+   never-prestige) in ≤ **11 weeks** (tail-growth extrapolation, labeled
+   REASONED in the results doc). One boundary, measured and stated rather
+   than hidden: a fresh save that **never clicks even once** never starts —
+   no hit means no High and no nugs, so nothing ever unlocks (pinned by
+   test). That is pillar 1 as a fact: the game begins with a hit. Every
+   archetype that has ever taken one is never walled.
+2. **Spread bounds:** across the attendance axis at comparable discipline,
+   per-stage median reach-time ratio ≤ **4×** at arc 2's midpoint,
+   tightening to ≤ **1.5×** by arc 3 (measured 3.3× → 1.27×). Across the
+   discipline axis, eager trails patient ≤ **3×** per authored stage
+   (measured ≤ 2.6×).
+3. **Dead-time bound (attended):** no attended stretch in which the game
+   offers no move — nothing affordable AND Wake & Bake unlit — longer than
+   **5 min in arc 1 · 25 min in arc 2 · 45 min in arc 3** (measured worsts:
+   30 s / 20 m / 37.5 m — the deep ones all on the post-reset warm-up § 9.5
+   names).
+4. **Check-in bound (away play):** ≥ **90 %** of check-ins offer a move,
+   for every playing archetype (measured 95.9–100 %; the zero-click wall
+   lane is outside "playing" by rail 1's boundary).
+5. **Felt-upgrade floor, two visibility tiers:** (a) the first purchase of
+   every item whose effect is an **instantly-displayed output** — the
+   nug/s and cash/s tiles, the per-click floater — moves it by ≥ **2 %**
+   at the moment it is typically bought; (b) every purchase whose effect
+   is **deferred-visible** must have a named display surface where the
+   player sees it move (buzz number/bar for Hydration and Lava Lamp, the
+   Hits tile and balance ticks for The Roommate, the offline report for
+   Blackout Curtains, the Wake & Bake preview for Meditation Cushion) —
+   no purchase with no visible surface at all (spider-swing § 2.6's trap,
+   kept out by measurement; the first draft scored tier-(a) on engine
+   internals the UI never renders — Codex caught it).
+6. **The prestige promise, restated to what a bounded curve can keep:**
+   banked Clarity strictly grows every cycle; for **patient-discipline
+   lanes** the next afternoon regains its previous peak at median ≤
+   **0.95×** the previous cycle's time (measured 0.90–0.93); and the late
+   loop pays out in story cadence (§ 9.5). Eager gain-1 cycling is excluded
+   from the ratio rail by mechanism, not mercy: prestiging the moment +1
+   lights pins rebuild ≈ cycle length under *any* tuning (the cycle IS the
+   rebuild), and its hotness expresses as shorter absolute cycles instead.
+   The prototype's implicit "dramatically hotter every time" was the
+   runaway itself and is deliberately given up.
+
+### 9.7 The per-stage visual plan (DECIDED plan; production is later work)
+
+- **18 scene backdrops**, one per stage (`scene` keys in the stage table):
+  the same room/couch through a life — parking-lot dusk → corner store →
+  cousin's living room → the apartment aging and accreting objects through
+  arc 2 → the cosmic rooms of arc 3. **The couch is the continuity object.**
+- The existing two-state mood crossfade (`couch-lucid`/`couch-baked`) stays
+  the *within-afternoon* layer, over whichever stage backdrop is active;
+  the current pair remains the arc-2 anchor and the style reference for
+  every generated scene.
+- Production route (later sessions): the estate's `image-prompt` family +
+  `asset-pipeline` per delivered image, anchored on the existing art;
+  contract = the current scene panel's aspect and crop, `art/stage-<id>.jpg`.
+  Then the owner's ChatGPT-Work pass fine-tunes looks, then Claude sessions
+  improve freely (owner's stated division of labor).
+
+### 9.8 Still OPEN after this pass (deliberately)
+
+- Arc-1 and arc-3 content tables (numbers proposed in the results doc get
+  authored into `content.ts` with flavor by the implementation session).
+- Per-stage beats, news lines, achievement extensions — content work.
+- Clarity spend shop (§ 8.1) — unchanged, evidence says not yet needed.
+- Whether stage entry deserves a celebration moment beyond the toast
+  (small UI design, the implementation session's call).
 
 ## 10 · Verification
 
