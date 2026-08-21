@@ -351,21 +351,32 @@ tuning — future tuning changes must stay inside them, with sim evidence:
    kept out by measurement; the first draft scored tier-(a) on engine
    internals the UI never renders — Codex caught it).
 6. **The prestige promise, restated to what a bounded curve can keep:**
-   banked Clarity strictly grows every cycle; for **patient-discipline
-   lanes** the next afternoon regains its previous peak at median ≤
-   **0.95×** the previous cycle's time (measured 0.90–0.93, with the 1–3
-   unrecovered cycles per ~50–70 counted, never dropped); and the late
-   loop pays out in story cadence (§ 9.5). Eager gain-1 cycling is
-   excluded from the ratio rail by **measured mechanism**: ~91 % of its
-   cycles end *below* the previous peak entirely (2 858 of 3 149
-   click-heavy cycles unrecovered — Meditation-Cushion and achievement
-   bonuses relight +1 at ever-lower peaks), so "rebuild time" is undefined
-   for that discipline; its progression is banked-count accumulation
-   across micro-cycles, not peak-chasing. *(This rail's first version
-   claimed the eager ratio "pins at 1.00" — counting the
-   previously-dropped unrecovered cycles, a review catch, showed the
-   truth is starker.)* The prototype's implicit "dramatically hotter
-   every time" was the runaway itself and is deliberately given up.
+   banked Clarity strictly grows every cycle, and every started rebuild is
+   accounted — completed with its time, or counted `unrecovered`, never
+   dropped. Three disciplines, three measured rebuild behaviors:
+   - **Patient, non-hoarding lanes** (balanced · click-heavy-patient ·
+     idle-only) carry the rail: median rebuild ≤ **0.95×** the previous
+     cycle (measured late medians 0.90–0.93; one genuinely unrecovered
+     cycle across all runs).
+   - **Eager gain-1 cycling** sits at median 0.97–1.00 with zero
+     unrecovered cycles — structurally: the cycle *ends* at the moment the
+     previous peak is re-exceeded and +1 lights, so its ratio can never
+     meaningfully beat 1 and the rail does not apply; hotness expresses as
+     shorter absolute cycles.
+   - **Hoard-everything** (save-for-tiers, patient prestige but deferred
+     spending) measures late median **1.00 — outside the rail**, stated
+     rather than hidden: hoarding starves rebuild breadth, and the slower
+     afternoon is that strategy's chosen price. A boundary the owner may
+     veto; making the rail hold for hoarders too would need tuning aimed
+     at them specifically, unproposed.
+   The late loop pays out in story cadence (§ 9.5); the prototype's
+   implicit "dramatically hotter every time" was the runaway itself and is
+   deliberately given up. *(Review history, kept because each round moved
+   a number: round 2 refused the unqualified rail; the survivorship fix
+   then briefly fabricated a "91 % of eager cycles never recover" story
+   whose own data refuted it 959/959 — an ordering bug marked cycles
+   unrecovered before checking the pre-reset peak; the figures above are
+   post-fix.)*
 
 ### 9.7 The per-stage visual plan (DECIDED plan; production is later work)
 

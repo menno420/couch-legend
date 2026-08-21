@@ -280,22 +280,35 @@ two refinements are called out because they moved:
   tile's multiplier is now routed through `clarityMultiplier` instead of
   an inline `1 + e·0.18` — Codex caught that adopting the knee would have
   desynced the display from the engine.)
-- **F6 the prestige promise — approve as restated, with the rail scoped in
-  review twice.** The rail (median rebuild ≤ 0.95× the previous cycle)
-  applies to **patient-discipline lanes** — measured 0.90–0.93 late,
-  inside it, with the 1–3 unrecovered cycles per ~50–70 now counted
-  instead of dropped. The eager exclusion's rationale was itself corrected
-  by a review catch: round 2 refused the unqualified rail (three lanes
-  read 1.00); the survivorship fix from round 3 then showed the eager
-  truth is starker than "ratio 1.00" — **~91 % of eager cycles never
-  regain the previous peak at all** (2 858 of 3 149 click-heavy cycles
-  unrecovered; Meditation-Cushion and achievement bonuses relight +1 at
-  ever-lower peaks), so rebuild time is undefined for that discipline and
-  its progression is banked-count accumulation across micro-cycles.
-  Banked Clarity strictly grows in every lane. The prototype's compounding
-  "dramatically hotter" is gone by design — it WAS the runaway. Late cycles
-  pay in story cadence; DESIGN § 9.5 records the trade for the owner to
-  feel and veto.
+- **F6 the prestige promise — approve as restated: three disciplines,
+  three measured rebuild behaviors, every started rebuild accounted**
+  (completed with its time, or counted `unrecovered` — never dropped).
+  Banked Clarity strictly grows in every lane. **Patient, non-hoarding
+  lanes** (balanced · click-heavy-patient · idle-only) carry the rail
+  (median rebuild ≤ 0.95× the previous cycle): late medians 0.90–0.93,
+  one genuinely unrecovered cycle across all their runs. **Eager gain-1
+  cycling** (click-heavy, spend-everything) measures 0.97–1.00 with zero
+  unrecovered cycles — structural, not a heat finding: an eager cycle
+  *ends* at the moment the previous peak is re-exceeded and +1 lights, so
+  its ratio cannot meaningfully beat 1 and the rail does not apply;
+  hotness expresses as shorter absolute cycles (click-heavy: 3 029 late
+  cycles across the three 14-day seeds). **Hoard-everything**
+  (save-for-tiers) measures late median **1.00 with one unrecovered
+  cycle — outside the rail, stated rather than hidden**: hoarding starves
+  rebuild breadth and the slower afternoon is that strategy's chosen
+  price; a boundary the owner may veto (making the rail hold for hoarders
+  would need tuning aimed at them specifically, unproposed). The
+  prototype's compounding "dramatically hotter" is gone by design — it
+  WAS the runaway; late cycles pay in story cadence, and DESIGN § 9.5
+  records the trade for the owner to feel and veto. *(Review history,
+  kept because each round moved a number: round 2 refused the unqualified
+  rail — three lanes read 1.00; the round-3 survivorship fix then briefly
+  fabricated "~91 % of eager cycles never recover", refuted by its own
+  data — 959 of 959 flagged cycles in the checked seed had in fact
+  re-exceeded the target before resetting; the harness marked
+  `unrecovered` before checking the pre-reset peak. The ordering fixed,
+  both datasets were regenerated to the current schema; the figures above
+  are post-fix.)*
 
 **Overall verdict on the proposal (tuning candidate + stage table):
 approve** — with the § 6 limits, and with adoption deliberately left to the

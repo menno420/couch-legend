@@ -260,11 +260,18 @@ export function runSim(opts: SimOptions): SimResult {
     let didPrestige = false
     const gain = prestigeGain(s, tuning)
     if (gain > 0 && policy.prestigeWhen(s, gain)) {
-      // A prestige taken before the previous rebuild completed closes that
-      // rebuild as unrecovered — counted, never silently overwritten.
+      // Close any pending rebuild before resetting: if the pre-reset peak
+      // has reached the target, that IS a completed rebuild (crossings only
+      // run at pass end, after the reset — checking here, first, is what
+      // makes the label true); only a peak still below target is
+      // unrecovered. The first version marked unconditionally and
+      // fabricated a 91%-unrecovered eager story the data refuted 959/959.
       if (rebuildPending) {
         const open = prestiges[rebuildPending.row]
-        if (open && open.rebuildSeconds == null) open.unrecovered = true
+        if (open && open.rebuildSeconds == null) {
+          if (s.peakHigh >= rebuildPending.target) open.rebuildSeconds = t - rebuildPending.since
+          else open.unrecovered = true
+        }
       }
       prestiges.push({ t, gain, peak: s.peakHigh, cycleSeconds: t - cycleStart })
       firstReach(`prestige:${prestiges.length}`)
