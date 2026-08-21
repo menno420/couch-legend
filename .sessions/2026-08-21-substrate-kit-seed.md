@@ -54,5 +54,54 @@ mechanic, balance, tuning, content or presentation edit rides this PR
 
 ## Close-out
 
-*(written at close; this card flips `complete` only after the exact-head
-Codex review is answered and dispositioned)*
+**Shipped (PR #5):** the full v1.21.0 adoption — vendored `bootstrap.py` +
+`bootstrap.py.sha256` · `substrate.config.json` (kit_version 1.21.0) ·
+`CONSTITUTION.md` + the rendered doc set (16 slots answered from measured
+facts, `render --live` 0 unfilled) · `.claude/CLAUDE.md` + `settings.json`
+(hooks wired) · `.github/workflows/substrate-gate.yml` (the one new live
+workflow) · `.substrate/` staging incl. `ci/auto-merge-enabler.yml` +
+`ci/branch-sweep.yml` (deliberately staged-only) · `control/` +
+`.session-journal.md` + `project.index.json` · `scripts/preflight.py`
+(local product-gate convergence, three self-skips) · `tests/test_kit_pin.py`
+(2 tests) · Status badges + orientation links for the game's own docs ·
+this card.
+
+**Verify (each command run, real exit codes):**
+- `pnpm check` → exit 0 (product gate untouched)
+- `python3 -m pytest tests/ -q` → 2 passed
+- `python3 bootstrap.py check --strict` → exit 1, exactly the designed
+  born-red hold on this card; CI substrate-gate red verified **from the job
+  log** as the same hold (run 32480690043: "HOLD (by design)")
+- `ci` green on the PR head (run 32480690036)
+
+**Kit defects fed to fleet-manager's worklist** (rows 24–25 new; row 14
+first live bite; rows 20–21 sighted): see fleet-manager
+`docs/findings/2026-08-13-substrate-kit-v1210-followups.md`.
+
+**⚑ decide-and-flag:** substrate-gate as a SECOND required check beside `ci`
+(spider-swing precedent) vs OD-9's one-check preference — wired at landing,
+reversible in the ruleset UI in seconds. · Enabler + branch-sweep staged,
+not live (deviates from spider-swing parity; land-it-yourself stands). ·
+The kit-planted `.claude/` hooks load only for sessions booted on this repo
+as root — fleet-manager-booted sessions keep hub apparatus (estate
+boot-triad doctrine).
+
+**💡 Session idea:** when the kit session fixes the `fleet-repos.txt`
+roster hole (sim-lab · superbot-idle · product-forge · spider-swing), add
+`menno420/couch-legend` in the same commit — this repo is registry-invisible
+from birth otherwise, and the registry's DRIFT machinery can't watch a repo
+the roster never scans.
+
+**⟲ previous-session review:** the previous sessions here were the owner's
+ChatGPT-Work looks pass (#3, the Lucid Chronicle contract) and art session
+(#4, the first three Arc-1 scene packages). Verified from the tree this
+session: the contract doc declares the direction owner-approved and
+finalized; #4's six JPEGs are present with CI tests and are dormant exactly
+as its boundary declares (no `lifeHigh`/stage-schema change landed); `pnpm
+check` green at their merge state. One residue both left: neither design doc
+carried a Status badge token (this surface's docs do) — added here, `binding`
+for the contract, `reference` for the package record.
+
+**Layer-2 handoff:** fleet-manager `docs/repos/couch-legend/README.md` —
+threads re-cut (looks pass LANDED · kit adoption thread added · Android
+re-sequenced); ESTATE.md row updated; `OQ-CL-LOOKS-PASS` resolved.

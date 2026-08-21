@@ -50,6 +50,25 @@ fi
 
 # --- repo-specific steps go below (keep every step guarded + non-fatal) ----
 
+# This is a pnpm/TypeScript project: install the JS workspace so pnpm check
+# / pnpm dev work out of the box. Guarded per contract rule 3 — no pnpm or
+# no lockfile just logs and moves on (scripts/preflight.py self-skips when
+# node_modules is absent, so a session without this install still reports).
+if [ -f pnpm-lock.yaml ]; then
+  if command -v pnpm >/dev/null 2>&1; then
+    log "pnpm install --frozen-lockfile"
+    pnpm install --frozen-lockfile \
+      || log "pnpm install failed (non-fatal, continuing)"
+  elif command -v corepack >/dev/null 2>&1; then
+    log "corepack enable && pnpm install --frozen-lockfile"
+    corepack enable >/dev/null 2>&1
+    pnpm install --frozen-lockfile \
+      || log "corepack/pnpm install failed (non-fatal, continuing)"
+  else
+    log "pnpm not available (no pnpm, no corepack) — JS deps not installed (non-fatal)"
+  fi
+fi
+
 # Contract rule 1 — the single most important line. Do not "improve" this.
 log "env-setup complete (defensive: always exit 0)"
 exit 0

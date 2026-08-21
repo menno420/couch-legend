@@ -51,7 +51,7 @@
   "heartbeat_files": [
     "control/status.md"
   ],
-  "interpreter": "/usr/local/bin/python3",
+  "interpreter": "python3",
   "interpreter_for_checks": null,
   "kit_version": "1.21.0",
   "namespace": {

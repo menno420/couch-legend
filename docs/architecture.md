@@ -37,5 +37,6 @@ believing the other covers it.
 ## Verifying a change
 
 ```
-npm test
+pnpm check                          # the product gate: tsc + vitest + build (CI job `ci`)
+python3 bootstrap.py check --strict # the kit gate (CI job `substrate-gate`)
 ```

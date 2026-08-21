@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/usr/local/bin/python3 bootstrap.py hook pretooluse"
+            "command": "python3 bootstrap.py hook pretooluse"
           }
         ]
       }

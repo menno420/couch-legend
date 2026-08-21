@@ -15,7 +15,10 @@ mechanics base.
 
 ## Boot read path — read first, in order
 
-0. **Preflight — land on origin's HEAD before reading anything else:**
+0. **Preflight — land on origin's HEAD before reading anything else, and
+   look before you reset:** run `git status --short` FIRST — if it shows
+   work you did not author, stop and report it instead of resetting over
+   it; only on a clean tree run
    `git fetch origin main && git reset --hard origin/main` (or
    `git checkout -B main origin/main`). A warm container clone can lag
    origin by dozens of commits, and a stale clone reads stale orders.

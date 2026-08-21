@@ -7,20 +7,24 @@
 
 ## Start every session
 
-**Preflight first — land on origin's HEAD before reading anything else:**
+**Preflight first — land on origin's HEAD before reading anything else,
+checking the tree BEFORE the reset:**
 
 ```
+git status --short   # MUST come first — a hard reset destroys what it finds
 git fetch origin main && git reset --hard origin/main
 ```
 
 (or `git checkout -B main origin/main`; substitute your default branch).
+If `git status` shows work you did not author, **stop and report it instead
+of resetting over it** — the check is ordered before the reset because the
+reset is destructive and unprompted work is evidence, not noise.
 Then verify: local HEAD (`git rev-parse HEAD`) must equal
 `git ls-remote origin main`. A warm container clone can lag origin by
 dozens of commits, and a stale clone reads stale orders and stale state —
 every orientation read below assumes this step already ran. The hard reset
 discards uncommitted local changes by design: at session START there should
-be none; if `git status` shows work you did not author, stop and report it
-instead of resetting over it.
+be none.
 
 The boot set lives in the working agreement — `.claude/CLAUDE.md` — and its
 orientation guidance (one list, one home). This file is not boot reading —

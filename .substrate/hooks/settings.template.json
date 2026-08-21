@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/usr/local/bin/python3 bootstrap.py hook pretooluse"
+            "command": "python3 bootstrap.py hook pretooluse"
           }
         ]
       }
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/usr/local/bin/python3 bootstrap.py hook sessionstart"
+            "command": "python3 bootstrap.py hook sessionstart"
           }
         ]
       }
@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/usr/local/bin/python3 bootstrap.py hook postedit"
+            "command": "python3 bootstrap.py hook postedit"
           }
         ]
       }
@@ -37,7 +37,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/usr/local/bin/python3 bootstrap.py hook stopcheck"
+            "command": "python3 bootstrap.py hook stopcheck"
           }
         ]
       }
