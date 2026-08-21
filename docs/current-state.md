@@ -20,10 +20,27 @@ dataset — evidence `docs/sim/2026-08-20-life-story-balance.md` +
 
 ## In flight
 
-- (nothing — the researched visible-progress pass landed; the Android shell
-  is next, below)
+- (nothing — the Android shell landed; see below)
 
 ## Recently shipped (newest first)
+
+- **The Android shell — milestone A, the first sideloadable APK** (#11,
+  2026-08-21): a Capacitor 8 wrapper around this exact web build
+  (`capacitor.config.ts`, app id `com.menno420.couchlegend`, the generated
+  `android/` Gradle project committed), plus `.github/workflows/android.yml`,
+  which builds the bundle with `VITE_BASE=./`, syncs it into the shell and
+  assembles a **debug-signed** APK as a downloadable run artifact. `[D-0002]`
+  chose sideload-before-store; `[D-0003]` put the build in CI because the agent
+  container has no Android SDK. `tools/check-shell-assets.ts` (`pnpm
+  check:shell`) mechanically asserts the bundle is self-contained — the
+  `/couch-legend/` base leaking into the shell is a black screen with no error
+  to read, and it is invisible in review. **Zero game changes.** What is
+  verified: the APK is real (5.3 MB, v2 signature, all 27 web assets inside)
+  and the shipped bundle plays at a Pixel-class viewport in headless Chromium,
+  14/14, with zero off-origin requests. What is NOT: real Android System
+  WebView behaviour — suspend/resume, force-stop persistence, on-device
+  smoothness — which has no device in this container and is the owner's
+  measurement to make. That answer is what unblocks milestone B.
 
 - **Visible within-afternoon progress** (#9, 2026-08-21): a compact global
   next-threshold rail derived from canonical mood/Grow/Work/Ritual content,
@@ -55,8 +72,14 @@ dataset — evidence `docs/sim/2026-08-20-life-story-balance.md` +
 
 ## Next (the owner's stated order)
 
-The **Android/Capacitor shell** (DESIGN § 7): wrap this exact build, sign
-and release APKs from CI on the phone-controller pattern. Alongside it, the
+**Milestone B — the working Android handoff** (DESIGN § 7's list), gated on the
+owner installing the milestone-A APK and reporting how the game actually
+behaves on his phone: the asynchronous `SaveRepository` boundary, the
+pause/resume service, the Back / safe-area / haptics adapters, the device test
+matrix — and release signing with a managed keystore, on the phone-controller
+pattern. Writing that list before the device answers arrive is guesswork; the
+whole point of shipping A first was to replace guesses with a measurement.
+Alongside it, the
 open content work in DESIGN § 9.8 — arc-3 batches and the remaining 15
 scene packages (image-prompt/asset-pipeline route with owner QA, slot by
 slot into the registry's placeholder entries) — and the owner's feel pass
