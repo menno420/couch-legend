@@ -1,10 +1,10 @@
 ---
 state: promoted
 origin: owner
-shipped_pr: null
-shipped_repo: null
-merged_date: null
-outcome: open
+shipped_pr: 9
+shipped_repo: menno420/couch-legend
+merged_date: 2026-08-21
+outcome: shipped
 ---
 
 # Visible within-afternoon goal
@@ -28,5 +28,7 @@ The evidence and limits live in
 
 ## Outcome
 
-Implementation and exact-head review are in progress. Fill the ship fields only
-after the feature PR merges.
+Shipped in PR #9. The global rail forecasts only the nearest currently
+chapter-available threshold, shares the shop's reveal rule, acknowledges rapid
+or tied arrivals, and ends explicitly. It changes presentation only; the
+economy, save, rewards, gates and simulator are untouched.

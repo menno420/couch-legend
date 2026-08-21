@@ -20,11 +20,18 @@ dataset — evidence `docs/sim/2026-08-20-life-story-balance.md` +
 
 ## In flight
 
-- (nothing — the life-story implementation session landed; the Android
-  shell is next, below)
+- (nothing — the researched visible-progress pass landed; the Android shell
+  is next, below)
 
 ## Recently shipped (newest first)
 
+- **Visible within-afternoon progress** (#9, 2026-08-21): a compact global
+  next-threshold rail derived from canonical mood/Grow/Work/Ritual content,
+  filtered by the current `lifeHigh` chapter; tied and rapid arrivals are
+  acknowledged, distant names share the shop's reveal rule, and the shelf has
+  an explicit completion state. Presentation only — no economy, save, reward,
+  gate, offline or simulator change. Evidence and limits:
+  `docs/research/2026-08-21-idle-player-preferences.md`.
 - **The life story lands** (the implementation session, 2026-08-21):
   adopted tuning as the engine default + updated pins; save v2 `lifeHigh`
   with migration; `STAGES` + era framing + re-keyed revelations (the
