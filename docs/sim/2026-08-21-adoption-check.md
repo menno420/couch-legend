@@ -75,11 +75,17 @@ Median reach deltas, frozen `tuned-*` → live `adopted-*` (same seeds):
 | Mythic Canopy (13) | 8.2 → 7.3 d | 6.9 → 6.1 d | 9.4 → 8.3 d | ~65 → ~64 d ext |
 | The Long Afternoon (18) | ~14 d ext → **12.5 d** | 11.8 → 10.4 d | ~15 → ~14 d ext | ~72 → ~72 d ext |
 
-Every column moves **0–12 % faster or not at all — never slower**: additive
-income can only speed pacing, and the measured bound is small (§ 9.4's
-"bounded and re-checkable at implementation", checked). The arc-1 pivot
-stays inside the first attended half hour; the balanced story close moves
-from ~14 d to 12.5 d, still squarely at the § 9.1 "about two weeks".
+Measured honestly, the per-landmark deltas are **small and both-signed:
+from ~15 % slower to ~12 % faster** (Codex R2 refused the first draft's
+"never slower"). Additive rows add income, but they also divert purchase
+order — so a few early-mid landmarks slip (balanced The Couch 30.7 → 31.4 m
+· heavy-patient Rituals 41.8 → 41.9 m · save-for-tiers Rituals 4.7 → 5.4 h,
+the −15 % worst) while the mid-and-late story uniformly speeds up (every
+stage from The Long Sunday on, in every lane). What § 9.4's "bounded and
+re-checkable" requires is exactly this check: every shifted landmark stays
+inside every rail below. The arc-1 pivot stays inside the first attended
+half hour; the balanced story close moves from ~14 d to 12.5 d, still
+squarely at the § 9.1 "about two weeks".
 
 ## 4 · The § 9.6 rails, verdict by verdict (adopted dataset)
 
@@ -90,16 +96,20 @@ from ~14 d to 12.5 d, still squarely at the § 9.1 "about two weeks".
    minimum-start bands are unchanged and stay pinned by engine tests (the
    prologue rows sit above the entry thresholds by construction — Shift's
    High 45 gate cannot touch the 4-hit band).
-2. **Spread — HOLDS.** Attendance axis (patient lanes): 1.74× at arc 2's
-   midpoint (idle-only 28.4 h vs heavy-patient 16.3 h at Working Stiff),
-   1.36× by arc 3 (9.8 d vs 7.2 d at The Civilization) — bounds 4× / 1.5×.
-   Discipline axis: the authored-story-close ratio — the reading that
-   reproduces the frozen doc's "measured ≤ 2.6×" (30 d/11.8 d = 2.54×) —
-   measures **2.79×** (29 d ext / 10.4 d), inside the ≤ 3× rail. Stated
-   plainly: mid-arc-2 per-stage discipline ratios run ~4.5× in the frozen
-   dataset and ~4.5× here alike (e.g. The Operation 6.7 d/36.8 h frozen,
-   6.1 d/32.7 h adopted) — that shape predates this session, is unchanged
-   by it, and is not what the accepted rail measured.
+2. **Spread — HOLDS under the corrected rail; the correction is explicit.**
+   Attendance axis (patient lanes): 1.74× at arc 2's midpoint (idle-only
+   28.4 h vs heavy-patient 16.3 h at Working Stiff), 1.36× by arc 3
+   (9.8 d vs 7.2 d at The Civilization) — bounds 4× / 1.5×. Discipline
+   axis: **the rail's original "≤ 3× per authored stage" wording was never
+   satisfied by its own accepted evidence** — the frozen dataset it was
+   snapped to already measured ~4.5× at mid-arc-2 (The Operation:
+   6.7 d/36.8 h frozen; 6.1 d/32.7 h adopted — the same shape, unchanged
+   by this session). Codex R2 correctly refused a verdict that quietly
+   substituted a different reading, so DESIGN § 9.6 rail 2 is **amended in
+   this PR** to what was actually measured and accepted: eager closes the
+   authored story ≤ 3× behind patient (2.54× frozen · **2.79× adopted** —
+   inside), with the ~4.5× mid-story shape documented as deliberate and
+   capped in absolute terms by rail 1's eager ≤ 5 weeks.
 3. **Attended dead time — HOLDS, one bound now tight.** Arc 1 ≤ 5 m: worst
    30 s (idle-only). Arc 2 ≤ 25 m: worst 18.1 m (heavy-patient). Arc 3
    ≤ 45 m: worst **44.8 m** (click-heavy-patient's deep-tail post-reset
@@ -130,8 +140,11 @@ Mood ladder (balanced medians): Baked 5.9 m · Galactic 32.9 m · Couch
 Legend 50 m — the within-afternoon arc is intact at every stage of the life.
 
 **Overall verdict: approve — the shipped state (adopted tuning + arc-1
-prologue + stage schema) sits inside every § 9.6 rail, with the arc-3
-dead-time bound now the closest one (44.8 m of 45 m) and named as such.**
+prologue + stage schema) sits inside every § 9.6 rail as now written, with
+two things named rather than smoothed over: rail 2's discipline wording is
+amended in this same PR (its original per-stage phrasing never matched its
+own accepted evidence — § 4.2 above), and the arc-3 dead-time bound is the
+closest one (44.8 m of 45 m).**
 
 ## 5 · Needs-more-evidence (carried honestly)
 

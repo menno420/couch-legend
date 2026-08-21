@@ -18,9 +18,16 @@ const TURN_MS = 5200
 export function ChapterTurn() {
   const turn = useGame(s => s.chapterTurn)
   const dismiss = useGame(s => s.dismissChapterTurn)
+  // A modal (Settings/Prestige/Reset) portals above this overlay at z-50
+  // and makes the app root inert — presenting under it would burn the
+  // one-shot cinematic unseen, and its Escape would collide with the
+  // modal's. Defer the whole turn (render, timer, keys) until no modal is
+  // open; the store keeps the pending stage, so it presents fresh after.
+  const modalOpen = useGame(s => s.showSettings || s.showPrestige || s.showReset)
+  const presenting = turn != null && !modalOpen
 
   useEffect(() => {
-    if (!turn) return
+    if (!presenting) return
     const timer = setTimeout(dismiss, TURN_MS)
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') dismiss()
@@ -30,9 +37,9 @@ export function ChapterTurn() {
       clearTimeout(timer)
       window.removeEventListener('keydown', onKey)
     }
-  }, [turn, dismiss])
+  }, [presenting, turn, dismiss])
 
-  if (!turn) return null
+  if (!presenting) return null
   const number = String(STAGES.findIndex(s => s.id === turn.id) + 1).padStart(2, '0')
   const postcard = presentationFor(turn).postcard
 

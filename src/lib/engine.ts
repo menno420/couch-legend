@@ -86,11 +86,14 @@ export const PROTO_TUNING: Tuning = {
   milestoneCapDoublings: Infinity,
 }
 
-/** The adopted curve (2026-08-21, § 7 item 1): identical to the prototype
- * through the playtested hours (invariance measured — Clarity trajectories
- * exact for the playtested profiles over 2 h), then the knee brakes the
- * measured runaway by ~6 orders of magnitude at day 3. Evidence:
- * docs/sim/2026-08-20-life-story-balance.md § 3. */
+/** The adopted curve (2026-08-21, § 7 item 1). Measured boundary of its
+ * identity with the prototype (per profile, 2 h invariance runs):
+ * spend-everything exact across the full 2 h; click-heavy exact through
+ * ~90 min (131 vs 122 Clarity at 2 h); balanced-patient diverges from
+ * ~minute 60 — which is the design: the knee's first bite lands exactly
+ * where the measured runaway began, then brakes it by ~6 orders of
+ * magnitude at day 3. Evidence: docs/sim/2026-08-20-life-story-balance.md
+ * § 3 + docs/sim/2026-08-21-adoption-check.md § 2. */
 export const DEFAULT_TUNING: Tuning = {
   clarityKnee: 80,
   claritySoftExp: 0.5,

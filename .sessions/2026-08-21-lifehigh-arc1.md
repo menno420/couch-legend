@@ -129,6 +129,20 @@ in the Codex trail below.
   draft→ready re-fired the integration and the review landed **200 s**
   later. On this repo, the ready transition is the reliable trigger; the
   comment path did not fire this day (quota or matcher — not established).
+- **Round 2 on `573d4be`:** 4 findings (1 P1 · 3 P2) — **4 [conceded]**,
+  fixed in the following commit: P1 the adoption-check declared rail 2
+  held by silently substituting a different reading — resolved the way the
+  reviewer allowed: DESIGN § 9.6 rail 2 is explicitly AMENDED to what its
+  own accepted evidence measured (story-close ≤ 3×; the ~4.5× mid-story
+  shape documented as deliberate, present identically in the frozen data),
+  and the check doc § 4.2 + verdict now name the amendment; P2 the "0–12 %
+  faster, never slower" pacing claim was refuted by my own table — restated
+  as the real both-signed range (−15 %…+12 %) with the slower landmarks
+  listed; P2 the engine's DEFAULT_TUNING comment overclaimed 2 h
+  invariance — rewritten to the measured per-profile boundary; P2 a modal
+  above the chapter turn (z-50, root inert) would burn the one-shot
+  cinematic unseen and collide on Escape — the turn now defers entirely
+  (render, timer, keys) until no modal is open.
 - **Round 1 on `1268433`:** 3 findings (1 P1 · 2 P2) — **3 [conceded]**,
   fixed in the following commit: P1 `pnpm sim tuned`/`baseline` would
   regenerate the FROZEN pre-adoption fixtures from the post-adoption tree —

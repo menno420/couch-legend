@@ -381,8 +381,17 @@ tuning — future tuning changes must stay inside them, with sim evidence:
 2. **Spread bounds:** across the attendance axis at comparable discipline,
    per-stage median reach-time ratio ≤ **4×** at arc 2's midpoint,
    tightening to ≤ **1.5×** by arc 3 (measured 3.3× → 1.27×). Across the
-   discipline axis, eager trails patient ≤ **3×** per authored stage
-   (measured ≤ 2.6×).
+   discipline axis, eager closes the **authored story** ≤ **3×** behind
+   patient (measured 2.54× on the frozen dataset · 2.79× adopted).
+   *(Wording corrected 2026-08-21, Codex adoption review: the original
+   "≤ 3× per authored stage" phrasing never matched its own accepted
+   evidence — the frozen dataset it was snapped to already measured ~4.5×
+   at mid-arc-2 stages (The Operation: 6.7 d eager vs 36.8 h patient), and
+   the "measured ≤ 2.6×" it recorded is the story-close ratio. The
+   mid-story shape is deliberate and accepted: eager gain-1 cycling trades
+   mid-story pace for Clarity, and the absolute cap on what that can cost
+   is rail 1's eager ≤ 5 weeks. A future change that widens the per-stage
+   shape beyond ~4.5× still needs fresh evidence and a stated reason.)*
 3. **Dead-time bound (attended):** for every playing archetype (rail 1's
    boundary — the zero-click wall lane's attended blocks are fully dead by
    definition), no attended stretch in which the game offers no move —
