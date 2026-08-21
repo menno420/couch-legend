@@ -40,10 +40,28 @@ sources and needs no key management, which is all a sideload requires. Release
 signing and a managed keystore arrive with the first real release, deliberately
 not before ([D-0002]).
 
-One consequence worth knowing: a debug keystore is generated per build machine,
-so **APKs from different CI runs are not guaranteed to share a signing key**. If
-a later build refuses to install over an earlier one, uninstall first — and note
-that uninstalling clears the app's local storage, which is where saves live.
+One consequence, and it is stronger than "not guaranteed" — it was **measured**
+2026-08-21 by extracting the v2 signer certificate from three APKs built by
+three separate CI runs of this workflow:
+
+| APK | signer cert SHA-256 | cert valid from |
+|---|---|---|
+| `couch-legend-c31d653-debug.apk` | `f815828465d6ce40…` | 21:25:54 UTC |
+| `couch-legend-f2a54eb-debug.apk` | `387c7df1bc805a04…` | 21:52:14 UTC |
+| `couch-legend-02e27ca-debug.apk` | `d7f4a2dd77798044…` | 22:15:59 UTC |
+
+Three runs, **three distinct certificates**, each stamped at its own build
+minute. The runner has no debug keystore until Gradle needs one, so it mints a
+fresh key every run. Therefore **every APK this workflow produces will refuse to
+install over any other one** — signature mismatch, not a maybe. Replacing an
+installed build means uninstalling first, **and uninstalling clears the app's
+local storage, which is where saves live.**
+
+That is a design input for milestone B, not just an operational footnote: any
+workflow meant to deliver *repeated* builds to a real device needs a stable
+signing identity — a committed debug keystore (its password is public by
+convention, so it is not a secret) or real release signing. Sideloading one
+build for one measurement, which is all `[D-0002]` asked for, does not.
 
 ## What is generated, not authored
 
