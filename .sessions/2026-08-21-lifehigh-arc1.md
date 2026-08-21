@@ -129,6 +129,22 @@ in the Codex trail below.
   draft→ready re-fired the integration and the review landed **200 s**
   later. On this repo, the ready transition is the reliable trigger; the
   comment path did not fire this day (quota or matcher — not established).
+- **Round 3 on `9dd58bf` (final per the two-re-review cap):** 1 finding
+  (P2) — **1 [conceded]**, fixed in the flip-preceding commit: decisionPass
+  recorded first-buy ImpactRows against a stage cursor that only synced at
+  pass END, so a row bought in the pass that crossed its own stage carried
+  the prior stage index (the reviewer verified it against the committed
+  fixtures). Crossings now also sync at pass ENTRY (idempotent, dynamics
+  untouched — series byte-identical), a pin test asserts every gated
+  first-buy records ≥ its gate's stage, and `adopted-*` is regenerated a
+  final time. Ripple honestly handled: the entry sync also records
+  unlocks/moods an immediate same-pass prestige used to erase (matching
+  what the UI showed), which exposed prestige-phase quantization in the
+  cross-seed similarity test — that test now excludes post-first-reset
+  sawtooth first-touches by mechanism (whole-cycle skew), with the
+  monotone spines (stage:*, prestige:N) still asserted. **Fixes land
+  without a fourth round; this trail is the named record** (seed-card
+  precedent).
 - **Round 2 on `573d4be`:** 4 findings (1 P1 · 3 P2) — **4 [conceded]**,
   fixed in the following commit: P1 the adoption-check declared rail 2
   held by silently substituting a different reading — resolved the way the

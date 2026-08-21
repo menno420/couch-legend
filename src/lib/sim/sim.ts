@@ -242,6 +242,13 @@ export function runSim(opts: SimOptions): SimResult {
 
   const decisionPass = (attended: boolean) => {
     s = collectAchievements(s).save
+    // Sync the cursors to the state the elapsed chunk produced BEFORE any
+    // purchase is recorded: a stage crossed during the chunk must be the
+    // stage its newly-unlocked rows' first-buys carry (Codex R3 — the
+    // committed fixtures carried pre-crossing stage indices). The end-of-
+    // pass call below re-syncs after purchases and prestige; both are
+    // idempotent.
+    checkCrossings()
     let purchases = 0
     for (let i = 0; i < 200; i++) {
       const want = policy.buy(s, tuning)

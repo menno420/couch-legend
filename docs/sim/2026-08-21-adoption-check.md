@@ -136,8 +136,13 @@ squarely at the § 9.1 "about two weeks".
    tier walk early rebuild breadth. The boundary the owner was offered to
    veto has closed itself.
 
-Mood ladder (balanced medians): Baked 5.9 m · Galactic 32.9 m · Couch
-Legend 50 m — the within-afternoon arc is intact at every stage of the life.
+Mood ladder (balanced medians): Baked 3.3 m · Galactic 30.3 m · Couch
+Legend 50 m — the within-afternoon arc is intact at every stage of the
+life. (These medians are measured under the R3-corrected recording — the
+harness now stamps a threshold's first touch at the pass that produced it,
+as the UI's revelation toasts always did, where the old recording let a
+same-pass Wake & Bake erase it; the frozen doc's 5.9 m/31 m/55 m were true
+of the old semantics.)
 
 **Overall verdict: approve — the shipped state (adopted tuning + arc-1
 prologue + stage schema) sits inside every § 9.6 rail as now written, with

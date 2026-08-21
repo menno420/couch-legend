@@ -17,14 +17,21 @@ describe('determinism', () => {
   it('different seeds move click jitter, not reachability', () => {
     const a = runSim({ policy: POLICIES['click-heavy'], seed: 1, dt: 1, horizon: 3600, stages: STAGES })
     const b = runSim({ policy: POLICIES['click-heavy'], seed: 2, dt: 1, horizon: 3600, stages: STAGES })
-    // Both cross well past the prestige gate inside the hour, and every
-    // landmark reached by both lands at a similar time. (A landmark sitting
-    // right at the horizon boundary may appear in only one sample — that is
-    // jitter, not a reachability difference, so it is not asserted on.)
+    // The similarity claim covers the pre-reset opening plus the monotone
+    // spines (stage:* rides lifeHigh; prestige:N is a cumulative count).
+    // A mood/unlock threshold first TOUCHED after the first Wake & Bake on
+    // this eager lane is prestige-phase-quantized — its first-touch moves
+    // by whole cycle lengths across seeds (a sawtooth peak either brushes
+    // the threshold this cycle or the next) — so those keys are excluded
+    // as phase jitter, not reachability. (A landmark may also appear in
+    // only one sample at the horizon; the `in` guard drops it.)
     expect(a.reach['mood:baked']).toBeDefined()
     expect(b.reach['mood:baked']).toBeDefined()
+    const firstReset = Math.min(a.reach['prestige:1'] ?? Infinity, b.reach['prestige:1'] ?? Infinity)
     for (const k of Object.keys(a.reach)) {
       if (!(k in b.reach)) continue
+      const sawtooth = k.startsWith('unlock:') || k.startsWith('mood:')
+      if (sawtooth && (a.reach[k] >= firstReset || b.reach[k] >= firstReset)) continue
       const ta = Math.max(a.reach[k], 30)
       const tb = Math.max(b.reach[k], 30)
       expect(Math.abs(ta - tb) / Math.max(ta, tb), k).toBeLessThan(0.25)
@@ -84,6 +91,19 @@ describe('stage table', () => {
     // A long offline gap can cross several thresholds — one turn, the last.
     expect(stageCrossed(0, 2e4)?.id).toBe('the-couch')
     expect(stageCrossed(2e4, 2e4)).toBeNull()
+  })
+})
+
+describe('impact rows carry the purchase stage (Codex R3)', () => {
+  it('a stage-gated row bought in the pass that crossed its stage records that stage, not the prior one', () => {
+    const gateIdx = Object.fromEntries(STAGES.map((st, i) => [st.id, i]))
+    const gated = Object.fromEntries([...GENERATORS, ...JOBS, ...RITUALS].filter(d => d.stage).map(d => [d.id, gateIdx[d.stage!]]))
+    const r = runSim({ policy: POLICIES['no-prestige'], seed: 23, dt: 1, horizon: 2 * 3600, stages: STAGES })
+    const gatedImpacts = r.impacts.filter(i => i.id in gated)
+    expect(gatedImpacts.length).toBeGreaterThan(0) // shift/pinch land inside 2 h
+    for (const i of gatedImpacts) {
+      expect(i.stage, `${i.id} recorded at stage ${i.stage}, gate ${gated[i.id]}`).toBeGreaterThanOrEqual(gated[i.id])
+    }
   })
 })
 
