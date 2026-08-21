@@ -55,9 +55,34 @@ if (absolute.length > 0) {
   pass(`all ${refs.length} index.html asset references are relative`)
 }
 
+// 2b — and each of them resolves to a file that is actually in the bundle.
+//      Without this the check above passes on an index.html that references
+//      nothing, which is what a half-copied bundle looks like.
+const unresolved = refs
+  .filter((r) => !/^(?:data:|mailto:)/.test(r))
+  .filter((r) => !existsSync(join(SHELL, r.replace(/^\.\//, '').split(/[?#]/)[0])))
+if (unresolved.length > 0) {
+  fail(`index.html references files absent from the bundle: ${unresolved.join(', ')}`)
+} else {
+  pass(`all ${refs.length} references resolve to files in the bundle`)
+}
+
+// 2c — non-vacuity: a bundle with no script and no stylesheet is not a build.
+const hasJs = refs.some((r) => r.endsWith('.js'))
+const hasCss = refs.some((r) => r.endsWith('.css'))
+if (!hasJs || !hasCss) {
+  fail(
+    `index.html does not reference both a script and a stylesheet ` +
+      `(js=${hasJs}, css=${hasCss}) — the checks above would pass vacuously`,
+  )
+} else {
+  pass('index.html references both a built script and a built stylesheet')
+}
+
 // 3 — the GitHub Pages base must not survive into the shipped bundle, in the
 //     document or in any bundled chunk (BASE_URL is inlined at build time).
 const bundled = walk(SHELL).filter((f) => /\.(html|js|css|webmanifest)$/.test(f))
+if (bundled.length === 0) fail('no text files in the shell bundle — nothing to scan for a leaked base')
 const leaked = bundled.filter((f) => readFileSync(f, 'utf8').includes('/couch-legend/'))
 if (leaked.length > 0) {
   fail(
@@ -84,13 +109,16 @@ if (remoteCss.length > 0) {
 
 // 5 — every file the game ships in public/ reached the shell. A partial copy
 //     shows up as missing chapter art, which reads as a game bug on a phone.
-const missing = walk(PUBLIC)
-  .map((f) => relative(PUBLIC, f))
-  .filter((rel) => !existsSync(join(SHELL, rel)))
-if (missing.length > 0) {
-  fail(`public/ files absent from the shell bundle: ${missing.join(', ')}`)
+const publicFiles = walk(PUBLIC).map((f) => relative(PUBLIC, f))
+if (publicFiles.length === 0) {
+  fail(`no files found under ${relative(REPO, PUBLIC)} — this check would pass vacuously`)
 } else {
-  pass(`all ${walk(PUBLIC).length} public/ files present in the shell bundle`)
+  const missing = publicFiles.filter((rel) => !existsSync(join(SHELL, rel)))
+  if (missing.length > 0) {
+    fail(`public/ files absent from the shell bundle: ${missing.join(', ')}`)
+  } else {
+    pass(`all ${publicFiles.length} public/ files present in the shell bundle`)
+  }
 }
 
 // 6 — the shell's own config names the app we think it does.
