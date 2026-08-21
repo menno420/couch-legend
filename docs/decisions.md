@@ -17,3 +17,45 @@
   discipline let agents work correctly with little steering; adopting the
   kit starts couch-legend governed instead of accreting rules ad hoc.
 - provenance: substrate-kit adoption interview
+
+## [D-0002] Ship a sideloadable APK before any store work
+
+- status: decided
+- date: 2026-08-21
+- verdict: the first Android milestone is an installable APK the owner can
+  put on his own phone; store submission is a later, separate milestone.
+- why: owner directive, stated live in the 2026-08-21 state review after
+  being shown three costed finish lines (A sideload · B ship-quality ·
+  C Play Store) — *"the next session can work on option A"*. The reasoning
+  offered and accepted: how this game behaves inside an Android web view
+  (crossfades, drifting particles, the save layer) has never been measured,
+  and that answer should land on a real device before anything is built on
+  top of it or any store paperwork is started.
+- rules out: opening the Play Store track first (C) — its 12-tester /
+  14-consecutive-day closed-test clock and listing work are deliberately
+  NOT started yet; and treating the DESIGN § 7 pre-release polish list
+  (async save boundary, pause/resume service, Back/safe-area/haptics
+  adapters, device tests) as a blocker for this first build — that list is
+  milestone B and binds the first *release*, not the first sideload.
+- provenance: 2026-08-21 owner state review; DESIGN § 7 (the decided
+  Capacitor-wrapper path this milestone executes).
+
+## [D-0003] Android builds run in CI, not in the agent container
+
+- status: decided
+- date: 2026-08-21
+- verdict: the Gradle project is generated and committed from an agent
+  session, but the APK itself is assembled and signed by a GitHub Actions
+  workflow; a session must not assume it can build an APK locally.
+- why: working choice, forced by a measured fact — the agent container has
+  JDK 21 (`/usr/bin/java`) and Gradle (`/opt/gradle/bin/gradle`) but **no
+  Android SDK**: `sdkmanager` and `adb` are absent and both `ANDROID_HOME`
+  and `ANDROID_SDK_ROOT` are unset (probed 2026-08-21). GitHub's Ubuntu
+  runners ship the SDK preinstalled, and this is already how the estate's
+  two shipped Android products build and sign.
+- rules out: nothing permanently — a session may still install the SDK
+  in-container if it has a reason, but it must treat that as an experiment
+  with a fallback, never as the assumed path.
+- provenance: toolchain probe recorded in `docs/CAPABILITIES.md`
+  (2026-08-21); phone-controller + spider-swing signed-release precedent
+  (fleet-manager `docs/repos/product-forge/README.md`).
