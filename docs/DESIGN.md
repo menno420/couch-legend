@@ -315,21 +315,27 @@ tuning — future tuning changes must stay inside them, with sim evidence:
    stage — patient play in ≤ **16 days**, eager-prestige play in ≤ **5
    weeks**, and even the degenerate archetypes (hoard-everything,
    never-prestige) in ≤ **11 weeks** (tail-growth extrapolation, labeled
-   REASONED in the results doc). One boundary, measured and stated rather
-   than hidden: a fresh save that **never clicks even once** never starts —
-   no hit means no High and no nugs, so nothing ever unlocks (pinned by
-   test). That is pillar 1 as a fact: the game begins with a hit. Every
-   archetype that has ever taken one is never walled.
+   REASONED in the results doc). The minimum-start boundary, measured and
+   stated rather than hidden (and sharpened twice in review — "one hit is
+   enough" was also false): a fresh save with **fewer than 4 hits** freezes
+   forever (High < 4 locks every job, nugs < 10 lock the first generator,
+   and nothing replenishes either); **4–9 hits** open the cash/jobs half
+   only — an unbounded but generator-less life; **10 hits** open the full
+   game. All three bands pinned by test. That is pillar 1 as a fact: the
+   game begins with a few hits, and every archetype past that threshold is
+   never walled.
 2. **Spread bounds:** across the attendance axis at comparable discipline,
    per-stage median reach-time ratio ≤ **4×** at arc 2's midpoint,
    tightening to ≤ **1.5×** by arc 3 (measured 3.3× → 1.27×). Across the
    discipline axis, eager trails patient ≤ **3×** per authored stage
    (measured ≤ 2.6×).
-3. **Dead-time bound (attended):** no attended stretch in which the game
-   offers no move — nothing affordable AND Wake & Bake unlit — longer than
-   **5 min in arc 1 · 25 min in arc 2 · 45 min in arc 3** (measured worsts:
-   30 s / 20 m / 37.5 m — the deep ones all on the post-reset warm-up § 9.5
-   names).
+3. **Dead-time bound (attended):** for every playing archetype (rail 1's
+   boundary — the zero-click wall lane's attended blocks are fully dead by
+   definition), no attended stretch in which the game offers no move —
+   nothing affordable, Wake & Bake unlit, and no prestige taken — longer
+   than **5 min in arc 1 · 25 min in arc 2 · 45 min in arc 3** (measured
+   worsts: 30 s / 20 m / 37.5 m — the deep ones all on the post-reset
+   warm-up § 9.5 names).
 4. **Check-in bound (away play):** ≥ **90 %** of check-ins offer a move,
    for every playing archetype (measured 95.9–100 %; the zero-click wall
    lane is outside "playing" by rail 1's boundary).
@@ -345,15 +351,35 @@ tuning — future tuning changes must stay inside them, with sim evidence:
    kept out by measurement; the first draft scored tier-(a) on engine
    internals the UI never renders — Codex caught it).
 6. **The prestige promise, restated to what a bounded curve can keep:**
-   banked Clarity strictly grows every cycle; for **patient-discipline
-   lanes** the next afternoon regains its previous peak at median ≤
-   **0.95×** the previous cycle's time (measured 0.90–0.93); and the late
-   loop pays out in story cadence (§ 9.5). Eager gain-1 cycling is excluded
-   from the ratio rail by mechanism, not mercy: prestiging the moment +1
-   lights pins rebuild ≈ cycle length under *any* tuning (the cycle IS the
-   rebuild), and its hotness expresses as shorter absolute cycles instead.
-   The prototype's implicit "dramatically hotter every time" was the
-   runaway itself and is deliberately given up.
+   banked Clarity strictly grows every cycle, and every started rebuild is
+   accounted — completed with its time, counted `unrecovered`, or
+   right-censored at the horizon and reported as such; never dropped.
+   Three disciplines, three measured rebuild behaviors:
+   - **Patient, non-hoarding lanes** (balanced · click-heavy-patient ·
+     idle-only) carry the rail: median rebuild ≤ **0.95×** the previous
+     cycle (measured late medians 0.90–0.93; one genuinely unrecovered
+     cycle across all runs).
+   - **Eager gain-1 cycling** sits at median 0.97–1.00 with zero
+     unrecovered cycles — structurally: the cycle *ends* at the moment the
+     previous peak is re-exceeded and +1 lights, so its ratio can never
+     meaningfully beat 1 and the rail does not apply; hotness expresses as
+     shorter absolute cycles.
+   - **Hoard-everything** (save-for-tiers, patient prestige but deferred
+     spending) measures late median **1.00 — outside the rail**, stated
+     rather than hidden: hoarding starves rebuild breadth, and the slower
+     afternoon is that strategy's chosen price. A boundary the owner may
+     veto; making the rail hold for hoarders too would need tuning aimed
+     at them specifically, unproposed.
+   The late loop pays out in story cadence (§ 9.5); the prototype's
+   implicit "dramatically hotter every time" was the runaway itself and is
+   deliberately given up. *(Review history, kept because each round moved
+   a number: round 2 refused the unqualified rail; the survivorship fix
+   then briefly fabricated a "91 % of eager cycles never recover" story
+   whose own data refuted it 959/959 — an ordering bug marked cycles
+   unrecovered before checking the pre-reset peak; and the round after
+   caught the horizon edge — every run's final still-pending rebuild had
+   silently vanished from the statistics, now right-censored and counted.
+   The figures above are post-fix.)*
 
 ### 9.7 The per-stage visual plan (DECIDED plan; production is later work)
 

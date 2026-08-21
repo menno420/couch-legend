@@ -67,7 +67,20 @@ export interface ImpactRow {
   axisShown: string
 }
 
-export interface PrestigeRow { t: number; gain: number; peak: number; cycleSeconds: number; rebuildSeconds?: number }
+export interface PrestigeRow {
+  t: number; gain: number; peak: number; cycleSeconds: number
+  rebuildSeconds?: number
+  /** The next prestige happened before this cycle's previous peak was
+   * regained — the rebuild never completed. Counted, never dropped: these
+   * are exactly the slow rebuilds the F6 rail exists to see. */
+  unrecovered?: boolean
+  /** The run's horizon ended while this rebuild was still in progress:
+   * right-censored — observed this many seconds without recovery, outcome
+   * unknown. Reported separately so "every started rebuild is accounted"
+   * stays true at the edge; without it every run's final prestige row
+   * silently vanished from the F6 statistics. */
+  censoredSeconds?: number
+}
 
 export interface SimResult {
   policy: string; seed: number; dt: number; horizon: number
@@ -178,7 +191,7 @@ export function runSim(opts: SimOptions): SimResult {
   const bought = new Set<string>()
   let cycleStart = 0
   let prevPeak = 0
-  let rebuildPending: { target: number; since: number } | null = null
+  let rebuildPending: { target: number; since: number; row: number } | null = null
   let deadSince: number | null = null
   let nextRecord = 0
   // Hit schedule: one jittered draw PER HIT (not per step), so the click
@@ -214,7 +227,7 @@ export function runSim(opts: SimOptions): SimResult {
       }
     }
     if (rebuildPending && s.peakHigh >= rebuildPending.target) {
-      const row = prestiges[prestiges.length - 1]
+      const row = prestiges[rebuildPending.row]
       if (row) row.rebuildSeconds = t - rebuildPending.since
       rebuildPending = null
     }
@@ -250,8 +263,22 @@ export function runSim(opts: SimOptions): SimResult {
     }
     if (purchases > 0) events.push({ t, kind: 'buy-pass', n: purchases })
     s = collectAchievements(s).save
+    let didPrestige = false
     const gain = prestigeGain(s, tuning)
     if (gain > 0 && policy.prestigeWhen(s, gain)) {
+      // Close any pending rebuild before resetting: if the pre-reset peak
+      // has reached the target, that IS a completed rebuild (crossings only
+      // run at pass end, after the reset — checking here, first, is what
+      // makes the label true); only a peak still below target is
+      // unrecovered. The first version marked unconditionally and
+      // fabricated a 91%-unrecovered eager story the data refuted 959/959.
+      if (rebuildPending) {
+        const open = prestiges[rebuildPending.row]
+        if (open && open.rebuildSeconds == null) {
+          if (s.peakHigh >= rebuildPending.target) open.rebuildSeconds = t - rebuildPending.since
+          else open.unrecovered = true
+        }
+      }
       prestiges.push({ t, gain, peak: s.peakHigh, cycleSeconds: t - cycleStart })
       firstReach(`prestige:${prestiges.length}`)
       events.push({ t, kind: 'prestige', n: gain })
@@ -261,15 +288,18 @@ export function runSim(opts: SimOptions): SimResult {
       absorbHighDelta(before, s.high) // no-op: prestige only ever lowers high
       cursors.mood = 0
       cycleStart = t
-      rebuildPending = { target: prevPeak, since: t }
+      rebuildPending = { target: prevPeak, since: t, row: prestiges.length - 1 }
+      didPrestige = true
     }
     checkCrossings()
     // Dead-time accounting (attended play only): a stretch is dead while the
     // game offers NO move — nothing affordable AND Wake & Bake unlit. A lit
     // prestige button a patient policy declines is a strategy choice, not
-    // dead air (§ 9.6's definition of "something real to buy, feel, or reach").
+    // dead air (§ 9.6's definition of "something real to buy, feel, or
+    // reach") — and a prestige actually TAKEN this pass is a move, even
+    // though the post-reset state momentarily affords nothing.
     if (attended) {
-      if (purchases > 0 || anythingAffordable(s) || prestigeGain(s, tuning) >= 1) {
+      if (purchases > 0 || didPrestige || anythingAffordable(s) || prestigeGain(s, tuning) >= 1) {
         if (deadSince != null) {
           const span = t - deadSince
           deadMax[cursors.stage] = Math.max(deadMax[cursors.stage] ?? 0, span)
@@ -280,7 +310,7 @@ export function runSim(opts: SimOptions): SimResult {
         deadSince = t
       }
     }
-    return purchases
+    return { purchases, didPrestige }
   }
 
   const attendedChunk = (until: number) => {
@@ -329,8 +359,8 @@ export function runSim(opts: SimOptions): SimResult {
       s = collectAchievements(s).save
       checkCrossings()
       checkIns.total++
-      const purchases = decisionPass(false)
-      if (purchases > 0 || anythingAffordable(s) || prestigeGain(s, tuning) >= 1) checkIns.withMove++
+      const pass = decisionPass(false)
+      if (pass.purchases > 0 || pass.didPrestige || anythingAffordable(s) || prestigeGain(s, tuning) >= 1) checkIns.withMove++
       record()
     }
   }
@@ -340,6 +370,20 @@ export function runSim(opts: SimOptions): SimResult {
     deadMax[cursors.stage] = Math.max(deadMax[cursors.stage] ?? 0, span)
     if (span > 0) deadSpans.push({ t: deadSince, span })
   }
+
+  // A rebuild still pending when the horizon ends is right-censored, never
+  // silently dropped: it neither completed nor provably failed. (A closure
+  // like its siblings: rebuildPending is only ever assigned inside them, so
+  // outer-scope flow analysis would pin it to its initial null here.)
+  const censorPendingAtHorizon = () => {
+    if (rebuildPending) {
+      const open = prestiges[rebuildPending.row]
+      if (open && open.rebuildSeconds == null && !open.unrecovered) {
+        open.censoredSeconds = t - rebuildPending.since
+      }
+    }
+  }
+  censorPendingAtHorizon()
 
   return {
     policy: policy.name, seed, dt, horizon,

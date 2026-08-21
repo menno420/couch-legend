@@ -100,3 +100,57 @@ describe('the zero-click wall (a stated boundary, not an oversight)', () => {
     expect(r.final.cash).toBeGreaterThan(0)
   })
 })
+
+describe('rebuild accounting (Codex CL#2 R2: the horizon edge)', () => {
+  it('every prestige row resolves to exactly one of completed / unrecovered / censored', () => {
+    // Two hours is enough: the eager lane prestiges every ~11 minutes, and
+    // a 24 h horizon blew Vitest's 5 s per-test budget on slower machines
+    // (Codex R3 measured 11.9 s in its sandbox).
+    const r = runSim({ policy: POLICIES['click-heavy'], seed: 7, dt: 5, horizon: 2 * 3600, stages: PROPOSED_STAGES })
+    expect(r.prestiges.length).toBeGreaterThan(0)
+    for (const row of r.prestiges) {
+      const states = [row.rebuildSeconds != null, row.unrecovered === true, row.censoredSeconds != null]
+      expect(states.filter(Boolean).length).toBe(1)
+    }
+    // The eager lane is mid-rebuild whenever the horizon lands, so its final
+    // row is the censored case this test exists to keep visible.
+    expect(r.prestiges[r.prestiges.length - 1].censoredSeconds).toBeGreaterThan(0)
+  })
+})
+
+import { advance, applyHit, collectAchievements, purchaseGenerator, purchaseJob } from '../src/lib/actions'
+import { defaultSave } from '../src/lib/engine'
+
+describe('the minimum-start boundary (Codex R3: one hit is not enough)', () => {
+  // Direct engine math, no harness: the wall band and its exit, pinned.
+  it('1-3 hits freeze forever: High < 4 locks jobs, nugs < 10 lock the tray', () => {
+    let s = collectAchievements({ ...defaultSave(0), booted: true }).save
+    for (let i = 0; i < 3; i++) s = applyHit(s)
+    s = advance(s, 2 * 3600) // two idle hours change nothing that matters
+    expect(s.high).toBeCloseTo(3, 6) // no job → no highRate
+    expect(s.nugs).toBeCloseTo(3, 6) // no generator, no further hits
+    expect(purchaseGenerator(s, 'tray', 1)).toBeNull() // 3 < 10 nugs
+    expect(purchaseJob(s, 'thinker', 1)).toBeNull() // High 3 < 4
+  })
+  it('4 hits open the jobs half: the cash trickle buys the first job and High starts moving', () => {
+    let s = collectAchievements({ ...defaultSave(0), booted: true }).save
+    for (let i = 0; i < 4; i++) s = applyHit(s)
+    s = advance(s, 120) // the passive trickle tops up the 8-cash job cost
+    const hired = purchaseJob(s, 'thinker', 1)
+    expect(hired).not.toBeNull()
+    const later = advance(hired!, 3600)
+    expect(later.high).toBeGreaterThan(4) // job highRate now climbs
+    // The grow half stays shut without more hits: nugs frozen below the tray.
+    expect(purchaseGenerator(later, 'tray', 1)).toBeNull()
+  })
+  it('the 9/10-hit endpoint: nine hits still cannot buy the tray, the tenth can and starts nug production', () => {
+    let nine = collectAchievements({ ...defaultSave(0), booted: true }).save
+    for (let i = 0; i < 9; i++) nine = applyHit(nine)
+    expect(purchaseGenerator(nine, 'tray', 1)).toBeNull() // 9 nugs < 10
+    const ten = applyHit(nine)
+    const grown = purchaseGenerator(ten, 'tray', 1)
+    expect(grown).not.toBeNull() // exactly 10 nugs buys it
+    const later = advance(grown!, 3600)
+    expect(later.nugs).toBeGreaterThan(grown!.nugs) // nug production is on
+  })
+})

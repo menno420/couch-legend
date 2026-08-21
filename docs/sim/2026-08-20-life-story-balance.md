@@ -235,21 +235,26 @@ two refinements are called out because they moved:
 
 - **F1 reachability — approve, with its boundary measured and stated.**
   Patient ≤ 15 d (ext), eager ≤ ~30–32 d (ext), degenerate archetypes
-  ≤ ~72 d (ext) — nothing that plays is ever walled. The boundary (added in
-  Codex review, which correctly refused "nothing walls" while the idle
-  archetype quietly clicked 0.2 Hz): a fresh save that **never clicks even
-  once** never starts — no hit, no High, no nugs, nothing unlocks. Measured
-  by the `zero-click` lane and pinned by test (24 h simulated: High 0,
-  nugs 0, zero purchases; only the passive cash trickle moves). That is
-  pillar 1 as a fact — the game begins with a hit — and making zero-click
-  viable would need a High or nug trickle, a tuning change rejected as
-  hollowing the game's first verb.
+  ≤ ~72 d (ext) — nothing past the start threshold is ever walled. The
+  boundary took two review rounds to state honestly: round 2 refused
+  "nothing walls" while the idle archetype quietly clicked 0.2 Hz (the
+  `zero-click` lane and its pin came from that); round 3 refused the
+  replacement claim "one hit is enough" — correctly: **1–3 hits freeze
+  forever** (High < 4 locks every job, nugs < 10 lock the tray, neither
+  replenishes), **4–9 hits** open only the cash/jobs half (unbounded,
+  generator-less), **10 hits** open the full game. All three bands are
+  pinned by engine-level tests. Making the sub-threshold bands viable
+  would need a High or nug trickle — a tuning change rejected as hollowing
+  pillar 1, the game's first verb.
 - **F2 spread — approve.** Attendance axis (patient): 3.3× at Long Sunday
   → 1.27× by arc 3. Discipline axis: eager trails ≤ 2.6× per stage.
   *Refinement:* the two axes are bounded separately; a single flat "≤ 6×
   across strategies" conflated being-away-for-an-hour with prestige skill.
-- **F3 attended dead-time — approve.** Worst attended stretch with no
-  offered move: balanced 9.9 m · click-heavy-patient 37.5 m (the deep-tail
+- **F3 attended dead-time — approve** (scoped, like F1/F4, to playing
+  archetypes — the zero-click wall lane's attended blocks are fully dead
+  by definition, measured at the 9.9 m attended-block length). Worst
+  attended stretch with no offered move, a taken prestige now counting as
+  one: balanced 9.9 m · click-heavy-patient 37.5 m (the deep-tail
   post-reset warm-up) · every eager/greedy lane ≤ 50 s. *Refinements:* "a
   move" includes a lit Wake & Bake a patient player declines — strategy
   patience is not dead air; stretches are attended-time only (the first
@@ -275,18 +280,40 @@ two refinements are called out because they moved:
   tile's multiplier is now routed through `clarityMultiplier` instead of
   an inline `1 + e·0.18` — Codex caught that adopting the knee would have
   desynced the display from the engine.)
-- **F6 the prestige promise — approve as restated, with the rail scoped in
-  review.** The rail (median rebuild ≤ 0.95× the previous cycle) applies to
-  **patient-discipline lanes** — measured 0.90–0.93 late, inside it. Eager
-  gain-1 cycling sits at 1.00 structurally (prestiging the instant +1
-  lights makes the cycle BE the rebuild, under any tuning), so it is
-  excluded from the ratio rail by mechanism and its hotness shows as
-  shorter absolute cycles; Codex correctly refused the first draft, which
-  stated the rail unqualified and then approved past three lanes at 1.00.
-  Banked Clarity strictly grows in every lane. The prototype's compounding
-  "dramatically hotter" is gone by design — it WAS the runaway. Late cycles
-  pay in story cadence; DESIGN § 9.5 records the trade for the owner to
-  feel and veto.
+- **F6 the prestige promise — approve as restated: three disciplines,
+  three measured rebuild behaviors, every started rebuild accounted**
+  (completed with its time, counted `unrecovered`, or right-censored at
+  the horizon and reported as such — never dropped).
+  Banked Clarity strictly grows in every lane. **Patient, non-hoarding
+  lanes** (balanced · click-heavy-patient · idle-only) carry the rail
+  (median rebuild ≤ 0.95× the previous cycle): late medians 0.90–0.93,
+  one genuinely unrecovered cycle across all their runs. **Eager gain-1
+  cycling** (click-heavy, spend-everything) measures 0.97–1.00 with zero
+  unrecovered cycles — structural, not a heat finding: an eager cycle
+  *ends* at the moment the previous peak is re-exceeded and +1 lights, so
+  its ratio cannot meaningfully beat 1 and the rail does not apply;
+  hotness expresses as shorter absolute cycles (click-heavy: 3 029 late
+  cycles across the three 14-day seeds). **Hoard-everything**
+  (save-for-tiers) measures late median **1.00 with one unrecovered
+  cycle — outside the rail, stated rather than hidden**: hoarding starves
+  rebuild breadth and the slower afternoon is that strategy's chosen
+  price; a boundary the owner may veto (making the rail hold for hoarders
+  would need tuning aimed at them specifically, unproposed). The
+  prototype's compounding "dramatically hotter" is gone by design — it
+  WAS the runaway; late cycles pay in story cadence, and DESIGN § 9.5
+  records the trade for the owner to feel and veto. *(Review history,
+  kept because each round moved a number: round 2 refused the unqualified
+  rail — three lanes read 1.00; the round-3 survivorship fix then briefly
+  fabricated "~91 % of eager cycles never recover", refuted by its own
+  data — 959 of 959 flagged cycles in the checked seed had in fact
+  re-exceeded the target before resetting; the harness marked
+  `unrecovered` before checking the pre-reset peak. The round after
+  caught the horizon edge: every run's final still-pending rebuild
+  (11 tuned rows, 17 baseline) was silently neither completed nor
+  unrecovered — now right-censored, counted, and printed by the
+  analyzer, with the accounting invariant pinned by test. The ordering
+  fixed, both datasets were regenerated to the current schema; the
+  figures above are post-fix.)*
 
 **Overall verdict on the proposal (tuning candidate + stage table):
 approve** — with the § 6 limits, and with adoption deliberately left to the
