@@ -1,8 +1,8 @@
 # 2026-08-21 — Substrate-kit v1.21.0 seeded (adoption session)
 
-> **Status:** `in-progress` — branch `claude/kit-seed-v1-21-0`. This card is
-> the repo's first: the session that plants it is the seeding session itself,
-> and the card holds the PR red (born-red) until the seed is complete.
+> **Status:** `complete` — branch `claude/kit-seed-v1-21-0`, PR #5. The
+> repo's first session card: the seeding session itself. Born-red until this
+> flip; the full close-out and the three-round Codex trail are below.
 
 - **📊 Model:** fable-5 · high · feature build
 

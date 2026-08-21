@@ -1,9 +1,9 @@
 # Couch Legend · status
-updated: 2026-08-21T12:31:23Z
-phase: substrate-kit v1.21.0 seeding — PR #5 open, born-red hold until the flip
-health: red-by-design (born-red adoption card .sessions/2026-08-21-substrate-kit-seed.md holds check --strict red until the flip commit)
-kit: v1.21.0 · check: red · engaged: yes
-last-shipped: none
+updated: 2026-08-21T13:01:17Z
+phase: substrate-kit v1.21.0 seeded — PR #5 landing (flip head)
+health: green
+kit: v1.21.0 · check: green · engaged: yes
+last-shipped: PR #5 — substrate-kit v1.21.0 full adoption (zero game changes)
 blockers: none
 orders: acked= done=
 ⚑ needs-owner: none
