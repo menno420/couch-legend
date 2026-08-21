@@ -1,7 +1,7 @@
 # Arc 1 scene packages — opening chapters
 
-> **Status:** owner-approved opening theme and delivered art package,
-> 2026-08-21. This supplies three of the planned 18 stage compositions, with a
+> **Status:** `reference` — owner-approved opening theme and delivered art
+> package, 2026-08-21. This supplies three of the planned 18 stage compositions, with a
 > lucid and baked state for each. The files are intentionally dormant until the
 > permanent `lifeHigh` stage schema and `STAGE_PRESENTATION` registry land.
 
