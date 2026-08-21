@@ -58,6 +58,13 @@ export interface ImpactRow {
   felt: number
   /** The rate field that moved most, for the report. */
   axis: string
+  /** Largest relative change across the INSTANTLY-DISPLAYED outputs only —
+   * nug/s and cash/s (StatsPanel tiles) and hit power (the per-click
+   * floater). Purchases whose effect is deferred-visible (buzz level, Hits
+   * counter, the offline report, the prestige preview) score 0 here and are
+   * reported with their named display surface instead (F5's two tiers). */
+  feltShown: number
+  axisShown: string
 }
 
 export interface PrestigeRow { t: number; gain: number; peak: number; cycleSeconds: number; rebuildSeconds?: number }
@@ -125,19 +132,26 @@ const RATE_AXES = [
   'hitPower', 'hitBuzz', 'offlineCap', 'offlineEff', 'prestigeBonus',
 ] as const
 
-function feltImpact(before: SaveState, after: SaveState, tuning: Tuning): { felt: number; axis: string } {
+/** The outputs a player sees change the moment a purchase lands: the nug/s
+ * and cash/s tiles and the per-click floater (hit power). */
+const SHOWN_AXES = ['nugRate', 'cashRate', 'hitPower'] as const
+
+function feltImpact(before: SaveState, after: SaveState, tuning: Tuning): { felt: number; axis: string; feltShown: number; axisShown: string } {
   const a = computeRates(before, tuning)
   const b = computeRates(after, tuning)
   let felt = 0
   let axis = 'none'
+  let feltShown = 0
+  let axisShown = 'none'
   for (const k of RATE_AXES) {
     const va = a[k]
     const vb = b[k]
     const base = Math.abs(va) > 1e-12 ? Math.abs(va) : 1e-12
     const rel = Math.abs(vb - va) / base
     if (rel > felt) { felt = rel; axis = k }
+    if ((SHOWN_AXES as readonly string[]).includes(k) && rel > feltShown) { feltShown = rel; axisShown = k }
   }
-  return { felt, axis }
+  return { felt, axis, feltShown, axisShown }
 }
 
 export function runSim(opts: SimOptions): SimResult {
@@ -229,8 +243,8 @@ export function runSim(opts: SimOptions): SimResult {
       const key = `${want.kind}:${want.id}`
       if (!bought.has(key)) {
         bought.add(key)
-        const { felt, axis } = feltImpact(before, s, tuning)
-        impacts.push({ id: want.id, kind: want.kind, t, stage: cursors.stage, felt, axis })
+        const { felt, axis, feltShown, axisShown } = feltImpact(before, s, tuning)
+        impacts.push({ id: want.id, kind: want.kind, t, stage: cursors.stage, felt, axis, feltShown, axisShown })
         events.push({ t, kind: 'first-buy', id: want.id })
       }
     }

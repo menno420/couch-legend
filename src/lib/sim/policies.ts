@@ -148,4 +148,16 @@ export const POLICIES: Record<string, Policy> = {
     buy: roiBuy,
     prestigeWhen: never,
   },
+  // The literal never-click extreme. From a fresh save this lane is WALLED at
+  // the opening by design — no hit means no High and no nugs, so nothing ever
+  // unlocks (pillar 1: the click is the game's first verb). It exists so the
+  // reachability claim states its boundary from measurement, not omission.
+  'zero-click': {
+    name: 'zero-click',
+    session: { play: 600, away: 900 },
+    clickHz: 0,
+    decisionEvery: 8,
+    buy: roiBuy,
+    prestigeWhen: never,
+  },
 }

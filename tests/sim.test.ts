@@ -86,3 +86,17 @@ describe('integration step', () => {
     }
   })
 })
+
+describe('the zero-click wall (a stated boundary, not an oversight)', () => {
+  it('a fresh save that never clicks never starts: no High, no nugs, nothing unlocks', () => {
+    const r = runSim({ policy: POLICIES['zero-click'], seed: 7, dt: 5, horizon: 24 * 3600 })
+    expect(r.final.totalHits).toBe(0)
+    expect(r.final.high).toBe(0)
+    expect(r.final.lifeHigh).toBe(0)
+    expect(r.final.nugs).toBe(0)
+    expect(r.impacts.length).toBe(0)
+    // Cash trickles in passively but nothing purchasable ever unlocks
+    // (the first job needs High 4) — pillar 1: the game starts with a hit.
+    expect(r.final.cash).toBeGreaterThan(0)
+  })
+})

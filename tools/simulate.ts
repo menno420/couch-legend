@@ -229,10 +229,24 @@ function analyze(stages: StageDef[], prefix: 'baseline' | 'tuned') {
     if (tot > 0) console.log(`- ${p}: ${wp}/${tot} (${((wp / tot) * 100).toFixed(1)}%)`)
   }
 
-  console.log('\n## Upgrade felt-impact floor (first purchase of each item)\n')
+  console.log('\n## Upgrade felt impact (first purchase of each item) — two visibility tiers\n')
+  // Purchases whose effect is not an instantly-displayed rate, each with the
+  // display surface where the player actually sees it move.
+  const DEFERRED_VISIBILITY: Record<string, string> = {
+    water: 'buzz visibly falls slower (buzz number + bar persist higher)',
+    lamp: 'the buzz number visibly climbs between hits',
+    roommate: 'the Hits tile ticks on its own; balances jump per auto-hit',
+    curtains: 'the offline report banner shows the bigger kept share',
+    cushion: 'the Wake & Bake preview shows the larger Clarity gain',
+  }
   for (const [p, rs] of byPolicy) {
-    const worst = rs.flatMap(r => r.impacts).reduce((min, i) => (i.felt < min.felt ? i : min), { felt: Infinity, id: 'none', kind: 'gen', t: 0, stage: 0, axis: '' })
-    if (Number.isFinite(worst.felt)) console.log(`- ${p}: weakest first-buy ${worst.kind}:${worst.id} felt ${(worst.felt * 100).toFixed(1)}% on ${worst.axis}`)
+    const all = rs.flatMap(r => r.impacts)
+    if (all.length === 0) { console.log(`- ${p}: no purchases (the zero-click wall)`); continue }
+    const shown = all.filter(i => (i.feltShown ?? 0) > 0)
+    const worst = shown.reduce((min, i) => (i.feltShown < min.feltShown ? i : min), { feltShown: Infinity, id: 'none', kind: 'gen', axisShown: '' } as (typeof all)[number])
+    const deferred = [...new Set(all.filter(i => (i.feltShown ?? 0) === 0).map(i => i.id))]
+    const unmapped = deferred.filter(id => !(id in DEFERRED_VISIBILITY))
+    console.log(`- ${p}: displayed-rate floor ${worst.kind}:${worst.id} at ${(worst.feltShown * 100).toFixed(1)}% on ${worst.axisShown} · deferred-visibility items: ${deferred.length ? deferred.map(id => `${id} (${DEFERRED_VISIBILITY[id] ?? 'NO NAMED SURFACE — F5 failure'})`).join(' · ') : 'none'}${unmapped.length ? ' ⚠' : ''}`)
   }
 
   console.log('\n## Mood ladder (median reach, balanced)\n')

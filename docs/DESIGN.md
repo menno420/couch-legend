@@ -311,11 +311,15 @@ bounded separately rather than flattened. The bounds below are **regression
 rails snapped just above the accepted measured behavior** of the proposed
 tuning — future tuning changes must stay inside them, with sim evidence:
 
-1. **Reachability:** every archetype reaches every authored stage —
-   patient play in ≤ **16 days**, eager-prestige play in ≤ **5 weeks**, and
-   even the degenerate archetypes (hoard-everything, never-prestige) in
-   ≤ **11 weeks** (tail-growth extrapolation, labeled REASONED in the
-   results doc). Nothing is ever walled.
+1. **Reachability:** every archetype that plays reaches every authored
+   stage — patient play in ≤ **16 days**, eager-prestige play in ≤ **5
+   weeks**, and even the degenerate archetypes (hoard-everything,
+   never-prestige) in ≤ **11 weeks** (tail-growth extrapolation, labeled
+   REASONED in the results doc). One boundary, measured and stated rather
+   than hidden: a fresh save that **never clicks even once** never starts —
+   no hit means no High and no nugs, so nothing ever unlocks (pinned by
+   test). That is pillar 1 as a fact: the game begins with a hit. Every
+   archetype that has ever taken one is never walled.
 2. **Spread bounds:** across the attendance axis at comparable discipline,
    per-stage median reach-time ratio ≤ **4×** at arc 2's midpoint,
    tightening to ≤ **1.5×** by arc 3 (measured 3.3× → 1.27×). Across the
@@ -326,12 +330,20 @@ tuning — future tuning changes must stay inside them, with sim evidence:
    **5 min in arc 1 · 25 min in arc 2 · 45 min in arc 3** (measured worsts:
    30 s / 20 m / 37.5 m — the deep ones all on the post-reset warm-up § 9.5
    names).
-4. **Check-in bound (away play):** ≥ **90 %** of check-ins offer a move
-   (measured 95.9–100 %).
-5. **Felt-upgrade floor:** the first purchase of every item moves a rate
-   the player can see by ≥ **2 %** at the moment it is typically bought
-   (measured floor: 8 %, Infinite Playlist) — no purchase that buys nothing
-   (spider-swing § 2.6's trap, kept out by measurement).
+4. **Check-in bound (away play):** ≥ **90 %** of check-ins offer a move,
+   for every playing archetype (measured 95.9–100 %; the zero-click wall
+   lane is outside "playing" by rail 1's boundary).
+5. **Felt-upgrade floor, two visibility tiers:** (a) the first purchase of
+   every item whose effect is an **instantly-displayed output** — the
+   nug/s and cash/s tiles, the per-click floater — moves it by ≥ **2 %**
+   at the moment it is typically bought; (b) every purchase whose effect
+   is **deferred-visible** must have a named display surface where the
+   player sees it move (buzz number/bar for Hydration and Lava Lamp, the
+   Hits tile and balance ticks for The Roommate, the offline report for
+   Blackout Curtains, the Wake & Bake preview for Meditation Cushion) —
+   no purchase with no visible surface at all (spider-swing § 2.6's trap,
+   kept out by measurement; the first draft scored tier-(a) on engine
+   internals the UI never renders — Codex caught it).
 6. **The prestige promise, restated to what a bounded curve can keep:**
    banked Clarity strictly grows every cycle; for **patient-discipline
    lanes** the next afternoon regains its previous peak at median ≤

@@ -223,7 +223,9 @@ tuned` prints the full table):
 
 The mood ladder stays a first-session arc for attended play (balanced
 medians: Baked 5.9 m · Galactic 31 m · Couch Legend 55 m) — the
-within-afternoon display works at every stage of the life.
+within-afternoon display works at every stage of the life. An eighth lane,
+`zero-click`, is deliberately absent from the table: it never reaches
+stage 2, or anything — see F1's measured boundary in § 5.
 
 ## 5 · Fairness metrics — measured, with verdicts
 
@@ -231,8 +233,17 @@ Numbers from the final dataset (`docs/sim/data/tuned-*`, 21 runs); the
 metric definitions are DESIGN § 9.6 and were refined against this data —
 two refinements are called out because they moved:
 
-- **F1 reachability — approve.** Patient ≤ 15 d (ext), eager ≤ ~30–32 d
-  (ext), degenerate archetypes ≤ ~72 d (ext). Nothing walls.
+- **F1 reachability — approve, with its boundary measured and stated.**
+  Patient ≤ 15 d (ext), eager ≤ ~30–32 d (ext), degenerate archetypes
+  ≤ ~72 d (ext) — nothing that plays is ever walled. The boundary (added in
+  Codex review, which correctly refused "nothing walls" while the idle
+  archetype quietly clicked 0.2 Hz): a fresh save that **never clicks even
+  once** never starts — no hit, no High, no nugs, nothing unlocks. Measured
+  by the `zero-click` lane and pinned by test (24 h simulated: High 0,
+  nugs 0, zero purchases; only the passive cash trickle moves). That is
+  pillar 1 as a fact — the game begins with a hit — and making zero-click
+  viable would need a High or nug trickle, a tuning change rejected as
+  hollowing the game's first verb.
 - **F2 spread — approve.** Attendance axis (patient): 3.3× at Long Sunday
   → 1.27× by arc 3. Discipline axis: eager trails ≤ 2.6× per stage.
   *Refinement:* the two axes are bounded separately; a single flat "≤ 6×
@@ -247,10 +258,23 @@ two refinements are called out because they moved:
   bucketed by the stage at their **start** (Codex caught the first
   analyzer bucketing on the sample after the start, which could misfile a
   span across an arc boundary).
-- **F4 check-ins — approve.** 95.9–100 % of check-ins offer a move.
-- **F5 felt upgrades — approve.** Weakest first purchase in every lane:
-  Infinite Playlist at **8 %** (on a visible rate), 4× the 2 % floor. No
-  purchase buys nothing.
+- **F4 check-ins — approve.** 95.9–100 % of check-ins offer a move, for
+  every playing archetype (the zero-click wall lane sits outside "playing"
+  by F1's boundary).
+- **F5 felt upgrades — approve under the corrected two-tier definition.**
+  The first draft scored "visible" on engine internals the UI never
+  renders (highRate, decay, offlineCap…) — Codex refused it, rightly. As
+  corrected: tier (a), instantly-displayed outputs (the nug/s and cash/s
+  tiles, the per-click floater) — measured floor **Snack Cache at 4.0 % on
+  nug/s** in every lane, double the 2 % rail; tier (b), the five
+  deferred-visibility purchases (Hydration, Lava Lamp, The Roommate,
+  Blackout Curtains, Meditation Cushion) each has a **named display
+  surface** where the player watches it work — the buzz number/bar, the
+  Hits tile and balance ticks, the offline report, the Wake & Bake
+  preview. No purchase has no surface at all. (Adoption note: the Clarity
+  tile's multiplier is now routed through `clarityMultiplier` instead of
+  an inline `1 + e·0.18` — Codex caught that adopting the knee would have
+  desynced the display from the engine.)
 - **F6 the prestige promise — approve as restated, with the rail scoped in
   review.** The rail (median rebuild ≤ 0.95× the previous cycle) applies to
   **patient-discipline lanes** — measured 0.90–0.93 late, inside it. Eager

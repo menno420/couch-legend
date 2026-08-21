@@ -1,5 +1,5 @@
 import { useGame } from '../lib/store'
-import { computeRates } from '../lib/engine'
+import { clarityMultiplier, computeRates } from '../lib/engine'
 import { pickSave } from '../lib/save'
 import { fmt, fmtRate } from '../lib/format'
 
@@ -32,7 +32,7 @@ export function StatsPanel() {
         <Resource label="Nugs" value={fmt(nugs)} rate={fmtRate(rates.nugRate)} />
         <Resource label="Cash" value={fmt(cash)} rate={fmtRate(rates.cashRate)} />
         {enlightenment > 0 ? (
-          <Resource label="Clarity" value={fmt(enlightenment, 0)} rate={`×${(1 + enlightenment * 0.18).toFixed(2)} kept`} />
+          <Resource label="Clarity" value={fmt(enlightenment, 0)} rate={`×${clarityMultiplier(enlightenment).toFixed(2)} kept`} />
         ) : (
           <Resource label="Hits" value={fmt(totalHits, 0)} rate="manual + auto" />
         )}
