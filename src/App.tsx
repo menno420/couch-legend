@@ -4,6 +4,7 @@ import { CouchPanel } from './components/CouchPanel'
 import { StatsPanel } from './components/StatsPanel'
 import { GrowTab, RitualsTab, TabBar, WorkTab } from './components/ShopTabs'
 import { LoreTab } from './components/LoreTab'
+import { Panel } from './components/ui'
 import {
   BootScreen, Header, NewsLine, OfflineBanner, PrestigeModal, ResetModal,
   SettingsModal, Toasts,
@@ -53,9 +54,9 @@ export default function App() {
   }, [ready, booted, tick, flushSave])
 
   return (
-    <main className="relative min-h-dvh bg-bg text-fg">
+    <main className="game-canvas relative min-h-dvh overflow-x-clip text-fg">
       {booted ? (
-        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-4 pb-24 sm:px-6 sm:py-6 sm:pb-16">
+        <div className="safe-shell mx-auto flex max-w-6xl flex-col gap-4">
           <Header />
           <NewsLine />
           <OfflineBanner />
@@ -65,15 +66,15 @@ export default function App() {
               <StatsPanel />
             </div>
             <div className="flex flex-col gap-3">
-              <div className="sticky top-3 z-10 bg-bg py-1">
+              <div className="safe-sticky sticky z-20 -mx-1 bg-gradient-to-b from-bg via-bg/95 to-transparent px-1 pb-2 pt-3 backdrop-blur-sm sm:rounded-b-xl">
                 <TabBar />
               </div>
-              <section className="rounded-xl border border-border bg-surface p-4 sm:p-5">
+              <Panel as="section" tone={tab === 'lore' ? 'story' : 'default'} className="p-4 sm:p-5">
                 {tab === 'grow' ? <GrowTab /> : null}
                 {tab === 'work' ? <WorkTab /> : null}
                 {tab === 'rituals' ? <RitualsTab /> : null}
                 {tab === 'lore' ? <LoreTab /> : null}
-              </section>
+              </Panel>
             </div>
           </div>
         </div>

@@ -3,7 +3,7 @@ import { Cloudy } from 'lucide-react'
 import { useGame } from '../lib/store'
 import { moodFor, nextMood } from '../lib/content'
 import { fmt } from '../lib/format'
-import { Button } from './ui'
+import { Button, Panel } from './ui'
 
 const BASE = import.meta.env.BASE_URL
 
@@ -48,12 +48,15 @@ export function CouchPanel() {
   }, [hit])
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
+    <Panel tone="rust" className="overflow-hidden">
       <div
         ref={sceneRef}
         onPointerDown={e => hitAt(e.clientX, e.clientY)}
-        className="relative aspect-[4/5] max-h-[min(40vh,360px)] w-full cursor-pointer touch-manipulation select-none transition-transform duration-150 ease-out sm:aspect-[3/4] sm:max-h-[min(48vh,420px)]"
+        className="scene-frame relative aspect-[4/5] w-full cursor-pointer touch-manipulation select-none overflow-hidden outline-none transition-transform duration-150 ease-out focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent sm:aspect-[3/4]"
         style={{ transform: hitPulse > 0.5 ? 'scale(1.012)' : 'scale(1)' }}
+        role="button"
+        tabIndex={0}
+        aria-label="Take a hit in the couch scene"
       >
         <img
           src={`${BASE}art/couch-lucid.jpg`}
@@ -64,19 +67,19 @@ export function CouchPanel() {
         <img
           src={`${BASE}art/couch-baked.jpg`}
           alt=""
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[center_22%] transition-opacity duration-700"
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[center_22%] transition-opacity duration-1000"
           style={{ opacity: bakedOpacity }}
           draggable={false}
         />
         <div
           className="haze-layer pointer-events-none absolute inset-0"
           style={{
-            background: 'radial-gradient(ellipse at 50% 40%, color-mix(in oklab, var(--color-accent) 22%, transparent) 0%, transparent 62%)',
+            background: 'radial-gradient(ellipse at 48% 38%, color-mix(in oklab, var(--scene-haze) 18%, transparent) 0%, transparent 58%), radial-gradient(circle at 80% 20%, color-mix(in oklab, var(--scene-dream) 12%, transparent) 0%, transparent 40%)',
             opacity: hazeOpacity,
           }}
         />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-bg via-bg/15 to-transparent" />
-        <div className="lamp-glow pointer-events-none absolute left-[12%] top-[18%] h-24 w-24 rounded-full bg-accent/20 blur-2xl" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-bg via-bg/10 to-bg/15" />
+        <div className="scene-lamp lamp-glow pointer-events-none absolute left-[12%] top-[18%] h-24 w-24 rounded-full blur-2xl" />
         {hitPulse > 0.35
           ? Array.from({ length: 7 }, (_, i) => (
               <span
@@ -99,32 +102,31 @@ export function CouchPanel() {
             {f.text}
           </span>
         ))}
-        <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between p-4">
-          <div>
-            <p className="font-display text-xs uppercase tracking-[0.18em] text-accent">{mood.name}</p>
-            <p className="mt-1 max-w-[16rem] text-sm text-muted">{mood.blurb}</p>
+        <div className="pointer-events-none absolute inset-x-0 top-0 p-3 sm:p-4">
+          <div className="scene-glass w-fit max-w-[calc(100%_-_1.5rem)] rounded-[14px] px-3 py-2.5">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-story">Current mood</p>
+            <p className="mt-0.5 font-display text-base font-semibold text-fg">{mood.name}</p>
+            <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-muted sm:text-sm">{mood.blurb}</p>
           </div>
-          {upcoming ? (
-            <p className="rounded-full border border-border bg-bg/70 px-3 py-1 text-xs text-muted backdrop-blur-sm">
-              {upcoming.name} at {fmt(upcoming.minHigh)}
-            </p>
-          ) : null}
         </div>
+        {upcoming ? (
+          <div className="scene-glass pointer-events-none absolute bottom-3 right-3 max-w-[calc(100%_-_1.5rem)] rounded-full px-3 py-1.5 text-right text-xs text-subtle sm:bottom-4 sm:right-4">
+            Next · <span className="text-portal">{upcoming.name}</span>
+            <span className="tabular-nums text-muted"> at {fmt(upcoming.minHigh)}</span>
+          </div>
+        ) : null}
       </div>
       <div className="p-3 sm:p-4">
         <Button
           variant="hit"
           size="xl"
           className="h-14 min-h-14 w-full touch-manipulation rounded-[18px] font-display text-xl font-semibold tracking-[-0.02em]"
-          onPointerDown={e => {
-            e.preventDefault()
-            hitAt(e.clientX, e.clientY)
-          }}
+          onClick={() => hit(50, 55)}
         >
           <Cloudy className="size-5" strokeWidth={1.75} aria-hidden />
           Take a hit
         </Button>
       </div>
-    </div>
+    </Panel>
   )
 }

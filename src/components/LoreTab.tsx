@@ -19,22 +19,24 @@ export function LoreTab() {
 
   return (
     <div>
-      <h2 className="flex items-center gap-2 font-display text-xl font-semibold text-fg">
-        <ScrollText className="size-4 text-accent" aria-hidden />
-        Lore
+      <h2 className="flex items-center gap-2 font-display text-xl font-semibold tracking-[-0.015em] text-fg">
+        <span className="inline-flex size-8 items-center justify-center rounded-[10px] bg-story/10 text-story">
+          <ScrollText className="size-4" aria-hidden />
+        </span>
+        Chronicle
       </h2>
-      <p className="mt-1 text-sm text-muted">Revelations, titles, and the long afternoon.</p>
+      <p className="mt-1 text-sm text-muted">Revelations, titles, and everything the couch remembers.</p>
 
       <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <StatTile label="Peak high" value={fmt(peakHigh)} />
         <StatTile label="Hits" value={fmt(totalHits, 0)} />
         <StatTile label="Session" value={fmtDuration(playTime)} />
-        <StatTile label="Lore" value={`${earned}/${ACHIEVEMENTS.length}`} />
+        <StatTile label="Stories" value={`${earned}/${ACHIEVEMENTS.length}`} />
       </div>
 
-      <div className="mt-4 rounded-lg border border-border bg-elevated p-4">
+      <div className="surface-card story-card mt-4 rounded-[14px] p-4">
         <p className="flex items-center gap-2 font-display text-lg font-semibold text-fg">
-          <Sunrise className="size-4 text-accent" aria-hidden />
+          <Sunrise className="size-4 text-story" aria-hidden />
           Wake &amp; Bake
         </p>
         <p className="mt-1 text-sm text-muted">Come down overnight. Keep your lore. Gain Clarity that multiplies everything next session.</p>
@@ -55,8 +57,8 @@ export function LoreTab() {
           {MOODS.map(m => {
             const unlocked = peakHigh >= m.minHigh
             return (
-              <li key={m.id} className={cx('rounded-lg border border-border bg-elevated px-3 py-2.5', !unlocked && 'opacity-55')}>
-                <p className={cx('font-display text-sm', unlocked ? 'text-accent' : 'text-muted')}>{m.name}</p>
+              <li key={m.id} className={cx('surface-card rounded-[14px] px-3 py-2.5', unlocked ? 'story-card' : 'surface-card-muted')}>
+                <p className={cx('font-display text-sm', unlocked ? 'text-story' : 'text-muted')}>{m.name}</p>
                 <p className={cx('text-sm', unlocked ? 'text-fg' : 'text-muted')}>
                   {unlocked ? m.revelation : `Reaches you at High ${fmt(m.minHigh)}.`}
                 </p>
@@ -71,8 +73,8 @@ export function LoreTab() {
         {ACHIEVEMENTS.map(a => {
           const has = achievements.includes(a.id)
           return (
-            <li key={a.id} className={cx('rounded-lg border border-border bg-elevated px-3 py-2.5', !has && 'opacity-55')}>
-              <p className={cx('font-medium', has ? 'text-fg' : 'text-muted')}>{a.name}</p>
+            <li key={a.id} className={cx('surface-card rounded-[14px] px-3 py-2.5', has ? 'side-story-card' : 'surface-card-muted')}>
+              <p className={cx('font-medium', has ? 'text-dream' : 'text-muted')}>{a.name}</p>
               <p className="text-sm text-muted">{has ? a.blurb : 'Not yet.'}</p>
             </li>
           )
