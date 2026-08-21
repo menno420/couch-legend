@@ -23,6 +23,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Build the PR head, not GitHub's synthetic merge revision. This APK
+          # is a device-test artifact whose whole value is that a result from
+          # the owner's phone is attributable to a commit he can look up; a
+          # merge revision exists on no branch. Merge safety is what the
+          # required `ci` and `substrate-gate` checks are for.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - uses: pnpm/action-setup@v4
         with:
@@ -60,15 +67,11 @@ jobs:
 
       - name: Name the APK after the commit it was built from
         id: apk
-        # On a pull_request the checked-out HEAD is GitHub's ephemeral merge
-        # commit, which exists on no branch — naming the file after it makes the
-        # APK untraceable. Use the PR head instead, and github.sha on push.
-        # Via env rather than inline `${{ }}`: workflow expansion happens before
-        # bash parses the script, so a value can never be quoted safely inline.
-        env:
-          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        # Derived from the revision actually checked out, so the label and the
+        # bytes can never disagree — the checkout step above is what decides
+        # which commit that is.
         run: |
-          short="${SOURCE_SHA:0:7}"
+          short="$(git rev-parse --short=7 HEAD)"
           src=android/app/build/outputs/apk/debug/app-debug.apk
           out="couch-legend-${short}-debug.apk"
           cp "$src" "$out"

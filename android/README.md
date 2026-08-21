@@ -55,9 +55,15 @@ and `capacitor-cordova-android-plugins/`. Do not commit them; do not hand-edit
 - `res/values/ic_launcher_background.xml`, `res/values/colors.xml`,
   `res/drawable/splash.xml` and the launch theme in `res/values/styles.xml` —
   all set to the game's surface colour `#0B1110`, the same value as
-  `<meta name="theme-color">` in `index.html`, so a cold start never flashes
-  white. The eleven density-bucketed splash PNGs the template ships were
-  replaced by one `ColorDrawable`.
+  `<meta name="theme-color">` in `index.html`. The launch theme names both
+  `windowSplashScreenBackground` and `windowSplashScreenAnimatedIcon`
+  explicitly rather than trusting `Theme.SplashScreen` to inherit the
+  application icon. The eleven density-bucketed splash PNGs the template ships
+  were replaced by one `ColorDrawable`.
+  **Configured, not observed:** what the cold start actually looks like on a
+  phone has not been seen by anyone here — there is no device in the container
+  that wrote this. The intent is one unbroken dark colour from tap to first
+  frame; whether it delivers that is on the milestone-A checklist.
 - `app/build.gradle` — `versionName` reads `package.json`, so the version the
   phone reports is the version the repo ships.
 

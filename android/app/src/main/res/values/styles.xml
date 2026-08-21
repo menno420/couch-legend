@@ -19,7 +19,11 @@
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <!-- Pre-12 launch window. -->
         <item name="android:background">@drawable/splash</item>
-        <!-- Android 12+ system splash: same colour, launcher icon on top. -->
+        <!-- Android 12+ system splash. Both attributes are set explicitly:
+             Theme.SplashScreen takes its icon from windowSplashScreenAnimatedIcon,
+             and relying on the parent theme to fall back to android:icon is an
+             assumption no one here can test without a device. -->
         <item name="windowSplashScreenBackground">@color/couchLegendBackground</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
     </style>
 </resources>
