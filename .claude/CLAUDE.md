@@ -16,18 +16,24 @@ mechanics base.
 ## Boot read path — read first, in order
 
 0. **Preflight — land on origin's HEAD before reading anything else, and
-   look before you reset:** run `git status --short` FIRST. One dirty path
-   is your own: the SessionStart hook stamps a session anchor into
+   look before you reset:** run `git status --short` AND
+   `git log origin/main..HEAD --oneline` FIRST. One dirty path is your
+   own: the SessionStart hook stamps a session anchor into
    `.substrate/state.json` before you can look — a diff in ONLY that file
-   is expected, not foreign work. Anything else you did not author: stop
-   and report it instead of resetting over it. On a clean-or-anchor-only
-   tree run `git fetch origin main && git reset --hard origin/main` (or
-   `git checkout -B main origin/main`), then re-stamp the anchor the reset
-   just erased: `python3 bootstrap.py session-start` (session-close reads
-   it to attribute this session's commits). A warm container clone can lag
-   origin by dozens of commits, and a stale clone reads stale orders.
-   Mechanics + safety notes: `docs/AGENT_ORIENTATION.md` § "Start every
-   session".
+   is expected, not foreign work (the hook's other artifact, `HANDOFF.md`,
+   is gitignored by design and should not appear at all). Anything else
+   you did not author — uncommitted work OR local commits absent from
+   origin/main — stop and report it instead of resetting over it. Then
+   land on main WITHOUT moving any other branch's ref:
+   `git fetch origin main && git checkout -B main origin/main` (the safe
+   form from any checkout; the bare `git reset --hard origin/main` is for
+   a main checkout with no local commits ONLY — on a feature branch it
+   rewinds that branch's ref and strands its commits). Then re-stamp the
+   anchor the sync erased: `python3 bootstrap.py session-start`
+   (session-close reads it to attribute this session's commits). A warm
+   container clone can lag origin by dozens of commits, and a stale clone
+   reads stale orders. Mechanics + safety notes:
+   `docs/AGENT_ORIENTATION.md` § "Start every session".
 1. This file — the working agreement.
 2. `docs/current-state.md` — what is true right now.
 3. `docs/DESIGN.md` — the binding mechanics map (§ 9 = the decided life-story

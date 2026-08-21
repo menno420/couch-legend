@@ -8,26 +8,31 @@
 ## Start every session
 
 **Preflight first — land on origin's HEAD before reading anything else,
-checking the tree BEFORE the reset:**
+checking the tree BEFORE any destructive sync:**
 
 ```
-git status --short   # MUST come first — a hard reset destroys what it finds
-git fetch origin main && git reset --hard origin/main
+git status --short                   # MUST come first — a hard sync destroys what these find
+git log origin/main..HEAD --oneline  # local commits origin lacks — a reset would strand them
+git fetch origin main && git checkout -B main origin/main
 ```
 
-(or `git checkout -B main origin/main`; substitute your default branch).
+(substitute your default branch). `checkout -B` is the safe sync from any
+checkout — it never moves another branch's ref; the bare
+`git reset --hard origin/main` is equivalent ONLY on a main checkout with
+no local commits (on a feature branch it rewinds that branch's ref).
 One dirty path at boot is your own: the SessionStart hook stamps a session
 anchor into `.substrate/state.json` before you can look — a diff in ONLY
-that file is expected. Anything else `git status` shows that you did not
-author, **stop and report it instead of resetting over it** — the check is
-ordered before the reset because the reset is destructive and unprompted
-work is evidence, not noise. After the reset, re-stamp the anchor it just
-erased (`python3 bootstrap.py session-start`) so session-close can
-attribute this session's commits.
+that file is expected (the hook's `HANDOFF.md` is gitignored and should
+not appear). Anything else — uncommitted work or unpushed commits you did
+not author — **stop and report it instead of syncing over it** — the check
+is ordered first because the sync is destructive and unprompted work is
+evidence, not noise. After the sync, re-stamp the anchor it erased
+(`python3 bootstrap.py session-start`) so session-close can attribute this
+session's commits.
 Then verify: local HEAD (`git rev-parse HEAD`) must equal
 `git ls-remote origin main`. A warm container clone can lag origin by
 dozens of commits, and a stale clone reads stale orders and stale state —
-every orientation read below assumes this step already ran. The hard reset
+every orientation read below assumes this step already ran. The sync
 discards uncommitted local changes by design: at session START there should
 be none.
 

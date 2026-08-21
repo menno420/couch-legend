@@ -17,13 +17,19 @@ tree, never a registry line or a PR read.
 
 ## Instructions
 
-1. Preflight — sync the clone before reading anything:
-   `git fetch origin main && git reset --hard origin/main`. A stale clone
-   reads stale orders and re-executes finished work.
-2. Download the release next to the vendored copy:
-   `gh release download vX.Y.Z --repo menno420/substrate-kit --pattern 'bootstrap.py*' --pattern 'release.json'`
-   then move the downloaded dist to `bootstrap.py.new` (the consumer flow
-   `release.json` names).
+1. Preflight — look BEFORE you sync: `git status --short` first (uncommitted
+   work you did not author → stop and report; a hard reset destroys it), and
+   `git log origin/main..HEAD --oneline` for stranded local commits — then,
+   from a main checkout only, `git fetch origin main && git reset --hard
+   origin/main` (elsewhere `git checkout -B main origin/main`). A stale
+   clone reads stale orders and re-executes finished work.
+2. Download the release into a TEMP directory, never the repo root — the
+   adopted tree already holds `bootstrap.py` + `bootstrap.py.sha256`, and a
+   root download collides with them (`gh` refuses same-name files without
+   `--clobber`):
+   `tmp=$(mktemp -d) && gh release download vX.Y.Z --repo menno420/substrate-kit --pattern 'bootstrap.py*' --pattern 'release.json' --dir "$tmp"`
+   then `mv "$tmp/bootstrap.py" bootstrap.py.new` (the consumer flow
+   `release.json` names) and keep `$tmp/bootstrap.py.sha256` for step 5b.
 3. sha256 three-way compare (never skip) — `sha256sum bootstrap.py.new`
    must equal BOTH the `sha256` field in `release.json` AND the kit repo's
    committed `dist/bootstrap.py` at the release's bump SHA. Any mismatch:
@@ -35,6 +41,13 @@ tree, never a registry line or a PR read.
 5. Upgrade — `python3 bootstrap.py.new upgrade`. It banks the OLD dist to
    `.substrate/backup/` (verify the banked `bootstrap-<old-version>.py`
    exists — that is the rollback path) and consumes its own inputs.
+5b. Install the NEW sidecar with the dist — `run_upgrade` replaces only
+   `bootstrap.py`, never `bootstrap.py.sha256`, and this repo's
+   `tests/test_kit_pin.py` (required gate, pytest step) compares the two:
+   a stale sidecar reds every upgrade PR. Copy the verified new sidecar
+   over the old one (`mv "$tmp/bootstrap.py.sha256" bootstrap.py.sha256`)
+   in the same commit, and on any rollback restore BOTH files from the
+   bank (re-derive the old sidecar with `sha256sum` if needed).
 6. Carve-out scan — read `.substrate/upgrade-report.md`: `consumer-edited`
    and `diverged` docs are LOCAL MODIFICATIONS the upgrade must not
    clobber; list them verbatim in the PR body. `template-improved` applies

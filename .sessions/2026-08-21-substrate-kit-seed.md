@@ -105,3 +105,42 @@ for the contract, `reference` for the package record.
 **Layer-2 handoff:** fleet-manager `docs/repos/couch-legend/README.md` —
 threads re-cut (looks pass LANDED · kit adoption thread added · Android
 re-sequenced); ESTATE.md row updated; `OQ-CL-LOOKS-PASS` resolved.
+
+## Codex review trail (exact heads)
+
+- **Round 1 on `01627d7`:** 7 findings (1 P1 · 6 P2) — **7 [conceded]**,
+  fixed in `9d957a2`: env-setup pnpm install; npm-test remnants swept
+  (architecture · workflow · SKILLS grounds); status-before-reset ordering
+  in both orientation surfaces (the P1); PATH-resolved hook interpreter
+  (config + template + live settings); 15 staged skills installed live,
+  four annotated-verify command spans split; honest red-by-design
+  heartbeat.
+- **Round 2 on `9d957a2`:** 6 findings (6 P2) — **6 [conceded]**, fixed in
+  `60aa8d6`: staged copies synced with the installed fixes; tracked pyc
+  removed + bytecode ignored; session-anchor boot exception + post-reset
+  re-stamp in both preflight surfaces; CONSTITUTION boot path made a
+  pointer to the one list; session-close land-it-yourself in both trees;
+  edit capability declared where steps write + the Local-amendments
+  re-apply section in docs/SKILLS.md.
+- **Round 3 on `60aa8d6`:** 5 findings (5 P1) — **5 [conceded]**, fixed in
+  the flip-preceding commit: upgrade-distribution preflight gains the
+  status-first + stranded-commits inspection; release downloads moved to a
+  temp dir (a root download collides with the vendored files); step 5b
+  installs the NEW sidecar with the dist (without it, this repo's own
+  `test_kit_pin` reds every future upgrade PR — the reviewer caught the
+  interaction with a test added earlier in this same PR); the boot
+  preflights (both surfaces) gain the local-commits leg and make
+  `checkout -B` the safe primary (a bare reset on a feature branch rewinds
+  its ref); `HANDOFF.md` gitignored (the SessionStart hook regenerates it
+  untracked — without the ignore, the clean-boot contract broke on every
+  boot). **The session-close two-re-review cap is reached at this round**:
+  these fixes land without a fourth round, with this trail as the named
+  record (fm #878 precedent). Reviewed SHA `60aa8d6`; after it: the
+  round-3 fix commit and the flip commit (badge + close-out + heartbeat
+  only).
+
+Kit-rooted causes upstream: fleet-manager worklist rows 24–34 (+ row 14's
+first live bite, rows 20/21 sightings, rows 26/29 widened in place). Score
+across rounds: **18 findings, 18 [conceded] and fixed, 0 [survived]
+disputes** — every finding verified against source before acting; none
+refuted.

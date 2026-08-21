@@ -21,7 +21,7 @@ deriving the procedure from scratch.
 |---|---|---|---|
 | `session-close` | Land the session — claim, born-red card first, READY PR, batched work, close-out docs, flip complete last; land on green. | `read`, `edit`, `run` | `pnpm check`<br>`python3 bootstrap.py check --strict` |
 | `continuation-prompt` | Carry a session into a fresh one — verify state at HEAD, commit what belongs in the repo, and emit a paste-ready prompt that transfers intent without narrowing it. | `read`, `edit`, `run` | `git fetch origin main && git log -1 --oneline origin/main`<br>`pnpm check` |
-| `upgrade-distribution` | Roll a kit release out to one adopter repo — download, sha256 three-way, banked rollback, carve-out scan, born-red PR, tree-verified merge. | `read`, `edit`, `run` | `git fetch origin main && git reset --hard origin/main`<br>`gh release download vX.Y.Z --repo menno420/substrate-kit --pattern 'bootstrap.py*' --pattern 'release.json'`<br>`sha256sum bootstrap.py.new`<br>`python3 bootstrap.py.new upgrade`<br>`pnpm check`<br>`python3 bootstrap.py check --strict`<br>`git fetch origin main && git log -1 --oneline origin/main`<br>`git commit --allow-empty` |
+| `upgrade-distribution` | Roll a kit release out to one adopter repo — download, sha256 three-way, banked rollback, carve-out scan, born-red PR, tree-verified merge. | `read`, `edit`, `run` | `git status --short`<br>`git fetch origin main && git reset --hard origin/main`<br>`tmp=$(mktemp -d) && gh release download vX.Y.Z --repo menno420/substrate-kit --pattern 'bootstrap.py*' --pattern 'release.json' --dir "$tmp"`<br>`sha256sum bootstrap.py.new`<br>`python3 bootstrap.py.new upgrade`<br>`pnpm check`<br>`python3 bootstrap.py check --strict`<br>`git fetch origin main && git log -1 --oneline origin/main`<br>`git commit --allow-empty` |
 | `release` | Cut + publish a substrate-kit release — version bump PR, workflow_dispatch publish, three-way asset verification, adopter distribution wave. | `read`, `edit`, `run` | `python3 src/build_bootstrap.py`<br>`git diff --exit-code dist/bootstrap.py`<br>`python3 -m pytest tests/ -q`<br>`python3 -m ruff check src/engine/`<br>`python3 src/build_release_json.py --version X.Y.Z --verify-only`<br>`python3 dist/bootstrap.py check --strict`<br>`gh workflow run release.yml -f version=X.Y.Z`<br>`git fetch --tags && git tag -l vX.Y.Z`<br>`gh release view vX.Y.Z`<br>`python3 dist/bootstrap.py currency` |
 | `intake` | Turn a fragmented owner ask into main ideas, a restated fuller picture, a skill-index map, and structured-choice owner questions — before building (understand-and-reflect, executable). | `read`, `edit` | — |
 | `scope-backlog-item` | Turn a raw backlog item into a turnkey recipe or an owner ask — chase its origin, state the fuller picture, classify buildable/owner-gated/dead, write the sized recipe with acceptance + traps, and retarget the baton. Makes the standing 'when no executable work is left, plan' order turnkey. | `read`, `edit` | — |
@@ -70,6 +70,10 @@ deriving the procedure from scratch.
   `session-close` step 6, `continuation-prompt` DONE-WHEN,
   `upgrade-distribution` step 7); `session-close` rewritten to
   land-it-yourself (this repo has NO auto-merge enabler — three sites);
+  `upgrade-distribution` steps 1/2/5b rewritten (status check before the
+  reset; temp-dir download — a root download collides with the vendored
+  files; the NEW sidecar installed with the dist, or `test_kit_pin` reds
+  every upgrade PR);
   `edit` capability declared where steps write (`scope-backlog-item`,
   `repo-health`, `intake` — and their rows above). A copy loop or
   `skills --build` that drops these must re-apply them in the same
