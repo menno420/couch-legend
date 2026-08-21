@@ -8,7 +8,7 @@ export const SAVE_KEY = 'couch-legend-save'
 export const BACKUP_KEY = 'couch-legend-save-bak'
 
 const SAVE_FIELDS: (keyof SaveState)[] = [
-  'version', 'high', 'peakHigh', 'buzz', 'nugs', 'cash', 'enlightenment',
+  'version', 'high', 'lifeHigh', 'peakHigh', 'buzz', 'nugs', 'cash', 'enlightenment',
   'totalHits', 'playTime', 'generators', 'jobs', 'rituals', 'achievements',
   'lastTick', 'startedAt', 'sound', 'booted',
 ]
@@ -77,7 +77,7 @@ export function importCode(code: string): SaveState | null {
     if (typeof parsed.version !== 'number') return null
     const save = migrateSave(parsed)
     // Reject saves that would decode to nonsense numbers.
-    for (const k of ['high', 'peakHigh', 'buzz', 'nugs', 'cash', 'enlightenment', 'totalHits', 'playTime'] as const) {
+    for (const k of ['high', 'lifeHigh', 'peakHigh', 'buzz', 'nugs', 'cash', 'enlightenment', 'totalHits', 'playTime'] as const) {
       if (typeof save[k] !== 'number' || !Number.isFinite(save[k]) || save[k] < 0) return null
     }
     return save

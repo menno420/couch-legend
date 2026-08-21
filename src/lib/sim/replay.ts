@@ -8,7 +8,14 @@ import {
   advance, applyHit, applyPrestige, collectAchievements, purchaseGenerator,
   purchaseJob, purchaseRitual, type SaveState,
 } from '../actions'
-import { defaultSave, migrateSave } from '../engine'
+import { defaultSave, migrateSave, PROTO_TUNING } from '../engine'
+
+// The committed traces were hand-played on the PROTOTYPE curve (a local
+// build of e4b168b, before the 2026-08-21 tuning adoption), so the replay
+// pins PROTO_TUNING explicitly: these fixtures validate the engine/action
+// seam against the reality they recorded, not against the current default.
+// (Both traces sit far below the knee, where the curves are identical —
+// the pin makes the provenance explicit rather than changing any number.)
 
 export interface TraceAction {
   wall: number
@@ -79,12 +86,12 @@ export function replayTrace(trace: Trace): ReplayReport {
   let wall = t0
 
   const applyAction = (a: TraceAction) => {
-    if (a.kind === 'hit') { s = applyHit(s); return }
+    if (a.kind === 'hit') { s = applyHit(s, PROTO_TUNING); return }
     let next: SaveState | null = null
     if (a.kind === 'buy-gen' && a.id) next = purchaseGenerator(s, a.id, (a.qty as 1 | 10 | 100) ?? 1)
     else if (a.kind === 'buy-job' && a.id) next = purchaseJob(s, a.id, (a.qty as 1 | 10 | 100) ?? 1)
     else if (a.kind === 'buy-ritual' && a.id) next = purchaseRitual(s, a.id)
-    else if (a.kind === 'prestige') next = applyPrestige(s, wall)
+    else if (a.kind === 'prestige') next = applyPrestige(s, wall, PROTO_TUNING)
     else { misses.push(`unknown action kind ${a.kind}`); return }
     if (!next) { misses.push(`${a.kind}:${a.id ?? ''}@${((a.wall - t0) / 1000).toFixed(1)}s rejected in replay`); return }
     s = next
@@ -101,7 +108,7 @@ export function replayTrace(trace: Trace): ReplayReport {
       s = collectAchievements(s).save
       ai++
     }
-    s = collectAchievements(advance(s, STEP)).save
+    s = collectAchievements(advance(s, STEP, PROTO_TUNING)).save
     wall += STEP * 1000
     while (si < snapshots.length && snapshots[si].save.lastTick <= wall) {
       // An action and a snapshot can land inside the same 50 ms step; the

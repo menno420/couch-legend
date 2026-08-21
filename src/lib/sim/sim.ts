@@ -11,11 +11,10 @@
 
 import {
   advance, applyHit, applyOffline, applyPrestige, collectAchievements,
-  computeRates, defaultSave, prestigeGain, PROTO_TUNING, purchaseGenerator,
+  computeRates, DEFAULT_TUNING, defaultSave, prestigeGain, purchaseGenerator,
   purchaseJob, purchaseRitual, type SaveState, type Tuning,
 } from '../actions'
-import { GENERATORS, JOBS, MOODS, RITUALS } from '../content'
-import type { StageDef } from './stage-proposal'
+import { GENERATORS, JOBS, MOODS, RITUALS, stageUnlocked, type StageDef } from '../content'
 
 /** Deterministic PRNG (mulberry32) — the only randomness in the simulator. */
 export function mulberry32(seed: number): () => number {
@@ -123,15 +122,15 @@ function stageFor(stages: StageDef[] | undefined, lifeHigh: number): number {
 
 function anythingAffordable(s: SaveState): boolean {
   for (const g of GENERATORS) {
-    if (s.high < g.unlockHigh) continue
+    if (s.high < g.unlockHigh || !stageUnlocked(s.lifeHigh, g.stage)) continue
     if (s.nugs >= g.baseCost * g.costScale ** (s.generators[g.id] ?? 0)) return true
   }
   for (const j of JOBS) {
-    if (s.high < j.unlockHigh) continue
+    if (s.high < j.unlockHigh || !stageUnlocked(s.lifeHigh, j.stage)) continue
     if (s.cash >= j.baseCost * j.costScale ** (s.jobs[j.id] ?? 0)) return true
   }
   for (const r of RITUALS) {
-    if (s.high < r.unlockHigh) continue
+    if (s.high < r.unlockHigh || !stageUnlocked(s.lifeHigh, r.stage)) continue
     const level = s.rituals[r.id] ?? 0
     if (level >= r.maxLevel) continue
     const cost = r.costs[level]
@@ -172,13 +171,12 @@ export function runSim(opts: SimOptions): SimResult {
   const seed = opts.seed ?? 42
   const dt = opts.dt ?? 1
   const recordEvery = opts.recordEvery ?? 300
-  const tuning = opts.tuning ?? PROTO_TUNING
+  const tuning = opts.tuning ?? DEFAULT_TUNING
   const rng = mulberry32(seed)
 
   let s = collectAchievements(defaultSave(0)).save
   s = { ...s, booted: true }
   let t = 0
-  let lifeHigh = 0
   const events: SimEvent[] = []
   const series: SeriesPoint[] = []
   const reach: Record<string, number> = {}
@@ -202,9 +200,8 @@ export function runSim(opts: SimOptions): SimResult {
 
   const firstReach = (key: string) => { if (!(key in reach)) reach[key] = t }
 
-  const absorbHighDelta = (before: number, after: number) => {
-    if (after > before) lifeHigh += after - before
-  }
+  // lifeHigh is the engine's own save field since § 7 item 2 — the harness
+  // reads it rather than shadow-accumulating high deltas (one implementation).
 
   const checkCrossings = () => {
     // Moods ride current high within the afternoon.
@@ -219,7 +216,7 @@ export function runSim(opts: SimOptions): SimResult {
     for (const r of RITUALS) if (s.high >= r.unlockHigh && !cursors.unlocked.has(r.id)) { cursors.unlocked.add(r.id); firstReach(`unlock:${r.id}`) }
     // Stages ride lifeHigh and never rewind.
     if (opts.stages) {
-      const idx = stageFor(opts.stages, lifeHigh)
+      const idx = stageFor(opts.stages, s.lifeHigh)
       while (cursors.stage < idx) {
         cursors.stage++
         firstReach(`stage:${opts.stages[cursors.stage].id}`)
@@ -235,7 +232,7 @@ export function runSim(opts: SimOptions): SimResult {
 
   const record = () => {
     if (recordEvery > 0 && t >= nextRecord) {
-      series.push({ t, high: s.high, lifeHigh, nugs: s.nugs, cash: s.cash, buzz: s.buzz, enlightenment: s.enlightenment, stage: cursors.stage })
+      series.push({ t, high: s.high, lifeHigh: s.lifeHigh, nugs: s.nugs, cash: s.cash, buzz: s.buzz, enlightenment: s.enlightenment, stage: cursors.stage })
       nextRecord = t + recordEvery
     }
   }
@@ -283,9 +280,7 @@ export function runSim(opts: SimOptions): SimResult {
       firstReach(`prestige:${prestiges.length}`)
       events.push({ t, kind: 'prestige', n: gain })
       prevPeak = s.peakHigh
-      const before = s.high
       s = collectAchievements(applyPrestige(s, t * 1000, tuning) ?? s).save
-      absorbHighDelta(before, s.high) // no-op: prestige only ever lowers high
       cursors.mood = 0
       cycleStart = t
       rebuildPending = { target: prevPeak, since: t, row: prestiges.length - 1 }
@@ -319,14 +314,10 @@ export function runSim(opts: SimOptions): SimResult {
       const sliceEnd = Math.min(t + policy.decisionEvery, until)
       while (t < sliceEnd) {
         const step = Math.min(dt, sliceEnd - t)
-        const beforeHigh = s.high
         s = advance(s, step, tuning)
-        absorbHighDelta(beforeHigh, s.high)
         t += step
         while (t >= nextHitAt) {
-          const b = s.high
           s = applyHit(s, tuning)
-          absorbHighDelta(b, s.high)
           nextHitAt += hitGap()
         }
       }
@@ -350,12 +341,10 @@ export function runSim(opts: SimOptions): SimResult {
       }
       if (t >= horizon) break
       const away = Math.min(policy.session.away, horizon - t)
-      const beforeHigh = s.high
       const { save: back } = applyOffline({ ...s, lastTick: t * 1000 }, away, tuning)
       s = back
       t += away
       nextHitAt = policy.clickHz > 0 ? t + hitGap() : Infinity
-      absorbHighDelta(beforeHigh, s.high)
       s = collectAchievements(s).save
       checkCrossings()
       checkIns.total++
@@ -389,7 +378,7 @@ export function runSim(opts: SimOptions): SimResult {
     policy: policy.name, seed, dt, horizon,
     events, series, reach, deadMax, deadSpans, checkIns, impacts, prestiges,
     final: {
-      t, high: s.high, lifeHigh, nugs: s.nugs, cash: s.cash, buzz: s.buzz,
+      t, high: s.high, lifeHigh: s.lifeHigh, nugs: s.nugs, cash: s.cash, buzz: s.buzz,
       enlightenment: s.enlightenment, stage: cursors.stage,
       totalHits: s.totalHits, playTime: s.playTime,
     },

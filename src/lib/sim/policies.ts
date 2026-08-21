@@ -2,8 +2,8 @@
 // bracketing real play between extremes (never-click vs hammer, hoard vs
 // spend-all, camp vs check-in), not modeling any one human well.
 
-import { milestoneMult, PROTO_TUNING, type Tuning } from '../engine'
-import { GENERATORS, JOBS, RITUALS } from '../content'
+import { DEFAULT_TUNING, milestoneMult, type Tuning } from '../engine'
+import { GENERATORS, JOBS, RITUALS, stageUnlocked } from '../content'
 import type { SaveState } from '../actions'
 import type { BuyAction, Policy } from './sim'
 
@@ -12,7 +12,7 @@ const unitCost = (base: number, scale: number, owned: number) => base * scale **
 function affordableRituals(s: SaveState): { id: string; cost: number }[] {
   const out: { id: string; cost: number }[] = []
   for (const r of RITUALS) {
-    if (s.high < r.unlockHigh) continue
+    if (s.high < r.unlockHigh || !stageUnlocked(s.lifeHigh, r.stage)) continue
     const level = s.rituals[r.id] ?? 0
     if (level >= r.maxLevel) continue
     const cost = r.costs[level]
@@ -23,13 +23,13 @@ function affordableRituals(s: SaveState): { id: string; cost: number }[] {
 }
 
 /** Best-return-per-cost purchase across generators and jobs, rituals first. */
-function roiBuy(s: SaveState, t: Tuning = PROTO_TUNING): BuyAction | null {
+function roiBuy(s: SaveState, t: Tuning = DEFAULT_TUNING): BuyAction | null {
   const cheap = affordableRituals(s)[0]
   if (cheap) return { kind: 'ritual', id: cheap.id }
 
   let best: { action: BuyAction; roi: number } | null = null
   for (const g of GENERATORS) {
-    if (s.high < g.unlockHigh) continue
+    if (s.high < g.unlockHigh || !stageUnlocked(s.lifeHigh, g.stage)) continue
     const n = s.generators[g.id] ?? 0
     const cost = unitCost(g.baseCost, g.costScale, n)
     if (s.nugs < cost) continue
@@ -38,7 +38,7 @@ function roiBuy(s: SaveState, t: Tuning = PROTO_TUNING): BuyAction | null {
     if (!best || roi > best.roi) best = { action: { kind: 'gen', id: g.id }, roi }
   }
   for (const j of JOBS) {
-    if (s.high < j.unlockHigh) continue
+    if (s.high < j.unlockHigh || !stageUnlocked(s.lifeHigh, j.stage)) continue
     const n = s.jobs[j.id] ?? 0
     const cost = unitCost(j.baseCost, j.costScale, n)
     if (s.cash < cost) continue
@@ -53,12 +53,12 @@ function roiBuy(s: SaveState, t: Tuning = PROTO_TUNING): BuyAction | null {
 function greedyBuy(s: SaveState): BuyAction | null {
   let best: { action: BuyAction; cost: number } | null = null
   for (const g of GENERATORS) {
-    if (s.high < g.unlockHigh) continue
+    if (s.high < g.unlockHigh || !stageUnlocked(s.lifeHigh, g.stage)) continue
     const cost = unitCost(g.baseCost, g.costScale, s.generators[g.id] ?? 0)
     if (s.nugs >= cost && (!best || cost < best.cost)) best = { action: { kind: 'gen', id: g.id }, cost }
   }
   for (const j of JOBS) {
-    if (s.high < j.unlockHigh) continue
+    if (s.high < j.unlockHigh || !stageUnlocked(s.lifeHigh, j.stage)) continue
     const cost = unitCost(j.baseCost, j.costScale, s.jobs[j.id] ?? 0)
     if (s.cash >= cost && (!best || cost < best.cost)) best = { action: { kind: 'job', id: j.id }, cost }
   }
@@ -70,8 +70,8 @@ function greedyBuy(s: SaveState): BuyAction | null {
 
 /** Hoard toward the next unowned tier on each currency; light maintenance. */
 function tierBuy(s: SaveState): BuyAction | null {
-  const nextGen = GENERATORS.find(g => (s.generators[g.id] ?? 0) === 0)
-  const nextJob = JOBS.find(j => (s.jobs[j.id] ?? 0) === 0)
+  const nextGen = GENERATORS.find(g => (s.generators[g.id] ?? 0) === 0 && stageUnlocked(s.lifeHigh, g.stage))
+  const nextJob = JOBS.find(j => (s.jobs[j.id] ?? 0) === 0 && stageUnlocked(s.lifeHigh, j.stage))
   if (nextGen && s.high >= nextGen.unlockHigh && s.nugs >= nextGen.baseCost) return { kind: 'gen', id: nextGen.id }
   if (nextJob && s.high >= nextJob.unlockHigh && s.cash >= nextJob.baseCost) return { kind: 'job', id: nextJob.id }
   const ritual = affordableRituals(s).find(r => r.cost <= 0.05 * Math.max(s.nugs, s.cash))

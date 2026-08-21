@@ -10,6 +10,10 @@ export interface GeneratorDef {
   costScale: number
   baseRate: number
   unlockHigh: number
+  /** Additive story content only (DESIGN § 9.4): the row exists once this
+   * stage is reached (a real `lifeHigh` gate on top of `unlockHigh`).
+   * Absent = available exactly as playtested, from the start of the life. */
+  stage?: string
 }
 
 export interface JobDef {
@@ -21,6 +25,8 @@ export interface JobDef {
   cashRate: number
   highRate: number
   unlockHigh: number
+  /** See GeneratorDef.stage — real gates bind only new additive content. */
+  stage?: string
 }
 
 export interface RitualDef {
@@ -31,6 +37,8 @@ export interface RitualDef {
   costs: number[]
   currency: 'nugs' | 'cash'
   unlockHigh: number
+  /** See GeneratorDef.stage — real gates bind only new additive content. */
+  stage?: string
 }
 
 export interface MoodDef {
@@ -49,6 +57,9 @@ export const GENERATORS: GeneratorDef[] = [
   { id: 'tray', name: 'Rolling Tray', blurb: 'A dented tin that knows the way. Starts the afternoon.', baseCost: 10, costScale: 1.14, baseRate: 0.1, unlockHigh: 0 },
   { id: 'piece', name: 'Beaker Piece', blurb: 'Glass that sings when it is warm. Reliable company.', baseCost: 80, costScale: 1.145, baseRate: 0.8, unlockHigh: 8 },
   { id: 'gravity', name: 'Gravity Bong', blurb: 'Physics does the work. You just hold the bottle.', baseCost: 620, costScale: 1.15, baseRate: 5.2, unlockHigh: 25 },
+  // Arc-1 prologue (NEW, stage-gated additive content — DESIGN § 9.4).
+  { id: 'pinch', name: "Cousin's Pinch", blurb: 'A little shared stash, replenished on the honor system.', baseCost: 780, costScale: 1.15, baseRate: 6.5, unlockHigh: 30, stage: 'cousins-couch' },
+  { id: 'grinder', name: 'Borrowed Grinder', blurb: 'Came with the couch, allegedly. It lives on the crate now.', baseCost: 2400, costScale: 1.15, baseRate: 15, unlockHigh: 50, stage: 'cousins-couch' },
   { id: 'vape', name: 'Desktop Vape', blurb: 'A quiet machine that never asks questions.', baseCost: 4800, costScale: 1.15, baseRate: 32, unlockHigh: 70 },
   { id: 'volcano', name: 'Tabletop Volcano', blurb: 'Bags of weather. The living room has its own climate.', baseCost: 42e3, costScale: 1.15, baseRate: 180, unlockHigh: 180 },
   { id: 'closet', name: 'Closet Grow', blurb: 'A secret forest behind the winter coats.', baseCost: 38e4, costScale: 1.15, baseRate: 1100, unlockHigh: 450 },
@@ -64,6 +75,8 @@ export const JOBS: JobDef[] = [
   { id: 'thinker', name: 'Unemployed Philosopher', blurb: 'You already had this job. Now it pays in change and theories.', baseCost: 8, costScale: 1.16, cashRate: 0.4, highRate: 0.02, unlockHigh: 4 },
   { id: 'pizza', name: 'Night Pizza Run', blurb: 'Keys were in the fridge. The car remembered the route.', baseCost: 90, costScale: 1.16, cashRate: 2.4, highRate: 0, unlockHigh: 12 },
   { id: 'guitar', name: 'Stairwell Guitar', blurb: 'Three chords. A hat. Strangers leave coins and compliments.', baseCost: 520, costScale: 1.17, cashRate: 12, highRate: 0.05, unlockHigh: 35 },
+  // Arc-1 prologue (NEW, stage-gated additive content — DESIGN § 9.4).
+  { id: 'shift', name: 'Corner Store Shift', blurb: 'Fluorescent hours. The till predicts your purchases with insulting accuracy.', baseCost: 700, costScale: 1.17, cashRate: 16, highRate: 0.03, unlockHigh: 45, stage: 'corner-store' },
   { id: 'napper', name: 'Professional Napper', blurb: 'You invoice for REM. Clients say the work is outstanding.', baseCost: 2800, costScale: 1.17, cashRate: 55, highRate: 0.15, unlockHigh: 90 },
   { id: 'historian', name: 'Couch Historian', blurb: 'You rate cushions for a newsletter with 12 devoted readers.', baseCost: 16e3, costScale: 1.17, cashRate: 240, highRate: 0.08, unlockHigh: 220 },
   { id: 'chemist', name: 'Snack Chemist', blurb: 'Flavor pairings no sober person would attempt. A small empire.', baseCost: 95e3, costScale: 1.18, cashRate: 1100, highRate: 0.2, unlockHigh: 550 },
@@ -79,6 +92,8 @@ export const RITUALS: RitualDef[] = [
   { id: 'water', name: 'Hydration', blurb: 'A glass that refills itself. Buzz fades slower.', maxLevel: 8, costs: [25, 80, 250, 800, 2500, 8e3, 25e3, 8e4], currency: 'nugs', unlockHigh: 6 },
   { id: 'snacks', name: 'Snack Cache', blurb: 'Crisp, salt, chocolate. The afternoon stays put.', maxLevel: 8, costs: [60, 200, 700, 2200, 8e3, 28e3, 1e5, 36e4], currency: 'nugs', unlockHigh: 18 },
   { id: 'roommate', name: 'The Roommate', blurb: 'They take a hit for you. On a loop. Bless them.', maxLevel: 10, costs: [120, 400, 1400, 5e3, 18e3, 65e3, 24e4, 9e5, 34e5, 13e6], currency: 'nugs', unlockHigh: 30 },
+  // Arc-1 prologue (NEW, stage-gated additive content — DESIGN § 9.4).
+  { id: 'lighter', name: 'The Green Lighter', blurb: "The cousin's loaner, never returned. Every hit lands a little warmer.", maxLevel: 6, costs: [150, 600, 2400, 9600, 4e4, 16e4], currency: 'nugs', unlockHigh: 35, stage: 'cousins-couch' },
   { id: 'playlist', name: 'Infinite Playlist', blurb: 'A mix that knows when to get weird. Everything produces more.', maxLevel: 8, costs: [40, 180, 720, 3e3, 14e3, 62e3, 28e4, 13e5], currency: 'cash', unlockHigh: 40 },
   { id: 'lamp', name: 'Lava Lamp', blurb: 'Blobs rise. Buzz arrives without asking.', maxLevel: 8, costs: [200, 900, 4e3, 18e3, 82e3, 38e4, 18e5, 82e5], currency: 'nugs', unlockHigh: 60 },
   { id: 'curtains', name: 'Blackout Curtains', blurb: 'Time becomes optional. Offline sessions keep more of themselves.', maxLevel: 5, costs: [150, 800, 4500, 28e3, 18e4], currency: 'cash', unlockHigh: 80 },
@@ -99,6 +114,115 @@ export const MOODS: MoodDef[] = [
   { id: 'mythic', name: 'Mythic', minHigh: 25e3, blurb: 'History starts taking notes.', revelation: 'History takes notes in the margins of your nap.' },
   { id: 'legend', name: 'Couch Legend', minHigh: 1e5, blurb: 'The afternoon became a civilization.', revelation: 'The afternoon became a civilization. You are its calendar.' },
 ]
+
+// --- the life story ------------------------------------------------------
+// 18 stages in three arcs, keyed on `lifeHigh` and nothing else (DESIGN
+// § 9). Thresholds are TUNED BY SIMULATION — fitted to the measured
+// tuned-balanced curve (docs/sim/2026-08-20-life-story-balance.md § 4);
+// change them only with fresh sim evidence inside the § 9.6 rails. Scene
+// keys are the looks contract's asset-scene keys (2026-08-21 looks pass
+// § 5). Beats are the permanent one-line chapter captions: stages 1–3
+// verbatim from the delivered scene packages, the rest authored here from
+// the looks contract's stage treatments.
+
+export interface StageDef {
+  id: string
+  name: string
+  /** 1 = Sparks · 2 = The Couch Era · 3 = The Legend. */
+  arc: 1 | 2 | 3
+  /** Stage begins when lifetime High reaches this. Monotonic; pinned by test. */
+  minLifeHigh: number
+  /** The one new pressure/emphasis this stage introduces (plateau design). */
+  pressure: string
+  /** Asset-scene key for the per-stage backdrop (STAGE_PRESENTATION). */
+  scene: string
+  /** Permanent one-line chapter caption — the stage-entry story beat. */
+  beat: string
+}
+
+export const ARC_NAMES: Record<1 | 2 | 3, string> = {
+  1: 'Sparks',
+  2: 'The Couch Era',
+  3: 'The Legend',
+}
+
+export const STAGES: StageDef[] = [
+  { id: 'first-light', name: 'First Light', arc: 1, minLifeHigh: 0, pressure: 'the click itself', scene: 'parking-lot-dusk', beat: 'Before the legend, there was a wet couch, a first cigarette, and a job flyer the wind refused to keep.' },
+  { id: 'corner-store', name: 'Corner Store Nights', arc: 1, minLifeHigh: 510, pressure: 'first idle income', scene: 'corner-store', beat: 'The couch squeezed into the stockroom. Fluorescent hours became a first paycheck.' }, // ~4 min
+  { id: 'cousins-couch', name: "Somebody's Cousin's Couch", arc: 1, minLifeHigh: 1.7e3, pressure: 'first cash, the pivot to weed', scene: 'cousins-living-room', beat: 'One green lighter changed the temperature of the room — and the price of a good afternoon.' }, // ~15 min
+  { id: 'the-couch', name: 'The Couch', arc: 2, minLifeHigh: 1.4e4, pressure: 'the apartment economy (tray, piece, first jobs)', scene: 'first-apartment', beat: 'A first apartment, a first proper tray, the first ridiculous paid errand. The couch has a home now.' }, // ~30 min
+  { id: 'rituals-of-the-room', name: 'Rituals of the Room', arc: 2, minLifeHigh: 3.0e7, pressure: 'retention + automation (water, snacks, roommate)', scene: 'apartment-lived-in', beat: 'Water, snacks, a roommate, a playlist. The room becomes a small system that runs without you.' }, // ~1.4 h
+  { id: 'long-sunday', name: 'The Long Sunday', arc: 2, minLifeHigh: 2.4e9, pressure: 'Wake & Bake becomes the rhythm', scene: 'sunday-light', beat: 'Work, smoke, come down, begin a better afternoon. The first visible rhythm of a life.' }, // ~3.6 h
+  { id: 'green-thumbs', name: 'Green Thumbs', arc: 2, minLifeHigh: 1.6e10, pressure: 'grow scale (closet, plants)', scene: 'closet-forest', beat: 'A luminous forest grows behind the winter coats. You are a producer now.' }, // ~day 0.4
+  { id: 'working-stiff', name: 'A Working Stiff, Technically', arc: 2, minLifeHigh: 5.5e10, pressure: 'the career ladder pays (napper → chemist)', scene: 'odd-jobs-wall', beat: 'Pizza runs, stairwell chords, professional naps. A colorful wall of improbable employment.' }, // ~day 0.9
+  { id: 'the-operation', name: 'The Operation', arc: 2, minLifeHigh: 1.5e11, pressure: 'industrial grow (farm, collective)', scene: 'evidence-room', beat: 'Success attracted the wrong attention. One spectacular weekend, the couch saw the inside of an evidence room.' }, // ~day 1.8
+  { id: 'local-legend', name: 'Local Legend', arc: 2, minLifeHigh: 3.1e11, pressure: 'the neighborhood knows (dispensary, throne)', scene: 'storefront', beat: 'Friends rebuilt the remains as a storefront. The couch sits in the window like a neighborhood monument.' }, // ~day 3
+  { id: 'head-in-the-cloud', name: 'Head in the Cloud', arc: 2, minLifeHigh: 5.3e11, pressure: 'subscription scale (cloud, oracle)', scene: 'state-room', beat: 'Delivery platforms, strange remote work, accidental influence. An administration extends an invitation.' }, // ~day 4.5
+  { id: 'garden-upstairs', name: 'The Garden Upstairs', arc: 2, minLifeHigh: 8.2e11, pressure: 'leaving the ground (orbit, envoy)', scene: 'lunar-lounge', beat: "An orbital garden and an envoy's badge carry the couch to a lunar lounge, Earth in the window." }, // ~day 6.2
+  { id: 'mythic-canopy', name: 'Mythic Canopy', arc: 2, minLifeHigh: 1.2e12, pressure: 'the last authored tier of the couch era', scene: 'bioluminescent-canopy', beat: 'A bioluminescent forest grows around the couch. The operation has become folklore.' }, // ~day 8
+  { id: 'the-civilization', name: 'The Civilization', arc: 3, minLifeHigh: 1.5e12, pressure: 'new content batch A (post-couch)', scene: 'afternoon-city', beat: 'Bright future lounges, gardens, absurd jobs. A private routine is becoming a culture.' }, // ~day 9.5
+  { id: 'the-archive', name: 'The Archive', arc: 3, minLifeHigh: 1.7e12, pressure: 'new content batch B', scene: 'archive-halls', beat: 'A future museum keeps the nametag, the tray, the wristband. The couch is supposedly behind glass. You are still on it.' }, // ~day 10.7
+  { id: 'the-long-now', name: 'The Long Now', arc: 3, minLifeHigh: 2.0e12, pressure: 'new content batch C', scene: 'long-now', beat: 'A calm future lounge. An afternoon, it turns out, can take several shapes without breaking.' }, // ~day 11.8
+  { id: 'almost-everything', name: 'Almost Everything', arc: 3, minLifeHigh: 2.2e12, pressure: 'new content batch D', scene: 'almost-everything', beat: 'Remembered rooms overlap — nightlife, plants, jail bars, state rooms, the moon. One colorful dream.' }, // ~day 12.9
+  { id: 'long-afternoon', name: 'The Long Afternoon', arc: 3, minLifeHigh: 2.5e12, pressure: 'endless: the prestige loop itself, forever', scene: 'long-afternoon', beat: 'The couch overlooks a cosmic sunset while the whole life quietly orbits it. The story ends. The afternoon does not.' }, // ~day 14
+]
+
+export function stageForLifeHigh(lifeHigh: number, stages: StageDef[] = STAGES): StageDef {
+  let cur = stages[0]
+  for (const st of stages) if (lifeHigh >= st.minLifeHigh) cur = st
+  return cur
+}
+
+export function nextStage(lifeHigh: number): StageDef | null {
+  for (const st of STAGES) if (lifeHigh < st.minLifeHigh) return st
+  return null
+}
+
+/** The chapter turn: the stage entered between two lifeHigh readings, or
+ * null. Multiple thresholds crossed at once (offline, import) collapse to
+ * the FINAL stage — at most one turn, never a replay of every crossing. */
+export function stageCrossed(prevLifeHigh: number, nextLifeHigh: number): StageDef | null {
+  const before = stageForLifeHigh(prevLifeHigh)
+  const after = stageForLifeHigh(nextLifeHigh)
+  return after.id === before.id ? null : after
+}
+
+/** Availability of stage-gated (additive) content. Rows without a stage are
+ * ungated; a row naming an unknown stage stays locked (fail closed — a pin
+ * test keeps the branch unreachable). */
+export function stageUnlocked(lifeHigh: number, stageId: string | undefined): boolean {
+  if (!stageId) return true
+  const st = STAGES.find(s => s.id === stageId)
+  return st != null && lifeHigh >= st.minLifeHigh
+}
+
+/**
+ * Era FRAMING for the content tables — which stage's scene and beats
+ * reference each item. NOT an availability gate for the original 34 items:
+ * they keep `high >= unlockHigh` as their only key, exactly as playtested
+ * (DESIGN § 9.4 — real stage gates bind only additive content, whose rows
+ * carry a `stage` field matching their framing here).
+ */
+export const STAGE_FRAMING: Record<string, string> = {
+  // generators
+  tray: 'the-couch', piece: 'the-couch', gravity: 'rituals-of-the-room',
+  pinch: 'cousins-couch', grinder: 'cousins-couch',
+  vape: 'long-sunday', volcano: 'long-sunday', closet: 'green-thumbs',
+  farm: 'the-operation', collective: 'the-operation', dispensary: 'local-legend',
+  cloud: 'head-in-the-cloud', orbit: 'garden-upstairs', myth: 'mythic-canopy',
+  // jobs
+  thinker: 'the-couch', pizza: 'the-couch', guitar: 'rituals-of-the-room',
+  shift: 'corner-store',
+  napper: 'working-stiff', historian: 'working-stiff', chemist: 'working-stiff',
+  narrator: 'the-operation', lights: 'local-legend', oracle: 'head-in-the-cloud',
+  minister: 'head-in-the-cloud', envoy: 'garden-upstairs', legend: 'mythic-canopy',
+  // rituals
+  water: 'the-couch', snacks: 'rituals-of-the-room', roommate: 'rituals-of-the-room',
+  lighter: 'cousins-couch',
+  playlist: 'rituals-of-the-room', lamp: 'long-sunday', curtains: 'long-sunday',
+  plants: 'green-thumbs', cushion: 'long-sunday', sunday: 'local-legend',
+  throne: 'local-legend',
+}
 
 export interface AchievementDef {
   id: string
