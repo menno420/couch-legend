@@ -3,6 +3,7 @@ import { Cloudy } from 'lucide-react'
 import { useGame } from '../lib/store'
 import { moodFor, nextMood } from '../lib/content'
 import { fmt } from '../lib/format'
+import { SceneMotion } from './SceneMotion'
 import { Button, Panel } from './ui'
 
 const BASE = import.meta.env.BASE_URL
@@ -78,8 +79,8 @@ export function CouchPanel() {
             opacity: hazeOpacity,
           }}
         />
+        <SceneMotion preset="couch-room" />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-bg via-bg/10 to-bg/15" />
-        <div className="scene-lamp lamp-glow pointer-events-none absolute left-[12%] top-[18%] h-24 w-24 rounded-full blur-2xl" />
         {hitPulse > 0.35
           ? Array.from({ length: 7 }, (_, i) => (
               <span

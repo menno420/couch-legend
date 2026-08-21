@@ -412,7 +412,7 @@ tuning — future tuning changes must stay inside them, with sim evidence:
    silently vanished from the statistics, now right-censored and counted.
    The figures above are post-fix.)*
 
-### 9.7 The per-stage visual plan (DECIDED plan; production is later work)
+### 9.7 The per-stage visual plan (DECIDED plan; production underway)
 
 - **18 scene backdrops**, one per stage (`scene` keys in the stage table):
   the same couch across changing places — parking-lot dusk → corner store →
@@ -443,8 +443,12 @@ tuning — future tuning changes must stay inside them, with sim evidence:
   encoded size and decode cost on representative phones before setting a
   delivery budget; this plan does not invent one before the 36 files exist.
 - The owner's 2026-08-21 looks pass precedes implementation and art production:
-  it is the style contract those later sessions follow. The 36 state images
-  are produced and owner-reviewed later, pair by pair.
+  it is the style contract those later sessions follow. The first three Arc-1
+  packages (six state images) are now delivered and owner-approved in
+  [`docs/design/2026-08-21-arc-1-scene-packages.md`](design/2026-08-21-arc-1-scene-packages.md).
+  They remain dormant until the permanent stage schema and presentation
+  registry land; the remaining 15 packages are produced and owner-reviewed
+  later, pair by pair.
 
 ### 9.8 Still OPEN after the looks pass (deliberately)
 

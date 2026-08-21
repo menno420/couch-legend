@@ -6,6 +6,11 @@
 > direction. This does **not** adopt a balance change, a quest economy, a
 > substance effect, or a new prestige route.
 
+> **Art-production update:** the owner approved the grounded opening treatment
+> and the first three lucid/baked packages on 2026-08-21. Asset metadata, motion
+> recipes, QA and the stage-runtime boundary are recorded in
+> [`2026-08-21-arc-1-scene-packages.md`](2026-08-21-arc-1-scene-packages.md).
+
 ### Authority in this document
 
 - **Owner direction:** the B + C blend with some of A — modern/futuristic,
