@@ -103,7 +103,10 @@ describe('the zero-click wall (a stated boundary, not an oversight)', () => {
 
 describe('rebuild accounting (Codex CL#2 R2: the horizon edge)', () => {
   it('every prestige row resolves to exactly one of completed / unrecovered / censored', () => {
-    const r = runSim({ policy: POLICIES['click-heavy'], seed: 7, dt: 5, horizon: 24 * 3600, stages: PROPOSED_STAGES })
+    // Two hours is enough: the eager lane prestiges every ~11 minutes, and
+    // a 24 h horizon blew Vitest's 5 s per-test budget on slower machines
+    // (Codex R3 measured 11.9 s in its sandbox).
+    const r = runSim({ policy: POLICIES['click-heavy'], seed: 7, dt: 5, horizon: 2 * 3600, stages: PROPOSED_STAGES })
     expect(r.prestiges.length).toBeGreaterThan(0)
     for (const row of r.prestiges) {
       const states = [row.rebuildSeconds != null, row.unrecovered === true, row.censoredSeconds != null]
@@ -139,5 +142,15 @@ describe('the minimum-start boundary (Codex R3: one hit is not enough)', () => {
     expect(later.high).toBeGreaterThan(4) // job highRate now climbs
     // The grow half stays shut without more hits: nugs frozen below the tray.
     expect(purchaseGenerator(later, 'tray', 1)).toBeNull()
+  })
+  it('the 9/10-hit endpoint: nine hits still cannot buy the tray, the tenth can and starts nug production', () => {
+    let nine = collectAchievements({ ...defaultSave(0), booted: true }).save
+    for (let i = 0; i < 9; i++) nine = applyHit(nine)
+    expect(purchaseGenerator(nine, 'tray', 1)).toBeNull() // 9 nugs < 10
+    const ten = applyHit(nine)
+    const grown = purchaseGenerator(ten, 'tray', 1)
+    expect(grown).not.toBeNull() // exactly 10 nugs buys it
+    const later = advance(grown!, 3600)
+    expect(later.nugs).toBeGreaterThan(grown!.nugs) // nug production is on
   })
 })
