@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The pre-Android-12 launch window. A flat fill in the game's own surface
+     colour; on Android 12+ the system splash draws the launcher icon over the
+     same colour, which styles.xml names explicitly. The intent is one unbroken
+     colour from tap to first frame — configured here, not yet observed on a
+     device. Replaces the eleven density-bucketed Capacitor-logo PNGs the
+     template ships: a ColorDrawable needs no density variants. -->
+<color xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/couchLegendBackground" />

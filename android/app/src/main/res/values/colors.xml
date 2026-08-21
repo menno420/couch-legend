@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Matches <meta name="theme-color"> in index.html and the `backgroundColor`
+         in capacitor.config.ts, so the launch window, the system splash and the
+         web view are all the same colour and a cold start never flashes white. -->
+    <color name="couchLegendBackground">#0B1110</color>
+</resources>

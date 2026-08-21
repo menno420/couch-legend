@@ -1,0 +1,124 @@
+# Assembles the sideloadable Android APK.
+#
+# The agent container that develops this repo has JDK and Gradle but no Android
+# SDK ([D-0003], docs/CAPABILITIES.md), so the Gradle project is generated and
+# committed from a session and the APK is assembled here. Debug signing is
+# deliberate for now: a debug-signed APK installs from unknown sources with no
+# key management, and release signing arrives with the first real release
+# ([D-0002]).
+#
+# Two jobs, because the two questions are different:
+#   apk         — builds the PR HEAD, so a result from a real phone is
+#                 attributable to a commit someone can look up.
+#   merge-tree  — builds what would actually land, so an Android-side
+#                 incompatibility between this branch and main cannot pass
+#                 review and break main. Nothing else covers this: `ci` runs
+#                 only `pnpm check` and `substrate-gate` is repo hygiene;
+#                 neither assembles Android.
+name: android
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    name: debug apk
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The PR head, not GitHub's synthetic merge revision — a merge
+          # revision exists on no branch, so an APK named after one is
+          # untraceable, and one built from one is misattributed.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Install the SDK packages this project compiles against
+        # Pinned rather than trusted to the runner image: variables.gradle
+        # decides compileSdk/targetSdk, and a runner image rotation should not
+        # silently change what the APK is built against.
+        uses: android-actions/setup-android@v3
+        with:
+          packages: platforms;android-36 build-tools;36.0.0
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build the web bundle with a relative base and sync it into the shell
+        # VITE_BASE=./ is load-bearing: the site's default base is
+        # /couch-legend/, which inside the app resolves to a path that does not
+        # exist and shows a black screen. The next step is what proves it.
+        run: pnpm build:shell
+
+      - name: Assert the shell is self-contained
+        run: pnpm check:shell
+
+      - name: Assemble the debug APK
+        run: ./gradlew --no-daemon assembleDebug
+        working-directory: android
+
+      - name: Name the APK after the commit it was built from
+        id: apk
+        # Derived from the revision actually checked out, so the label and the
+        # bytes can never disagree.
+        run: |
+          short="$(git rev-parse --short=7 HEAD)"
+          src=android/app/build/outputs/apk/debug/app-debug.apk
+          out="couch-legend-${short}-debug.apk"
+          cp "$src" "$out"
+          echo "short=$short" >> "$GITHUB_OUTPUT"
+          echo "path=$out" >> "$GITHUB_OUTPUT"
+          ls -lh "$out"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: couch-legend-apk-${{ steps.apk.outputs.short }}
+          path: ${{ steps.apk.outputs.path }}
+          if-no-files-found: error
+
+  merge-tree:
+    name: android merge check
+    # Only meaningful on a PR: on push to main the head IS the merge result.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      # No `ref:` — the default on a pull_request is the merge revision, which
+      # is exactly the tree this job exists to assemble.
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platforms;android-36 build-tools;36.0.0
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:shell
+      - run: pnpm check:shell
+      - name: Assemble the merged tree (no artifact — this is a check, not a build)
+        run: ./gradlew --no-daemon assembleDebug
+        working-directory: android
