@@ -9,7 +9,7 @@ import {
 } from './actions'
 import {
   ACHIEVEMENTS, INTERJECTIONS, MOODS, NEWS_LINES,
-  moodFor,
+  stageCrossed, type StageDef,
 } from './content'
 import { loadSave, persistSave, pickSave, requestPersistence, importCode } from './save'
 import { blipSound, chimeSound, ensureAudio, puffSound, setMuted } from './audio'
@@ -61,14 +61,13 @@ function collectAchievements(save: SaveState, toasts: Toast[]): AchievementResul
   return { save: collected, toasts: next, fresh: true }
 }
 
-/** NEW: mood transitions produce a revelation toast the first time. */
-function collectMoodChange(prevPeak: number, save: SaveState, toasts: Toast[]): { toasts: Toast[]; fresh: boolean } {
-  const before = moodFor(prevPeak)
-  const after = moodFor(save.peakHigh)
-  if (before.id === after.id) return { toasts, fresh: false }
+/** Revelations key on lifeHigh — the story axis — so they genuinely survive
+ * Wake & Bake (the § 9.2 re-key; the old peakHigh filter lost them on every
+ * prestige). Each threshold crosses exactly once in a life. */
+function collectRevelations(prevLifeHigh: number, save: SaveState, toasts: Toast[]): { toasts: Toast[]; fresh: boolean } {
   let next = toasts
   for (const m of MOODS) {
-    if (m.minHigh > prevPeak && m.minHigh <= save.peakHigh && m.minHigh > 0) {
+    if (m.minHigh > prevLifeHigh && m.minHigh <= save.lifeHigh && m.minHigh > 0) {
       next = pushToast(next, `Revelation — ${m.name}`, m.revelation)
     }
   }
@@ -85,6 +84,9 @@ export interface GameStore extends SaveState {
   newsIndex: number
   newsAt: number
   offline: OfflineSummary | null
+  /** The stage just entered — drives the chapter-turn overlay. Offline
+   * progress and import collapse multiple crossings to one final turn. */
+  chapterTurn: StageDef | null
   showPrestige: boolean
   showReset: boolean
   showSettings: boolean
@@ -106,6 +108,7 @@ export interface GameStore extends SaveState {
   setShowReset: (v: boolean) => void
   setShowSettings: (v: boolean) => void
   dismissOffline: () => void
+  dismissChapterTurn: () => void
   flushSave: () => void
 }
 
@@ -119,6 +122,7 @@ const uiDefaults = {
   newsIndex: 0,
   newsAt: 0,
   offline: null as OfflineSummary | null,
+  chapterTurn: null as StageDef | null,
   showPrestige: false,
   showReset: false,
   showSettings: false,
@@ -149,6 +153,8 @@ export const useGame = create<GameStore>()((set, get) => ({
       newsIndex: Math.floor(Math.random() * NEWS_LINES.length),
       newsAt: performance.now(),
       offline: summary,
+      // Offline progress emits at most ONE chapter turn — the final stage.
+      chapterTurn: stageCrossed(stored.lifeHigh, ach.save.lifeHigh),
     })
   },
 
@@ -170,10 +176,11 @@ export const useGame = create<GameStore>()((set, get) => ({
     ].slice(-14)
     const next = applyHit(pickSave(s))
     const ach = collectAchievements(next, s.toasts)
-    const mood = collectMoodChange(s.peakHigh, ach.save, ach.toasts)
+    const mood = collectRevelations(s.lifeHigh, ach.save, ach.toasts)
+    const turn = stageCrossed(s.lifeHigh, ach.save.lifeHigh)
     if (s.sound) puffSound()
-    if ((ach.fresh || mood.fresh) && s.sound) chimeSound()
-    set({ ...ach.save, floaters, toasts: mood.toasts, hitPulse: 1 })
+    if ((ach.fresh || mood.fresh || turn) && s.sound) chimeSound()
+    set({ ...ach.save, floaters, toasts: mood.toasts, hitPulse: 1, ...(turn ? { chapterTurn: turn } : {}) })
   },
 
   buyGenerator: (id) => {
@@ -221,8 +228,9 @@ export const useGame = create<GameStore>()((set, get) => ({
     if (!s.ready || !s.booted) return
     const progressed = { ...advance(pickSave(s), dt), lastTick: Date.now() }
     const ach = collectAchievements(progressed, s.toasts)
-    const mood = collectMoodChange(s.peakHigh, ach.save, ach.toasts)
-    if ((ach.fresh || mood.fresh) && s.sound) chimeSound()
+    const mood = collectRevelations(s.lifeHigh, ach.save, ach.toasts)
+    const turn = stageCrossed(s.lifeHigh, ach.save.lifeHigh)
+    if ((ach.fresh || mood.fresh || turn) && s.sound) chimeSound()
     const now = performance.now()
     const rotateNews = now - s.newsAt > 14000
     set({
@@ -232,6 +240,7 @@ export const useGame = create<GameStore>()((set, get) => ({
       hitPulse: s.hitPulse > 0 ? Math.max(0, s.hitPulse - 0.08) : 0,
       newsIndex: rotateNews ? (s.newsIndex + 1) % NEWS_LINES.length : s.newsIndex,
       newsAt: rotateNews ? now : s.newsAt,
+      ...(turn ? { chapterTurn: turn } : {}),
     })
     if (now - lastFlush > SAVE_EVERY_MS) get().flushSave()
   },
@@ -283,6 +292,8 @@ export const useGame = create<GameStore>()((set, get) => ({
       newsIndex: Math.floor(Math.random() * NEWS_LINES.length),
       newsAt: performance.now(),
       offline: summary,
+      // As on hydrate: at most one final turn for any crossings while away.
+      chapterTurn: stageCrossed(parsed.lifeHigh, ach.save.lifeHigh),
     })
     get().flushSave()
     return true
@@ -292,6 +303,7 @@ export const useGame = create<GameStore>()((set, get) => ({
   setShowReset: (v) => set({ showReset: v }),
   setShowSettings: (v) => set({ showSettings: v }),
   dismissOffline: () => set({ offline: null }),
+  dismissChapterTurn: () => set({ chapterTurn: null }),
 
   flushSave: () => {
     const s = get()

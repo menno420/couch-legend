@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest'
 import { runSim } from '../src/lib/sim/sim'
 import { POLICIES } from '../src/lib/sim/policies'
-import { GENERATORS, JOBS, RITUALS, STAGES, STAGE_FRAMING, stageUnlocked } from '../src/lib/content'
+import { GENERATORS, JOBS, RITUALS, STAGES, STAGE_FRAMING, stageCrossed, stageUnlocked } from '../src/lib/content'
 
 describe('determinism', () => {
   it('same seed, same policy → byte-identical results', () => {
@@ -77,6 +77,13 @@ describe('stage table', () => {
     expect(stageUnlocked(cousins.minLifeHigh - 1, 'cousins-couch')).toBe(false)
     expect(stageUnlocked(cousins.minLifeHigh, 'cousins-couch')).toBe(true)
     expect(stageUnlocked(Number.MAX_VALUE, 'not-a-stage')).toBe(false)
+  })
+  it('stageCrossed collapses any number of crossings to one final turn, and none to null', () => {
+    expect(stageCrossed(0, 100)).toBeNull()
+    expect(stageCrossed(0, 600)?.id).toBe('corner-store')
+    // A long offline gap can cross several thresholds — one turn, the last.
+    expect(stageCrossed(0, 2e4)?.id).toBe('the-couch')
+    expect(stageCrossed(2e4, 2e4)).toBeNull()
   })
 })
 

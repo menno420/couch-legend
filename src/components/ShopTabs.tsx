@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Leaf, Briefcase, Sparkles, ScrollText } from 'lucide-react'
 import { useGame, type BuyQty, type Tab } from '../lib/store'
-import { GENERATORS, JOBS, RITUALS } from '../lib/content'
+import { GENERATORS, JOBS, RITUALS, stageUnlocked } from '../lib/content'
 import { bulkCost, maxAffordable, milestoneMult } from '../lib/engine'
 import { fmt, fmtRate } from '../lib/format'
 import { Button, cx } from './ui'
@@ -33,10 +33,10 @@ export function QtyPicker() {
 /** NEW: a subtle dot on tabs where something new is affordable. */
 function useTabSignals(): Record<Tab, boolean> {
   return useGame(s => {
-    const growReady = GENERATORS.some(g => s.high >= g.unlockHigh && s.nugs >= bulkCost(g.baseCost, g.costScale, s.generators[g.id] ?? 0, 1))
-    const workReady = JOBS.some(j => s.high >= j.unlockHigh && s.cash >= bulkCost(j.baseCost, j.costScale, s.jobs[j.id] ?? 0, 1))
+    const growReady = GENERATORS.some(g => s.high >= g.unlockHigh && stageUnlocked(s.lifeHigh, g.stage) && s.nugs >= bulkCost(g.baseCost, g.costScale, s.generators[g.id] ?? 0, 1))
+    const workReady = JOBS.some(j => s.high >= j.unlockHigh && stageUnlocked(s.lifeHigh, j.stage) && s.cash >= bulkCost(j.baseCost, j.costScale, s.jobs[j.id] ?? 0, 1))
     const ritualReady = RITUALS.some(r => {
-      if (s.high < r.unlockHigh) return false
+      if (s.high < r.unlockHigh || !stageUnlocked(s.lifeHigh, r.stage)) return false
       const level = s.rituals[r.id] ?? 0
       const cost = level >= r.maxLevel ? null : r.costs[level]
       if (cost == null) return false
@@ -152,13 +152,14 @@ function Section({ icon, title, hint, qty, children }: { icon: ReactNode; title:
 
 export function GrowTab() {
   const high = useGame(s => s.high)
+  const lifeHigh = useGame(s => s.lifeHigh)
   const nugs = useGame(s => s.nugs)
   const generators = useGame(s => s.generators)
   const buyQty = useGame(s => s.buyQty)
   const buy = useGame(s => s.buyGenerator)
   return (
     <Section icon={<Leaf className="size-4" aria-hidden />} title="Grow" hint="Idle nugs. Buy them once, forget them forever." qty>
-      {GENERATORS.map(g => {
+      {GENERATORS.filter(g => stageUnlocked(lifeHigh, g.stage)).map(g => {
         const locked = high < g.unlockHigh
         const deepLocked = locked && high < g.unlockHigh * 0.45
         const owned = generators[g.id] ?? 0
@@ -185,13 +186,14 @@ export function GrowTab() {
 
 export function WorkTab() {
   const high = useGame(s => s.high)
+  const lifeHigh = useGame(s => s.lifeHigh)
   const cash = useGame(s => s.cash)
   const jobs = useGame(s => s.jobs)
   const buyQty = useGame(s => s.buyQty)
   const buy = useGame(s => s.buyJob)
   return (
     <Section icon={<Briefcase className="size-4" aria-hidden />} title="Work" hint="Jobs that happen while you stare at the lamp." qty>
-      {JOBS.map(j => {
+      {JOBS.filter(j => stageUnlocked(lifeHigh, j.stage)).map(j => {
         const locked = high < j.unlockHigh
         const deepLocked = locked && high < j.unlockHigh * 0.45
         const owned = jobs[j.id] ?? 0
@@ -219,13 +221,14 @@ export function WorkTab() {
 
 export function RitualsTab() {
   const high = useGame(s => s.high)
+  const lifeHigh = useGame(s => s.lifeHigh)
   const nugs = useGame(s => s.nugs)
   const cash = useGame(s => s.cash)
   const rituals = useGame(s => s.rituals)
   const buy = useGame(s => s.buyRitual)
   return (
     <Section icon={<Sparkles className="size-4" aria-hidden />} title="Rituals" hint="Set-and-forget. This is the idle part.">
-      {RITUALS.map(r => {
+      {RITUALS.filter(r => stageUnlocked(lifeHigh, r.stage)).map(r => {
         const locked = high < r.unlockHigh
         const deepLocked = locked && high < r.unlockHigh * 0.45
         const level = rituals[r.id] ?? 0

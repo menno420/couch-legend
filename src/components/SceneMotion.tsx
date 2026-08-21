@@ -1,10 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import type { SceneMotionPreset } from '../lib/presentation'
 
-export type SceneMotionPreset =
-  | 'couch-room'
-  | 'parking-lot'
-  | 'corner-store'
-  | 'cousins-room'
+export type { SceneMotionPreset }
 
 const MOTES = [
   { left: '14%', top: '69%', delay: '-1.4s', duration: '8.6s' },
