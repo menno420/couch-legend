@@ -81,7 +81,10 @@ export function OfflineBanner() {
 
 export function Toasts() {
   const toasts = useGame(s => s.toasts)
-  if (toasts.length === 0) return null
+  // The chapter turn owns its moment — the stack yields rather than talking
+  // over the one cinematic beat (they share a screen only seconds apart).
+  const chapterTurn = useGame(s => s.chapterTurn)
+  if (toasts.length === 0 || chapterTurn) return null
   return (
     <div className="toast-stack pointer-events-none fixed z-30 flex w-[min(calc(100%_-_2rem),20rem)] flex-col gap-2" aria-live="polite">
       {toasts.map(t => (

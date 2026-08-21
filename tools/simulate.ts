@@ -13,9 +13,8 @@ import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { runSim, type SimResult } from '../src/lib/sim/sim'
 import { POLICIES } from '../src/lib/sim/policies'
-import { PROPOSED_STAGES, type StageDef } from '../src/lib/sim/stage-proposal'
-import { MOODS } from '../src/lib/content'
-import { PROTO_TUNING, type Tuning } from '../src/lib/engine'
+import { MOODS, STAGES, type StageDef } from '../src/lib/content'
+import { DEFAULT_TUNING, PROTO_TUNING, type Tuning } from '../src/lib/engine'
 
 const DATA = join(import.meta.dirname, '..', 'docs', 'sim', 'data')
 const SEEDS = [11, 23, 47]
@@ -49,7 +48,7 @@ function runSet(prefix: string, days: number, dt: number, tuning: Tuning) {
   for (const name of Object.keys(POLICIES)) {
     for (const seed of SEEDS) {
       const t0 = Date.now()
-      const r = runSim({ policy: POLICIES[name], seed, dt, horizon: days * DAY, stages: PROPOSED_STAGES, recordEvery: 600, tuning })
+      const r = runSim({ policy: POLICIES[name], seed, dt, horizon: days * DAY, stages: STAGES, recordEvery: 600, tuning })
       const out: Omit<SimResult, 'events'> & { events?: undefined } = { ...r, events: undefined }
       const file = `${prefix}-${name}-s${seed}.json`
       writeFileSync(join(DATA, file), JSON.stringify(out))
@@ -58,15 +57,16 @@ function runSet(prefix: string, days: number, dt: number, tuning: Tuning) {
   }
 }
 
-const CANDIDATE: Tuning = { clarityKnee: 80, claritySoftExp: 0.5, milestoneCapDoublings: 6 }
+// The candidate became the engine's DEFAULT_TUNING at adoption (2026-08-21,
+// § 7 item 1) — one definition; `tuned`/`adopted` runs read it from the engine.
 
 function invariance() {
-  // The playtested first hours must not move: compare proto vs candidate on
-  // 2h continuous runs, per landmark reach time and Clarity trajectory.
-  console.log('# early-game invariance — proto vs candidate, 2h, dt 1, seed 11')
+  // The playtested first hours must not move: compare proto vs the adopted
+  // curve on 2h continuous runs, per landmark reach time and Clarity trajectory.
+  console.log('# early-game invariance — proto vs adopted, 2h, dt 1, seed 11')
   for (const p of ['balanced', 'spend-everything', 'click-heavy']) {
-    const a = runSim({ policy: POLICIES[p], seed: 11, dt: 1, horizon: 2 * 3600, recordEvery: 1800 })
-    const b = runSim({ policy: POLICIES[p], seed: 11, dt: 1, horizon: 2 * 3600, recordEvery: 1800, tuning: CANDIDATE })
+    const a = runSim({ policy: POLICIES[p], seed: 11, dt: 1, horizon: 2 * 3600, recordEvery: 1800, tuning: PROTO_TUNING })
+    const b = runSim({ policy: POLICIES[p], seed: 11, dt: 1, horizon: 2 * 3600, recordEvery: 1800, tuning: DEFAULT_TUNING })
     let worst = 0
     let worstKey = 'none'
     for (const k of Object.keys(a.reach)) {
@@ -159,7 +159,7 @@ function median(xs: number[]): number {
   return s[Math.floor(s.length / 2)]
 }
 
-function analyze(stages: StageDef[], prefix: 'baseline' | 'tuned') {
+function analyze(stages: StageDef[], prefix: 'baseline' | 'tuned' | 'adopted') {
   const runs = loadRuns(prefix)
   if (runs.length === 0) { console.log(`no ${prefix} data — run \`pnpm sim ${prefix}\` first`); return }
   console.log(`\n# analysis of the ${prefix} dataset (${runs.length} runs)`)
@@ -235,6 +235,7 @@ function analyze(stages: StageDef[], prefix: 'baseline' | 'tuned') {
   const DEFERRED_VISIBILITY: Record<string, string> = {
     water: 'buzz visibly falls slower (buzz number + bar persist higher)',
     lamp: 'the buzz number visibly climbs between hits',
+    lighter: 'the buzz number jumps further per hit (buzz number + bar)',
     roommate: 'the Hits tile ticks on its own; balances jump per auto-hit',
     curtains: 'the offline report banner shows the bigger kept share',
     cushion: 'the Wake & Bake preview shows the larger Clarity gain',
@@ -283,12 +284,29 @@ function analyze(stages: StageDef[], prefix: 'baseline' | 'tuned') {
   }
 }
 
+// `baseline-*` and `tuned-*` are FROZEN pre-adoption evidence (the
+// 2026-08-20 balance doc reproduces from them, and they were generated
+// from the pre-adoption content tables). Regenerating them from today's
+// tree would silently swap in the arc-1 prologue economy — so the writer
+// commands refuse; only `analyze` still reads them. To genuinely
+// reproduce them, run the commands from the pre-adoption tree
+// (`git checkout 1e8c685`). The live-state evidence prefix is `adopted`.
+const frozen = (prefix: string) => {
+  console.log(`\`${prefix}\` is a FROZEN pre-adoption dataset — regenerating it from the current tree would`)
+  console.log('overwrite committed evidence with the post-adoption content profile. Run `pnpm sim adopted`')
+  console.log('for the live state, or reproduce the frozen data from the pre-adoption tree (git checkout 1e8c685).')
+  process.exitCode = 1
+}
+
 const [cmd, a1, a2] = process.argv.slice(2)
 if (cmd === 'dtsense') dtsense()
-else if (cmd === 'baseline') runSet('baseline', Number(a1 ?? 14), Number(a2 ?? 2), PROTO_TUNING)
+else if (cmd === 'baseline') frozen('baseline')
 else if (cmd === 'sweep') sweep(Number(a1 ?? 3))
-else if (cmd === 'tuned') runSet('tuned', Number(a1 ?? 14), Number(a2 ?? 2), CANDIDATE)
+else if (cmd === 'tuned') frozen('tuned')
+// Post-adoption evidence set: the adopted DEFAULT_TUNING on the live
+// content tables (arc-1 prologue included).
+else if (cmd === 'adopted') runSet('adopted', Number(a1 ?? 14), Number(a2 ?? 2), DEFAULT_TUNING)
 else if (cmd === 'invariance') invariance()
 else if (cmd === 'fit') fit()
-else if (cmd === 'analyze') analyze(PROPOSED_STAGES, (a1 as 'baseline' | 'tuned') ?? 'tuned')
-else console.log('usage: pnpm sim <dtsense|baseline [days] [dt]|sweep [days]|tuned [days] [dt]|invariance|fit|analyze [baseline|tuned]>')
+else if (cmd === 'analyze') analyze(STAGES, (a1 as 'baseline' | 'tuned' | 'adopted') ?? 'adopted')
+else console.log('usage: pnpm sim <dtsense|sweep [days]|adopted [days] [dt]|invariance|fit|analyze [baseline|tuned|adopted]> (baseline/tuned are frozen — see the note above)')

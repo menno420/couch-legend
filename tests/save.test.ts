@@ -47,4 +47,20 @@ describe('save codes', () => {
     expect(parsed!.generators).toEqual({})
     expect(parsed!.sound).toBe(true)
   })
+
+  it('migrates a v1 code: lifeHigh floors at max(high, peakHigh), version becomes 2', () => {
+    const v1 = 'CL1.' + btoa(JSON.stringify({ version: 1, high: 120, peakHigh: 900 }))
+    const parsed = importCode(v1)
+    expect(parsed).not.toBeNull()
+    expect(parsed!.version).toBe(2)
+    expect(parsed!.lifeHigh).toBe(900)
+  })
+
+  it('round-trips a v2 lifeHigh; a corrupt negative one is repaired to the invariant floor', () => {
+    const s = migrateSave({ ...defaultSave(1), high: 10, peakHigh: 500, lifeHigh: 7777 })
+    const back = importCode(exportCode(s))
+    expect(back!.lifeHigh).toBe(7777)
+    const bad = 'CL1.' + btoa(JSON.stringify({ version: 2, high: 40, lifeHigh: -1 }))
+    expect(importCode(bad)!.lifeHigh).toBe(40) // max(0, high, peakHigh)
+  })
 })

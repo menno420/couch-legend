@@ -481,6 +481,63 @@ button:not(:disabled),
   animation-play-state: paused !important;
 }
 
+/* --- the chapter turn (scene-packages § 6) --------------------------- */
+/* One cinematic beat on permanent stage entry: the room dims (~250 ms), a
+   gold rail draws under the arc label, the new scene cross-dissolves back
+   in (~900 ms) while the title holds, and the Postcard lands as the quiet
+   final beat. Only opacity and transform travel; reduced-motion collapses
+   every phase to plain opacity below. */
+
+.chapter-turn {
+  animation: chapter-clear 5.2s ease-in-out forwards;
+}
+
+.chapter-turn__veil {
+  opacity: 0.5;
+  animation: chapter-veil 5.2s ease-in-out forwards;
+}
+
+.chapter-turn__arc,
+.chapter-turn__title,
+.chapter-turn__beat,
+.chapter-turn__postcard,
+.chapter-turn__hint {
+  opacity: 0;
+  animation: chapter-fade-up 0.6s ease-out forwards;
+}
+
+.chapter-turn__arc { animation-delay: 0.28s; }
+.chapter-turn__title { animation-delay: 0.9s; }
+.chapter-turn__beat { animation-delay: 1.3s; }
+.chapter-turn__hint { animation-delay: 2.2s; }
+.chapter-turn__postcard { animation-delay: 3.2s; }
+
+.chapter-turn__rail {
+  transform: scaleX(0);
+  animation: chapter-rail 0.7s ease-out 0.35s forwards;
+}
+
+@keyframes chapter-clear {
+  0%, 92% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes chapter-veil {
+  0% { opacity: 0; }
+  5%, 22% { opacity: 0.88; }
+  40%, 100% { opacity: 0.5; }
+}
+
+@keyframes chapter-fade-up {
+  from { transform: translateY(6px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes chapter-rail {
+  from { transform: scaleX(0); opacity: 0.4; }
+  to { transform: scaleX(1); opacity: 1; }
+}
+
 @keyframes toast-in {
   from { transform: translateY(-8px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
@@ -510,6 +567,28 @@ button:not(:disabled),
   }
   .scene-frame {
     transform: none !important;
+  }
+  /* The chapter turn keeps its meaning as short opacity changes only: no
+     travel, no rail draw — content simply appears over a steady veil and
+     the overlay still clears itself (scene-packages § 6). */
+  .chapter-turn {
+    animation: chapter-clear 5.2s step-end forwards;
+  }
+  .chapter-turn__veil {
+    opacity: 0.7;
+    animation: none;
+  }
+  .chapter-turn__arc,
+  .chapter-turn__title,
+  .chapter-turn__beat,
+  .chapter-turn__postcard,
+  .chapter-turn__hint {
+    animation: chapter-fade-up 0.01s linear forwards;
+  }
+  .chapter-turn__rail {
+    animation: none;
+    transform: none;
+    opacity: 1;
   }
   * {
     transition-duration: 0.01s !important;

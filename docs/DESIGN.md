@@ -61,11 +61,12 @@ buzz-driven multiplier feeds back into everything. Fixed-timestep simulation at
 ### 3.3 Prestige loop (sessions)
 
 At `peakHigh ≥ 400`, **Wake & Bake** becomes available: reset high, buzz, nugs,
-cash, generators, jobs and rituals; keep achievements ("lore"), revelations and
-sound preference; bank **Clarity**. *(Known gap: the current Lore view keys
-revelations on `peakHigh`, which this reset zeroes — so today they do not
-actually survive; § 9.2 records the defect and the `lifeHigh` fix path.)* Clarity multiplies nug output, cash output,
-hit power and job high-rate permanently (+18 % each per point).
+cash, generators, jobs and rituals; keep `lifeHigh` (the story — § 9.2),
+achievements ("lore"), revelations and sound preference; bank **Clarity**.
+*(The § 9.2 Lore-permanence defect is fixed as of 2026-08-21: revelations key
+on `lifeHigh`, which prestige never lowers.)* Clarity multiplies nug output,
+cash output, hit power and job high-rate permanently (+18 % each per point,
+knee-braked past 80 banked — § 4).
 
 ## 4 · The formulas (DECIDED — pinned by `tests/engine.test.ts`)
 
@@ -77,7 +78,8 @@ section fixes the *shapes* so a port (e.g. Android) can be verified against it.
   bulk buying is the closed-form geometric series; Max-buy inverts it
   (`log` form), capped at 1000 units per purchase.
 - **Milestones:** every 25 owned units of a generator or job **doubles** that
-  item's output: `× 2^⌊n/25⌋`.
+  item's output: `× 2^min(⌊n/25⌋, 6)` — doublings stop at the adopted cap of
+  6 (×64; the no-prestige/hoarder backstop, measured inert through day 14).
 - **Buzz multiplier:** `1 + √buzz × 0.12` (further scaled by achievement buzz
   bonuses). Applies to nug output, cash output and the passive cash trickle.
 - **Buzz decay:** `dB/dt = −decay × B` with
@@ -85,13 +87,20 @@ section fixes the *shapes* so a port (e.g. Android) can be verified against it.
   `0.18/s` per level; auto-hits add `hitBuzz` per hit.
 - **Hit:** `hitPower = (1 + 0.28·sunday) × clarity` nugs;
   `hitCash = 0.9 × hitPower`; `hitHigh = 1 + 0.06·sunday`;
-  `hitBuzz = (2.4 + 0.15·sunday) × achBuzz`.
+  `hitBuzz = (2.4 + 0.15·sunday) × (1 + 0.06·lighter) × achBuzz`.
 - **Job high rate:** `Σ highRate·n × clarity × playlist × (1 + √buzz × 0.04)`.
 - **Passive cash trickle:** `0.05 × (1 + log10(1 + high)) × buzzMult` /s — the
   game never fully stalls at zero.
-- **Clarity:** multiplier `1 + 0.18 × clarity`;
+- **Clarity:** multiplier `1 + 0.18 × effective` with
+  `effective = min(banked, 80) + max(0, banked − 80)^0.5` — linear through
+  the playtested region, sqrt-braked past the adopted knee of 80 (the
+  2026-08-21 adoption; sim evidence in `sim/2026-08-20-life-story-balance.md`
+  § 3, adoption re-check in `sim/2026-08-21-adoption-check.md`);
   gain on prestige `⌊√(peakHigh / 90) × (1 + 0.22·cushion)⌋ − banked`,
   available only at `peakHigh ≥ 400`, never negative.
+- **lifeHigh:** every point of High ever earned — accumulates with every
+  hit, tick and offline gain, is never reduced by anything (prestige resets
+  the afternoon, never the story), and keys stages and revelations (§ 9.2).
 - **Offline:** effective seconds `min(elapsed, cap) × efficiency` with
   `cap = (2 + 2·curtains) h` and `efficiency = 0.45 + 0.10·curtains`
   (so 2 h @ 45 % bare → 12 h @ 95 % maxed). Buzz relaxes toward the
@@ -100,15 +109,22 @@ section fixes the *shapes* so a port (e.g. Android) can be verified against it.
 
 ## 5 · Content tables (DECIDED — see `src/lib/content.ts`)
 
-- **12 generators** (Rolling Tray 10 nugs → Mythic Canopy 290 B), cost scale
-  1.14–1.16, unlock gates on High from 0 to 200 K.
-- **12 jobs** (Unemployed Philosopher → Couch Legend), cash plus a small
-  passive high rate, cost scale 1.16–1.20.
-- **10 rituals**, finite ladders (5–10 levels) split across the two
+- **14 generators** (Rolling Tray 10 nugs → Mythic Canopy 290 B), cost scale
+  1.14–1.16, unlock gates on High from 0 to 200 K — including the two arc-1
+  prologue rows (Cousin's Pinch, Borrowed Grinder; stage-gated NEW content).
+- **13 jobs** (Unemployed Philosopher → Couch Legend), cash plus a small
+  passive high rate, cost scale 1.16–1.20 — including the prologue's Corner
+  Store Shift (stage-gated).
+- **11 rituals**, finite ladders (5–10 levels) split across the two
   currencies: buzz retention (Hydration, Snack Cache), automation
   (The Roommate), global multipliers (Infinite Playlist, Houseplant Wall,
   Pillow Throne), buzz income (Lava Lamp), offline (Blackout Curtains),
-  hit scaling (Sunday Forever), prestige yield (Meditation Cushion).
+  hit scaling (Sunday Forever, The Green Lighter — the stage-gated prologue
+  ritual, +6 % hit buzz per level), prestige yield (Meditation Cushion).
+- **18 stages** (`STAGES`) — the life-story chapter table (§ 9): id, arc,
+  sim-fitted `minLifeHigh` threshold, pressure, asset-scene key and the
+  permanent one-line beat. `STAGE_FRAMING` names each item's era (framing
+  only — § 9.4); prologue rows additionally carry a real `stage` gate.
 - **9 moods** (Lucid 0 → Couch Legend 100 K) — each carries a one-line
   **revelation** unlocked at first reach; *meant* to be permanent through
   prestige (see the § 3.3 known gap — the permanence lands with § 9.2's
@@ -122,11 +138,15 @@ section fixes the *shapes* so a port (e.g. Android) can be verified against it.
 
 **Content discipline:** new content goes in these tables, not in components;
 ids are permanent (saves reference them); unlock thresholds must stay
-monotonically increasing per table (pinned by a test).
+monotonically increasing per table (pinned by a test). Stage gates (`stage`
+field) bind only NEW additive content per § 9.4 — the original 34 items keep
+`high ≥ unlockHigh` as their only key, exactly as playtested.
 
 ## 6 · Persistence (DECIDED)
 
-- Save = the 17-field JSON object in `src/lib/save.ts` (`SAVE_FIELDS`),
+- Save = the 18-field JSON object in `src/lib/save.ts` (`SAVE_FIELDS`) —
+  **v2** since 2026-08-21 (`lifeHigh` added; a v1 save migrates with
+  `lifeHigh = max(high, peakHigh)`, the conservative § 9.4 floor) —
   written to `localStorage` under `couch-legend-save` with a one-slot backup
   (`couch-legend-save-bak`), every 2.5 s and on hide/pagehide.
 - **Portable save codes**: `CL1.` + base64(JSON). Import validates shape and
@@ -202,9 +222,12 @@ known.
 1. **Clarity spend** — a small "Morning Routine" shop that spends Clarity on
    permanent perks would deepen prestige. Deliberately not designed yet; the
    passive multiplier is enough until real play data exists.
-2. **Balance pass** — current tuning is the prototype's, kept faithfully. It
-   feels right for the first hours; late-game pacing (Orbital Garden →
-   Mythic Canopy) is unplaytested. Tune only with play evidence.
+2. **Balance pass** — RESOLVED 2026-08-21: the sim-tested knee+cap curve is
+   the adopted default (identical through the playtested hours, braking the
+   measured late-game runaway; § 9.6's rails are the regression bounds).
+   Any future tuning change goes through the simulator + this file + the
+   pins in one commit. The owner's feel pass on the tuned late game remains
+   open — the designed relief valves (§ 9.5) stand ready if it drags.
 3. **Android extras** — haptics on hit, local notifications ("the room kept
    going"), cloud save. All post-shell.
 4. **Audio breadth** — one puff/chime/blip set today; a low ambient loop is
@@ -255,12 +278,12 @@ offering a move. Evidence: the results doc § 5.
   respected (pillar 3).
 - **Moods stay the within-afternoon ladder** (weather); **stages are the
   across-afternoon ladder** (chapters). Both display; they never compete.
-- **Revelations re-key from `peakHigh` to `lifeHigh`.** This also fixes a
-  real defect found during this design pass: the Lore tab promises
-  *"revelations survive Wake & Bake"* but filters on `peakHigh`, which
-  prestige resets — today they demonstrably do not survive. `lifeHigh` makes
-  the promise true structurally. (Fix ships with the stage implementation,
-  not before — one migration, one schema bump.)
+- **Revelations re-key from `peakHigh` to `lifeHigh`.** This also fixed a
+  real defect found during the design pass: the Lore tab promised
+  *"revelations survive Wake & Bake"* but filtered on `peakHigh`, which
+  prestige resets — they demonstrably did not survive. `lifeHigh` makes
+  the promise true structurally. **Shipped 2026-08-21** with the stage
+  implementation — one migration, one schema bump, exactly as planned.
 
 ### 9.3 The 18 stages in three arcs (DECIDED structure; names are working titles)
 
@@ -358,8 +381,17 @@ tuning — future tuning changes must stay inside them, with sim evidence:
 2. **Spread bounds:** across the attendance axis at comparable discipline,
    per-stage median reach-time ratio ≤ **4×** at arc 2's midpoint,
    tightening to ≤ **1.5×** by arc 3 (measured 3.3× → 1.27×). Across the
-   discipline axis, eager trails patient ≤ **3×** per authored stage
-   (measured ≤ 2.6×).
+   discipline axis, eager closes the **authored story** ≤ **3×** behind
+   patient (measured 2.54× on the frozen dataset · 2.79× adopted).
+   *(Wording corrected 2026-08-21, Codex adoption review: the original
+   "≤ 3× per authored stage" phrasing never matched its own accepted
+   evidence — the frozen dataset it was snapped to already measured ~4.5×
+   at mid-arc-2 stages (The Operation: 6.7 d eager vs 36.8 h patient), and
+   the "measured ≤ 2.6×" it recorded is the story-close ratio. The
+   mid-story shape is deliberate and accepted: eager gain-1 cycling trades
+   mid-story pace for Clarity, and the absolute cap on what that can cost
+   is rail 1's eager ≤ 5 weeks. A future change that widens the per-stage
+   shape beyond ~4.5× still needs fresh evidence and a stated reason.)*
 3. **Dead-time bound (attended):** for every playing archetype (rail 1's
    boundary — the zero-click wall lane's attended blocks are fully dead by
    definition), no attended stretch in which the game offers no move —
@@ -437,6 +469,9 @@ tuning — future tuning changes must stay inside them, with sim evidence:
   current pair, preloads only the next, lazy-loads the rest, resolves paths
   through `BASE_URL`, and falls back to the last valid/current anchor rather
   than a blank scene. Components do not carry stage-specific path conditionals.
+  **Landed 2026-08-21** (`src/lib/presentation.ts`): the three delivered Arc-1
+  packages are live entries; the other 15 stages are explicit placeholders on
+  the anchor pair until their art passes owner review.
 - For delivered entries, registry tests require both files, equal paired
   dimensions and valid focal metadata. Placeholder entries deliberately use the
   current anchor pair until their art passes review. Art production records
@@ -450,23 +485,29 @@ tuning — future tuning changes must stay inside them, with sim evidence:
   registry land; the remaining 15 packages are produced and owner-reviewed
   later, pair by pair.
 
-### 9.8 Still OPEN after the looks pass (deliberately)
+### 9.8 Still OPEN after the implementation session (2026-08-21)
 
-- Arc-1 and arc-3 content tables (numbers proposed in the results doc get
-  authored into `content.ts` with flavor by the implementation session).
-- The broad stage treatment and chapter-turn presentation are set by the looks
-  contract. Exact stage copy, news lines, dialogue, Postcard vignettes and
-  achievement extensions remain implementation content work; rewards or new
-  state are not implied.
+- **Arc-3 content tables** (batches A–D for stages 14–17) — authored later;
+  the stage slots and gate mechanism now exist. *(Arc-1 prologue: DONE —
+  four stage-gated rows, sim-checked inside the § 9.6 rails.)*
+- The remaining **15 scene packages** (art production + owner QA, pair by
+  pair; the registry's placeholder entries are their slots). Additional
+  per-stage news lines, dialogue and Postcard vignettes beyond the three
+  delivered postcards remain content work; rewards or new state are not
+  implied.
 - Clarity spend shop (§ 8.1) — unchanged, evidence says not yet needed.
-- Exact chapter-turn timing and responsive treatment may be refined during
-  implementation, while preserving its reduced-motion fallback.
+- The owner's feel pass on the tuned late game (§ 8.2).
+- Chapter-turn timing refinements as real screens expose them, preserving
+  the reduced-motion fallback that shipped with the shell.
 
 ## 10 · Verification
 
-`pnpm check` = typecheck + unit tests + production build; CI runs exactly this
-(one required-check candidate, per the estate's one-check convention). The
-engine tests pin: cost series ↔ max-buy inversion, milestone doubling, decay
-and offline shapes including the cap/efficiency ladder, prestige gating and
-yield, achievement multipliers, content invariants (unique ids, monotonic
-unlocks, ladder lengths).
+`pnpm check` = typecheck + unit tests + production build; the CI `ci` job runs
+exactly this, and `substrate-gate` (the kit gate) is the second required check
+on `main` since the 2026-08-21 kit seed. The engine tests pin: cost series ↔
+max-buy inversion, milestone doubling (and its adopted cap), the clarity knee,
+decay and offline shapes including the cap/efficiency ladder, prestige gating
+and yield, lifeHigh accrual/migration/prestige-carry, stage-table invariants
+and stage gates, the presentation registry, achievement multipliers, content
+invariants (unique ids, monotonic unlocks, ladder lengths). Anything touching
+balance or pacing also carries simulator evidence (`pnpm sim`, § 9.6).

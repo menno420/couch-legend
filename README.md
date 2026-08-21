@@ -18,22 +18,28 @@ shell over this build — DESIGN.md § 7).
 
 - **Take a hit** — the one manual action. It pays nugs and cash, raises High
   and spikes Buzz; the couch art literally gets hazier as Buzz climbs.
-- **Grow** — 12 nug generators, Rolling Tray → Mythic Canopy.
-- **Work** — 12 jobs that pay cash and drip passive High.
-- **Rituals** — 10 finite upgrade ladders: automation, multipliers, offline.
+- **Grow** — 14 nug generators, Rolling Tray → Mythic Canopy.
+- **Work** — 13 jobs that pay cash and drip passive High.
+- **Rituals** — 11 finite upgrade ladders: automation, multipliers, offline.
 - **Moods** — Lucid → Couch Legend; each first reach reveals a permanent
   revelation.
+- **Chapters** — 18 life-story stages across three arcs, from a parking-lot
+  first light to The Long Afternoon. The story only moves forward.
 - **Wake & Bake** — prestige at High 400+: reset the afternoon, bank Clarity,
-  run hotter forever.
+  run hotter. The story keeps every chapter.
 - Closing the tab is fine: offline progress accrues (2 h @ 45 % base, up to
   12 h @ 95 % with Blackout Curtains).
 
 ## What this version adds over the prototype
 
+- **The life story** — a lifetime High axis (`lifeHigh`) that nothing resets,
+  18 chapters with cinematic chapter turns, the first three painted scene
+  pairs live, and arc-1 prologue content that arrives as the story does.
 - **Portable saves** — export/import a `CL1.` save code from Settings; imports
   validate before touching anything.
 - **Revelations** — each mood now carries a permanent lore line with a toast on
-  first reach (the Lore tab shows the collection).
+  first reach (the Chronicle tab shows the collection — and they genuinely
+  survive Wake & Bake).
 - **A richer offline report** — the return banner itemizes nugs/cash/high
   earned and says when the cap truncated the absence.
 - **Prestige legibility** — the Lore tab shows the current Clarity multiplier

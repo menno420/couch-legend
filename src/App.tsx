@@ -4,6 +4,7 @@ import { CouchPanel } from './components/CouchPanel'
 import { StatsPanel } from './components/StatsPanel'
 import { GrowTab, RitualsTab, TabBar, WorkTab } from './components/ShopTabs'
 import { LoreTab } from './components/LoreTab'
+import { ChapterTurn } from './components/ChapterTurn'
 import { Panel } from './components/ui'
 import {
   BootScreen, Header, NewsLine, OfflineBanner, PrestigeModal, ResetModal,
@@ -81,6 +82,7 @@ export default function App() {
       ) : (
         <BootScreen />
       )}
+      {booted ? <ChapterTurn /> : null}
       <Toasts />
       <SettingsModal />
       <PrestigeModal />

@@ -183,6 +183,42 @@ describe('achievements', () => {
   })
 })
 
+describe('lifeHigh — the story axis (DESIGN § 9.2)', () => {
+  it('a fresh save is v2 with a zero life', () => {
+    const s = defaultSave(0)
+    expect(s.version).toBe(2)
+    expect(s.lifeHigh).toBe(0)
+  })
+
+  it('advance accumulates lifeHigh by exactly the high gained', () => {
+    const s = save({ high: 100, peakHigh: 100, jobs: { thinker: 5 }, rituals: { roommate: 2 } })
+    const after = advance(s, 60)
+    expect(after.lifeHigh - s.lifeHigh).toBeCloseTo(after.high - s.high, 9)
+    expect(after.lifeHigh).toBeGreaterThan(s.lifeHigh)
+  })
+
+  it('applyOffline accumulates lifeHigh by the offline high gain', () => {
+    const s = save({ high: 100, peakHigh: 100, jobs: { thinker: 5 } })
+    const { save: after, summary } = applyOffline(s, 3600)
+    expect(summary).not.toBeNull()
+    expect(after.lifeHigh - s.lifeHigh).toBeCloseTo(summary!.high, 9)
+  })
+
+  it('migrateSave lifts a v1 save to v2, flooring lifeHigh at max(high, peakHigh)', () => {
+    const v1 = migrateSave({ version: 1, high: 120, peakHigh: 900 })
+    expect(v1.version).toBe(2)
+    expect(v1.lifeHigh).toBe(900)
+    const fresh = migrateSave({ version: 1 })
+    expect(fresh.lifeHigh).toBe(0)
+  })
+
+  it('migrateSave keeps a valid v2 lifeHigh and repairs one below the invariant', () => {
+    expect(migrateSave({ version: 2, high: 50, peakHigh: 400, lifeHigh: 5000 }).lifeHigh).toBe(5000)
+    expect(migrateSave({ version: 2, high: 50, peakHigh: 400, lifeHigh: 10 }).lifeHigh).toBe(400)
+    expect(migrateSave({ version: 2, high: 50, peakHigh: 400, lifeHigh: Number.NaN }).lifeHigh).toBe(400)
+  })
+})
+
 describe('content invariants', () => {
   it('ids are unique across tables', () => {
     for (const table of [GENERATORS, JOBS, RITUALS]) {
