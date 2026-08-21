@@ -262,20 +262,24 @@ function analyze(stages: StageDef[], prefix: 'baseline' | 'tuned') {
     const early: number[] = []
     const late: number[] = []
     let unrecovered = 0
+    let censored = 0
     for (const r of rs) {
       let banked = 0
       for (const row of r.prestiges) {
         const bucket = banked <= 80 ? early : late
         // An unrecovered rebuild (the next reset came first) counts as ∞ —
         // these are precisely the slow rebuilds F6 exists to see; dropping
-        // them was a measured survivorship bias (Codex R3).
+        // them was a measured survivorship bias (Codex R3). A rebuild the
+        // horizon cut off is right-censored: outcome unknown, so it enters
+        // no ratio — but it is counted and printed, never silently dropped.
         if (row.unrecovered) { bucket.push(Infinity); unrecovered++ }
         else if (row.rebuildSeconds != null) bucket.push(row.rebuildSeconds / Math.max(row.cycleSeconds, 1))
+        else if (row.censoredSeconds != null) censored++
         banked += row.gain
       }
     }
     const stat = (xs: number[]) => xs.length ? `${xs.length} cycles · median ratio ${median(xs).toFixed(2)} · ${((xs.filter(x => x < 0.67).length / xs.length) * 100).toFixed(0)}% <0.67` : 'n/a'
-    console.log(`- ${p}: early(≤80) ${stat(early)} · late ${stat(late)} · unrecovered ${unrecovered}`)
+    console.log(`- ${p}: early(≤80) ${stat(early)} · late ${stat(late)} · unrecovered ${unrecovered} · censored-at-horizon ${censored}`)
   }
 }
 

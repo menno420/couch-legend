@@ -282,7 +282,8 @@ two refinements are called out because they moved:
   desynced the display from the engine.)
 - **F6 the prestige promise — approve as restated: three disciplines,
   three measured rebuild behaviors, every started rebuild accounted**
-  (completed with its time, or counted `unrecovered` — never dropped).
+  (completed with its time, counted `unrecovered`, or right-censored at
+  the horizon and reported as such — never dropped).
   Banked Clarity strictly grows in every lane. **Patient, non-hoarding
   lanes** (balanced · click-heavy-patient · idle-only) carry the rail
   (median rebuild ≤ 0.95× the previous cycle): late medians 0.90–0.93,
@@ -306,9 +307,13 @@ two refinements are called out because they moved:
   fabricated "~91 % of eager cycles never recover", refuted by its own
   data — 959 of 959 flagged cycles in the checked seed had in fact
   re-exceeded the target before resetting; the harness marked
-  `unrecovered` before checking the pre-reset peak. The ordering fixed,
-  both datasets were regenerated to the current schema; the figures above
-  are post-fix.)*
+  `unrecovered` before checking the pre-reset peak. The round after
+  caught the horizon edge: every run's final still-pending rebuild
+  (11 tuned rows, 17 baseline) was silently neither completed nor
+  unrecovered — now right-censored, counted, and printed by the
+  analyzer, with the accounting invariant pinned by test. The ordering
+  fixed, both datasets were regenerated to the current schema; the
+  figures above are post-fix.)*
 
 **Overall verdict on the proposal (tuning candidate + stage table):
 approve** — with the § 6 limits, and with adoption deliberately left to the

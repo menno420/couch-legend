@@ -352,8 +352,9 @@ tuning — future tuning changes must stay inside them, with sim evidence:
    internals the UI never renders — Codex caught it).
 6. **The prestige promise, restated to what a bounded curve can keep:**
    banked Clarity strictly grows every cycle, and every started rebuild is
-   accounted — completed with its time, or counted `unrecovered`, never
-   dropped. Three disciplines, three measured rebuild behaviors:
+   accounted — completed with its time, counted `unrecovered`, or
+   right-censored at the horizon and reported as such; never dropped.
+   Three disciplines, three measured rebuild behaviors:
    - **Patient, non-hoarding lanes** (balanced · click-heavy-patient ·
      idle-only) carry the rail: median rebuild ≤ **0.95×** the previous
      cycle (measured late medians 0.90–0.93; one genuinely unrecovered
@@ -375,8 +376,10 @@ tuning — future tuning changes must stay inside them, with sim evidence:
    a number: round 2 refused the unqualified rail; the survivorship fix
    then briefly fabricated a "91 % of eager cycles never recover" story
    whose own data refuted it 959/959 — an ordering bug marked cycles
-   unrecovered before checking the pre-reset peak; the figures above are
-   post-fix.)*
+   unrecovered before checking the pre-reset peak; and the round after
+   caught the horizon edge — every run's final still-pending rebuild had
+   silently vanished from the statistics, now right-censored and counted.
+   The figures above are post-fix.)*
 
 ### 9.7 The per-stage visual plan (DECIDED plan; production is later work)
 

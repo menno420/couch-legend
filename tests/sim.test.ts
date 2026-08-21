@@ -101,6 +101,20 @@ describe('the zero-click wall (a stated boundary, not an oversight)', () => {
   })
 })
 
+describe('rebuild accounting (Codex CL#2 R2: the horizon edge)', () => {
+  it('every prestige row resolves to exactly one of completed / unrecovered / censored', () => {
+    const r = runSim({ policy: POLICIES['click-heavy'], seed: 7, dt: 5, horizon: 24 * 3600, stages: PROPOSED_STAGES })
+    expect(r.prestiges.length).toBeGreaterThan(0)
+    for (const row of r.prestiges) {
+      const states = [row.rebuildSeconds != null, row.unrecovered === true, row.censoredSeconds != null]
+      expect(states.filter(Boolean).length).toBe(1)
+    }
+    // The eager lane is mid-rebuild whenever the horizon lands, so its final
+    // row is the censored case this test exists to keep visible.
+    expect(r.prestiges[r.prestiges.length - 1].censoredSeconds).toBeGreaterThan(0)
+  })
+})
+
 import { advance, applyHit, collectAchievements, purchaseGenerator, purchaseJob } from '../src/lib/actions'
 import { defaultSave } from '../src/lib/engine'
 

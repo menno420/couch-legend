@@ -74,6 +74,12 @@ export interface PrestigeRow {
    * regained — the rebuild never completed. Counted, never dropped: these
    * are exactly the slow rebuilds the F6 rail exists to see. */
   unrecovered?: boolean
+  /** The run's horizon ended while this rebuild was still in progress:
+   * right-censored — observed this many seconds without recovery, outcome
+   * unknown. Reported separately so "every started rebuild is accounted"
+   * stays true at the edge; without it every run's final prestige row
+   * silently vanished from the F6 statistics. */
+  censoredSeconds?: number
 }
 
 export interface SimResult {
@@ -364,6 +370,20 @@ export function runSim(opts: SimOptions): SimResult {
     deadMax[cursors.stage] = Math.max(deadMax[cursors.stage] ?? 0, span)
     if (span > 0) deadSpans.push({ t: deadSince, span })
   }
+
+  // A rebuild still pending when the horizon ends is right-censored, never
+  // silently dropped: it neither completed nor provably failed. (A closure
+  // like its siblings: rebuildPending is only ever assigned inside them, so
+  // outer-scope flow analysis would pin it to its initial null here.)
+  const censorPendingAtHorizon = () => {
+    if (rebuildPending) {
+      const open = prestiges[rebuildPending.row]
+      if (open && open.rebuildSeconds == null && !open.unrecovered) {
+        open.censoredSeconds = t - rebuildPending.since
+      }
+    }
+  }
+  censorPendingAtHorizon()
 
   return {
     policy: policy.name, seed, dt, horizon,
