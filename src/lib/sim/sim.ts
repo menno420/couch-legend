@@ -210,10 +210,13 @@ export function runSim(opts: SimOptions): SimResult {
       firstReach(`mood:${MOODS[cursors.mood].id}`)
       events.push({ t, kind: 'mood', id: MOODS[cursors.mood].id })
     }
-    // Unlock visibility rides current high; first-ever only.
-    for (const g of GENERATORS) if (s.high >= g.unlockHigh && !cursors.unlocked.has(g.id)) { cursors.unlocked.add(g.id); firstReach(`unlock:${g.id}`) }
-    for (const j of JOBS) if (s.high >= j.unlockHigh && !cursors.unlocked.has(j.id)) { cursors.unlocked.add(j.id); firstReach(`unlock:${j.id}`) }
-    for (const r of RITUALS) if (s.high >= r.unlockHigh && !cursors.unlocked.has(r.id)) { cursors.unlocked.add(r.id); firstReach(`unlock:${r.id}`) }
+    // Unlock visibility rides current high AND (for stage-gated rows) the
+    // story stage, exactly like the purchase layer and the UI; first-ever
+    // only. Without the stage predicate, reach maps recorded prologue rows
+    // as available while every real surface still rejected them (Codex R1).
+    for (const g of GENERATORS) if (s.high >= g.unlockHigh && stageUnlocked(s.lifeHigh, g.stage) && !cursors.unlocked.has(g.id)) { cursors.unlocked.add(g.id); firstReach(`unlock:${g.id}`) }
+    for (const j of JOBS) if (s.high >= j.unlockHigh && stageUnlocked(s.lifeHigh, j.stage) && !cursors.unlocked.has(j.id)) { cursors.unlocked.add(j.id); firstReach(`unlock:${j.id}`) }
+    for (const r of RITUALS) if (s.high >= r.unlockHigh && stageUnlocked(s.lifeHigh, r.stage) && !cursors.unlocked.has(r.id)) { cursors.unlocked.add(r.id); firstReach(`unlock:${r.id}`) }
     // Stages ride lifeHigh and never rewind.
     if (opts.stages) {
       const idx = stageFor(opts.stages, s.lifeHigh)

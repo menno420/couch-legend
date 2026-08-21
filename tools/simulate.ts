@@ -284,16 +284,29 @@ function analyze(stages: StageDef[], prefix: 'baseline' | 'tuned' | 'adopted') {
   }
 }
 
+// `baseline-*` and `tuned-*` are FROZEN pre-adoption evidence (the
+// 2026-08-20 balance doc reproduces from them, and they were generated
+// from the pre-adoption content tables). Regenerating them from today's
+// tree would silently swap in the arc-1 prologue economy — so the writer
+// commands refuse; only `analyze` still reads them. To genuinely
+// reproduce them, run the commands from the pre-adoption tree
+// (`git checkout 1e8c685`). The live-state evidence prefix is `adopted`.
+const frozen = (prefix: string) => {
+  console.log(`\`${prefix}\` is a FROZEN pre-adoption dataset — regenerating it from the current tree would`)
+  console.log('overwrite committed evidence with the post-adoption content profile. Run `pnpm sim adopted`')
+  console.log('for the live state, or reproduce the frozen data from the pre-adoption tree (git checkout 1e8c685).')
+  process.exitCode = 1
+}
+
 const [cmd, a1, a2] = process.argv.slice(2)
 if (cmd === 'dtsense') dtsense()
-else if (cmd === 'baseline') runSet('baseline', Number(a1 ?? 14), Number(a2 ?? 2), PROTO_TUNING)
+else if (cmd === 'baseline') frozen('baseline')
 else if (cmd === 'sweep') sweep(Number(a1 ?? 3))
-else if (cmd === 'tuned') runSet('tuned', Number(a1 ?? 14), Number(a2 ?? 2), DEFAULT_TUNING)
-// Post-adoption evidence set: the SAME constants as `tuned` but the live
-// content tables (arc-1 prologue included). `tuned-*` stays frozen as the
-// pre-adoption dataset the 2026-08-20 balance doc's numbers reproduce from.
+else if (cmd === 'tuned') frozen('tuned')
+// Post-adoption evidence set: the adopted DEFAULT_TUNING on the live
+// content tables (arc-1 prologue included).
 else if (cmd === 'adopted') runSet('adopted', Number(a1 ?? 14), Number(a2 ?? 2), DEFAULT_TUNING)
 else if (cmd === 'invariance') invariance()
 else if (cmd === 'fit') fit()
 else if (cmd === 'analyze') analyze(STAGES, (a1 as 'baseline' | 'tuned' | 'adopted') ?? 'adopted')
-else console.log('usage: pnpm sim <dtsense|baseline [days] [dt]|sweep [days]|tuned [days] [dt]|adopted [days] [dt]|invariance|fit|analyze [baseline|tuned|adopted]>')
+else console.log('usage: pnpm sim <dtsense|sweep [days]|adopted [days] [dt]|invariance|fit|analyze [baseline|tuned|adopted]> (baseline/tuned are frozen — see the note above)')

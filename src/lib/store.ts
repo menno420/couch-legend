@@ -233,9 +233,13 @@ export const useGame = create<GameStore>()((set, get) => ({
     if ((ach.fresh || mood.fresh || turn) && s.sound) chimeSound()
     const now = performance.now()
     const rotateNews = now - s.newsAt > 14000
+    // While a chapter turn owns the screen the toast stack is hidden — hold
+    // expiry so nothing queued alongside the crossing dies unseen; the
+    // dismiss handler re-stamps survivors for their full display window.
+    const turnActive = turn ?? s.chapterTurn
     set({
       ...ach.save,
-      toasts: mood.toasts.filter(t => now - t.born < TOAST_MS),
+      toasts: turnActive ? mood.toasts : mood.toasts.filter(t => now - t.born < TOAST_MS),
       floaters: s.floaters.filter(f => now - f.born < FLOATER_MS),
       hitPulse: s.hitPulse > 0 ? Math.max(0, s.hitPulse - 0.08) : 0,
       newsIndex: rotateNews ? (s.newsIndex + 1) % NEWS_LINES.length : s.newsIndex,
@@ -303,7 +307,11 @@ export const useGame = create<GameStore>()((set, get) => ({
   setShowReset: (v) => set({ showReset: v }),
   setShowSettings: (v) => set({ showSettings: v }),
   dismissOffline: () => set({ offline: null }),
-  dismissChapterTurn: () => set({ chapterTurn: null }),
+  dismissChapterTurn: () => {
+    // Toasts held through the turn get their full window from now.
+    const now = performance.now()
+    set({ chapterTurn: null, toasts: get().toasts.map(t => ({ ...t, born: now })) })
+  },
 
   flushSave: () => {
     const s = get()

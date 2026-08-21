@@ -124,4 +124,19 @@ in the Codex trail below.
 
 ## Codex review trail (exact heads)
 
-- (filled after each round)
+- **Trigger note (measured this session):** two `@codex review` comments
+  (19:28Z, 19:34Z) drew no response in ~40 min; converting the PR
+  draft→ready re-fired the integration and the review landed **200 s**
+  later. On this repo, the ready transition is the reliable trigger; the
+  comment path did not fire this day (quota or matcher — not established).
+- **Round 1 on `1268433`:** 3 findings (1 P1 · 2 P2) — **3 [conceded]**,
+  fixed in the following commit: P1 `pnpm sim tuned`/`baseline` would
+  regenerate the FROZEN pre-adoption fixtures from the post-adoption tree —
+  both writer commands now refuse with the honest reproduction path
+  (`git checkout 1e8c685`), `analyze` still reads them; P2 toasts queued
+  alongside a stage crossing could expire unseen behind the 5.2 s turn
+  (expiry now held while a turn shows; survivors re-stamped at dismiss);
+  P2 the sim's `unlock:` landmarks ignored stage gates (the three unlock
+  loops now share the purchase layer's `stageUnlocked` predicate; the
+  `adopted-*` dataset regenerated under the corrected semantics — series
+  identical, only recorded landmarks moved).
