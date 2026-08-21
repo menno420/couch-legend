@@ -1,1 +1,0 @@
-- `claude/research-visible-progress` · **research-backed visible progress** · progress selector + CouchPanel/StatsPanel/ShopTabs + tests + research note · 2026-08-21
