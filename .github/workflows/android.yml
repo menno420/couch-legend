@@ -6,6 +6,15 @@
 # deliberate for now: a debug-signed APK installs from unknown sources with no
 # key management, and release signing arrives with the first real release
 # ([D-0002]).
+#
+# Two jobs, because the two questions are different:
+#   apk         — builds the PR HEAD, so a result from a real phone is
+#                 attributable to a commit someone can look up.
+#   merge-tree  — builds what would actually land, so an Android-side
+#                 incompatibility between this branch and main cannot pass
+#                 review and break main. Nothing else covers this: `ci` runs
+#                 only `pnpm check` and `substrate-gate` is repo hygiene;
+#                 neither assembles Android.
 name: android
 
 on:
@@ -24,11 +33,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # Build the PR head, not GitHub's synthetic merge revision. This APK
-          # is a device-test artifact whose whole value is that a result from
-          # the owner's phone is attributable to a commit he can look up; a
-          # merge revision exists on no branch. Merge safety is what the
-          # required `ci` and `substrate-gate` checks are for.
+          # The PR head, not GitHub's synthetic merge revision — a merge
+          # revision exists on no branch, so an APK named after one is
+          # untraceable, and one built from one is misattributed.
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - uses: pnpm/action-setup@v4
@@ -68,8 +75,7 @@ jobs:
       - name: Name the APK after the commit it was built from
         id: apk
         # Derived from the revision actually checked out, so the label and the
-        # bytes can never disagree — the checkout step above is what decides
-        # which commit that is.
+        # bytes can never disagree.
         run: |
           short="$(git rev-parse --short=7 HEAD)"
           src=android/app/build/outputs/apk/debug/app-debug.apk
@@ -84,3 +90,35 @@ jobs:
           name: couch-legend-apk-${{ steps.apk.outputs.short }}
           path: ${{ steps.apk.outputs.path }}
           if-no-files-found: error
+
+  merge-tree:
+    name: android merge check
+    # Only meaningful on a PR: on push to main the head IS the merge result.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      # No `ref:` — the default on a pull_request is the merge revision, which
+      # is exactly the tree this job exists to assemble.
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platforms;android-36 build-tools;36.0.0
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:shell
+      - run: pnpm check:shell
+      - name: Assemble the merged tree (no artifact — this is a check, not a build)
+        run: ./gradlew --no-daemon assembleDebug
+        working-directory: android

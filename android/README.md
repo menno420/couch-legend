@@ -18,6 +18,14 @@ agent container does not have — so **the APK is assembled in CI**
 (`.github/workflows/android.yml`), not in a session. Generating and editing this
 Gradle project needs no SDK; building one does.
 
+That workflow runs the build **twice on a PR, on purpose**. The `apk` job builds
+the PR *head*, so a result from a real phone is attributable to a commit someone
+can look up; a merge revision exists on no branch. The `merge-tree` job builds
+what would actually land, so an Android-side incompatibility between a branch
+and `main` cannot pass review and then break `main`. Nothing else covers that:
+`ci` runs only `pnpm check` and `substrate-gate` is repo hygiene — neither
+assembles Android.
+
 `VITE_BASE=./` is the load-bearing part. The site's default base is
 `/couch-legend/`, which is correct on GitHub Pages and fatal inside the app:
 every asset resolves to a path that does not exist and the app opens black, with
