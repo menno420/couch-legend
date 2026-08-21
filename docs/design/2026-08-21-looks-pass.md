@@ -85,7 +85,7 @@ green filter over every place.
 
 Normal-size text must retain at least 4.5:1 contrast after any token refinement;
 the lowest proposed text pairing, Ash on Raised glass, measures about 5.8:1.
-Interactive line measures about 3.1:1 against Smoked glass; quiet lines remain
+Interactive line measures about 3.7:1 against Smoked glass; quiet lines remain
 decorative and never carry control or status meaning alone.
 A backdrop keeps the colors its location deserves: jail can be cold
 blue-grey, the White House ivory and navy, nightlife amber and magenta, and the
