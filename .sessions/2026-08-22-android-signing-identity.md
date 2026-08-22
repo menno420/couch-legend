@@ -114,10 +114,18 @@ re-measured):**
   distinct cert (`43bc128` → `04a12834c0c942ad…`, notBefore 22:42:51Z): four
   runs, four keys, so the per-run behaviour is a property of the pipeline rather
   than a three-sample coincidence.
-- **The two-build proof (the point of the session).** CI run 32567627298 on
-  `d37fcc7` assembled the APK twice — the `debug apk` job on the PR head and the
-  `android merge check` job on the merge revision, two independent runners. Both
-  printed the *same* signer certificate, equal to the committed keystore's:
+- **The two-build proof (the point of the session), and the honest scope of it.**
+  Across the whole PR the keystore produced **15 successful APK builds over 8
+  workflow runs** (7 PR runs × 2 jobs, plus main's single job — the merge check
+  is skipped on a push), and every one of those jobs went green, which *implies*
+  the certificate matched the pin because the assertion reddens the job on
+  mismatch. That is an inference, sound but an inference. The certificate value
+  was **read directly on 5 of the 15**: all four job logs of runs
+  `d37fcc7` and `ee50b7a` (`debug apk` on the PR head and `android merge check`
+  on the merge revision — different runners, different trees), plus main's
+  `9e04b0d` artifact downloaded and parsed here. Run 32567627298 on `d37fcc7` is
+  the clean two-build case: both jobs printed the *same* signer certificate,
+  equal to the committed keystore's:
   `1F:F7:25:FF:1A:D7:70:D4:35:01:70:30:FE:B1:23:FF:D3:33:58:94:0F:72:E6:4A:37:CC:E9:04:B0:CB:75:03`
 - **Confirmed off CI's own word too:** the uploaded artifact
   (`couch-legend-apk-d37fcc7`) was downloaded and parsed here by a second,
@@ -334,7 +342,7 @@ and still nearly mis-scored it — the first poll's counter was written wrong an
 reported zero through 36 iterations while findings sat on the endpoint it was
 reading. The endpoint lesson held; the arithmetic was the weak link.
 
-**Trail totals: 5 rounds, 16 findings, 13 `[conceded]`, 3 `[survived]`.** The
+**Trail totals: 5 rounds, 16 findings — 12 `[conceded]`, 1 `[partial]`, 3 `[survived]`.** (Corrected: an earlier version of this line said 13 conceded, which folded the `[partial]` into the concessions and made the tally stop reconciling with the bullets above it. Counted from the line-initial markers in this file, not from memory.) The
 shape is worth keeping: rounds 1–2 broke the design (the guard's baseline could
 move with the artifact it guarded; four ways an APK carries the pinned
 certificate while a device resolves a different identity), round 3 crossed out of
