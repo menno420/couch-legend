@@ -7,6 +7,11 @@
 # key management, and release signing arrives with the first real release
 # ([D-0002]).
 #
+# The debug key is COMMITTED (android/keystore/debug.keystore), not minted per
+# run. Without it every build carries a different signer certificate and refuses
+# to install over the last one — measured across four runs — which costs a save
+# every time. Both jobs assert the shipped APK carries that committed identity.
+#
 # Two jobs, because the two questions are different:
 #   apk         — builds the PR HEAD, so a result from a real phone is
 #                 attributable to a commit someone can look up.
@@ -72,6 +77,15 @@ jobs:
         run: ./gradlew --no-daemon assembleDebug
         working-directory: android
 
+      - name: Assert the APK carries the committed signing identity
+        # The build going green is not enough. Measured 2026-08-21 (#13): with
+        # no committed keystore Gradle mints a fresh debug key per run, and an
+        # APK signed by a different key REFUSES to install over an installed
+        # one — the uninstall that forces clears the save. This asserts the
+        # shipped bytes came from android/keystore/debug.keystore, so the
+        # regression cannot return quietly.
+        run: pnpm check:apk-signer android/app/build/outputs/apk/debug/app-debug.apk
+
       - name: Name the APK after the commit it was built from
         id: apk
         # Derived from the revision actually checked out, so the label and the
@@ -122,3 +136,13 @@ jobs:
       - name: Assemble the merged tree (no artifact — this is a check, not a build)
         run: ./gradlew --no-daemon assembleDebug
         working-directory: android
+
+      - name: Assert the APK carries the committed signing identity
+        # The build going green is not enough. Measured 2026-08-21 (#13): with
+        # no committed keystore Gradle mints a fresh debug key per run, and an
+        # APK signed by a different key REFUSES to install over an installed
+        # one — the uninstall that forces clears the save. This asserts the
+        # shipped bytes came from android/keystore/debug.keystore, so the
+        # regression cannot return quietly.
+        run: pnpm check:apk-signer android/app/build/outputs/apk/debug/app-debug.apk
+

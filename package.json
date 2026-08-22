@@ -11,6 +11,7 @@
     "test": "vitest run",
     "check": "tsc --noEmit && vitest run && vite build",
     "check:shell": "tsx tools/check-shell-assets.ts",
+    "check:apk-signer": "tsx tools/check-apk-signer.ts",
     "sim": "tsx tools/simulate.ts"
   },
   "dependencies": {

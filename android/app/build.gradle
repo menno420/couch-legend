@@ -5,6 +5,31 @@ apply plugin: 'com.android.application'
 // Legend` honest about which build is installed.
 def appVersion = new groovy.json.JsonSlurper().parse(file('../../package.json')).version
 
+// A COMMITTED debug keystore, deliberately, instead of the throwaway one Gradle
+// generates per build machine.
+//
+// Measured 2026-08-21 (#13, and the table in android/README.md): with nothing
+// checked in, the runner mints a FRESH debug key on every CI run — three runs,
+// three distinct signer certificates. Every APK then refuses to install over
+// every other one; replacing an installed build means uninstalling first, and
+// uninstalling clears app storage, which is where the save lives. Milestone B
+// ships repeated builds to a real phone, so one stable identity is a
+// prerequisite for the device work, not a tidiness pass.
+//
+// The password is the Android debug convention and is public BY DESIGN. This is
+// not a secret, and it is not a Play upload key — Play rejects debug-signed
+// builds, so committing this forecloses nothing about release signing, which
+// still arrives with the first real release ([D-0002]).
+def debugKeystore = rootProject.file('keystore/debug.keystore')
+if (!debugKeystore.exists()) {
+    // Loud on purpose. The silent fallback IS the bug: Gradle would quietly mint
+    // a throwaway key, the build would go green, and the per-run-identity
+    // problem this file exists to remove would be back with no signal.
+    throw new GradleException(
+        "Missing committed debug keystore at ${debugKeystore.absolutePath} — " +
+        "without it Gradle mints a per-run key and APKs stop installing over one another")
+}
+
 android {
     namespace = "com.menno420.couchlegend"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -21,7 +46,21 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        // Overrides AGP's implicit debug config; the debug buildType below binds
+        // it explicitly rather than relying on that override being picked up.
+        debug {
+            storeFile debugKeystore
+            storeType "pkcs12"
+            storePassword "android"
+            keyAlias "androiddebugkey"
+            keyPassword "android"
+        }
+    }
     buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
