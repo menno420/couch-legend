@@ -121,12 +121,16 @@ re-measured):**
   because the checker itself changed mid-PR:
   - **Read directly — 5 builds.** All four job logs of runs `d37fcc7` and
     `ee50b7a`, plus main's `9e04b0d` artifact downloaded and parsed here. These
-    are the only ones that *can* be read directly, and it is not a coincidence:
-    the first four ran the **pre-round-1 checker**, which derived its expectation
-    from the contemporaneous keystore and had no independent pin, so their going
-    green established APK↔keystore agreement and **not** a match against the pin.
+    are the ones that *were* inspected, not the only ones that could be — every
+    job's log prints the certificate and all 15 remain readable; five is what
+    this session chose to read. Which five matters, though: the first four ran
+    the **pre-round-1 checker**, which derived its expectation from the
+    contemporaneous keystore and had no independent pin, so their going green
+    established APK↔keystore agreement and **not** a match against the pin.
     Reading the printed certificate is what establishes it for them — and it
-    does, since the pin was generated from that same keystore.
+    does, since the pin was generated from that same keystore. So the four builds
+    the inference cannot cover happen to be four of the five that were read,
+    which is luck rather than design.
   - **Inferred from a green assertion — the other 10.** Every one of those ran
     the pin-aware checker, whose assertion is unconditional and reddens the job
     on mismatch, so green does imply the certificate matched the pin. Sound, but
