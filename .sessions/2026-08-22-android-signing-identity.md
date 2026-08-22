@@ -117,15 +117,27 @@ re-measured):**
 - **The two-build proof (the point of the session), and the honest scope of it.**
   Across the whole PR the keystore produced **15 successful APK builds over 8
   workflow runs** (7 PR runs × 2 jobs, plus main's single job — the merge check
-  is skipped on a push), and every one of those jobs went green, which *implies*
-  the certificate matched the pin because the assertion reddens the job on
-  mismatch. That is an inference, sound but an inference. The certificate value
-  was **read directly on 5 of the 15**: all four job logs of runs
-  `d37fcc7` and `ee50b7a` (`debug apk` on the PR head and `android merge check`
-  on the merge revision — different runners, different trees), plus main's
-  `9e04b0d` artifact downloaded and parsed here. Run 32567627298 on `d37fcc7` is
-  the clean two-build case: both jobs printed the *same* signer certificate,
-  equal to the committed keystore's:
+  is skipped on a push). The evidence splits in two, and the split matters
+  because the checker itself changed mid-PR:
+  - **Read directly — 5 builds.** All four job logs of runs `d37fcc7` and
+    `ee50b7a`, plus main's `9e04b0d` artifact downloaded and parsed here. These
+    are the only ones that *can* be read directly, and it is not a coincidence:
+    the first four ran the **pre-round-1 checker**, which derived its expectation
+    from the contemporaneous keystore and had no independent pin, so their going
+    green established APK↔keystore agreement and **not** a match against the pin.
+    Reading the printed certificate is what establishes it for them — and it
+    does, since the pin was generated from that same keystore.
+  - **Inferred from a green assertion — the other 10.** Every one of those ran
+    the pin-aware checker, whose assertion is unconditional and reddens the job
+    on mismatch, so green does imply the certificate matched the pin. Sound, but
+    an inference.
+
+  Run 32567627298 on `d37fcc7` is the clean two-build case: two independent
+  runners, two different revisions — the PR head and the synthetic merge
+  revision — though **not** two different trees, since `main` sat at `43bc128`
+  for the life of this PR and the merge revision therefore carried the same
+  content as the head. Both jobs printed the *same* signer certificate, equal to
+  the committed keystore's:
   `1F:F7:25:FF:1A:D7:70:D4:35:01:70:30:FE:B1:23:FF:D3:33:58:94:0F:72:E6:4A:37:CC:E9:04:B0:CB:75:03`
 - **Confirmed off CI's own word too:** the uploaded artifact
   (`couch-legend-apk-d37fcc7`) was downloaded and parsed here by a second,
