@@ -79,6 +79,9 @@ forecloses nothing), and DESIGN § 7's list, which stays owner-gated.
   (`android/keystore/debug-signer-sha256.txt` + `android/keystore/README.md`),
   cryptographic v2 signature verification, an exactly-one-signer requirement,
   and the overstated install-over claim qualified everywhere it appeared.
+- The Codex round-3 repairs: v3.1 added to the validated scheme list, algorithm
+  IDs bound to their required key family, and the threat model written into the
+  tool so the three declined findings are a recorded decision.
 - The Codex round-2 repairs: duplicate signing-block ids rejected, every
   identity scheme (v2 **and** v3) validated rather than v2 alone, signatures
   verified with the key inside the pinned certificate rather than the signer's
@@ -251,6 +254,44 @@ which is precisely the class the first two rounds had not exhausted.
 the round-2 fix passed the certificate's `KeyObject` through `createPublicKey()`,
 which throws `Invalid key object type public, expected private`. It would have
 reddened CI. Real exit codes on every bypass file are why it did not.
+
+**Codex round 3 on `6ef00ca`, 5 findings, 2 conceded and 3 declined on a stated
+threat model.** Requested `11:01:06Z`, answered ~`11:08Z`.
+
+- `[conceded]` **P2 — v3.1 (`0x1b93ad61`) is not in the scheme list.** Correct,
+  and it is the same argument that made the v3 finding worth taking: if AGP ever
+  emits a rotation block, a checker that knows only v2/v3 silently ignores the
+  block those devices take identity from. Added.
+- `[conceded]` **P2 — bind each algorithm ID to its required key type.** Node
+  infers the key family from the key, so a record labelled ECDSA but carrying an
+  RSA signature verified here and is rejected on device. Each algorithm now
+  declares `rsa`/`ec`/`dsa` and the certificate's family must match.
+- `[survived]` ×3 — **the counterfeit-EOCD record, v3's inner/outer SDK-range
+  copies, and the `0xbeeff00d` stripping-protection attribute.** All three are
+  real properties Android enforces and `apksigner verify` would cover. All three
+  are reachable **only by a party authoring a hostile APK** — none by this
+  pipeline drifting. This check runs in CI on an APK our own workflow assembled
+  from our own source seconds earlier, and what it defends is build provenance:
+  the pipeline quietly ceasing to use the committed key. It is not, and should
+  not become, an adversarial APK verifier. The threat model is now written into
+  the file's header alongside these three by name, so the boundary is a decision
+  on the record rather than an omission a later round re-raises.
+
+**Why the trail stops here rather than on a clean verdict, said plainly.** The
+convention this repo inherited — *a round that produced any `[conceded]` is not
+the last round* — would ask for a round 4, and round 3 conceded two. But the
+rounds are not converging: 5 findings, then 5, then 5, on one file, each batch
+more exotic than the last, and the arc runs from "your central claim is wrong"
+(round 1, correct and load-bearing) to "a crafted APK could carry a counterfeit
+end-of-central-directory record" (round 3, true and outside the job). Continuing
+would keep growing a build-provenance check into a partial reimplementation of
+`apksigner`, which is scope the owner did not ask for and maintenance nobody
+wants. Stopping is the judgement; recording that it was a judgement, and not a
+clean bill of health, is the honest part. **Rounds 1–2 were worth every minute** —
+between them they found that the guard's baseline could move with the artifact it
+guarded, and four ways an APK could carry the pinned certificate while a device
+resolved a different identity. Not one of those was visible from reading the
+happy path.
 
 ## ⟲ Previous-session review
 

@@ -45,6 +45,24 @@
  *    `digests` and `signatures` records must match, or Android rejects the
  *    signer even though the signature itself verifies.
  *
+ * THREAT MODEL, stated because it decides what belongs here. This runs in CI on
+ * an APK our own workflow assembled from our own source seconds earlier. What it
+ * defends against is a **build-provenance regression** — the pipeline quietly
+ * ceasing to use the committed key (a regenerated keystore, a dropped signing
+ * config, a scheme we forgot to validate). It is NOT an adversarial APK
+ * verifier: nothing here assumes a party crafting a hostile APK, because at this
+ * point in the pipeline there is no such party.
+ *
+ * That boundary is a decision, not an oversight, and three review rounds pushed
+ * against it (Codex, #14). Deliberately NOT implemented, each because it is only
+ * reachable by an attacker authoring the APK, never by our own build drifting:
+ * validating the EOCD comment length to reject a counterfeit end-of-directory
+ * record; comparing v3's inner and outer minSDK/maxSDK copies; and enforcing the
+ * `0xbeeff00d` stripping-protection attribute. All three are real properties that
+ * Android checks and that `apksigner verify` would cover — they are just not this
+ * check's job. If a build ever ships from somewhere less trusted than this
+ * workflow, revisit that reasoning before trusting a pass.
+ *
  * Boundary, stated so a pass is not over-read: this verifies signatures over
  * each scheme's *signed-data* block. It does not recompute the content digests
  * over the APK's chunks — that is `apksigner verify`'s job (no Android SDK
@@ -71,17 +89,24 @@ const APK_SIG_BLOCK_MAGIC = 'APK Sig Block 42'
 const SCHEMES = [
   { id: 0x7109871a, name: 'v2', sdkFieldsAfterSignedData: 0 },
   { id: 0xf05368c0, name: 'v3', sdkFieldsAfterSignedData: 2 },
+  // v3.1 (Android 13+, signing-key rotation). Listed for the same reason as v3:
+  // if AGP ever emits it, a checker that only knew v2/v3 would silently ignore
+  // the block those devices actually take identity from.
+  { id: 0x1b93ad61, name: 'v3.1', sdkFieldsAfterSignedData: 2 },
 ]
 
 /** v2/v3 signature algorithm IDs → how to verify them. */
-const ALGORITHMS: Record<number, { hash: string; padding?: number; saltLength?: number }> = {
-  0x0101: { hash: 'sha256', padding: constants.RSA_PKCS1_PSS_PADDING, saltLength: 32 },
-  0x0102: { hash: 'sha512', padding: constants.RSA_PKCS1_PSS_PADDING, saltLength: 64 },
-  0x0103: { hash: 'sha256', padding: constants.RSA_PKCS1_PADDING },
-  0x0104: { hash: 'sha512', padding: constants.RSA_PKCS1_PADDING },
-  0x0201: { hash: 'sha256' },
-  0x0202: { hash: 'sha512' },
-  0x0301: { hash: 'sha256' },
+const ALGORITHMS: Record<
+  number,
+  { hash: string; keyType: string; padding?: number; saltLength?: number }
+> = {
+  0x0101: { hash: 'sha256', keyType: 'rsa', padding: constants.RSA_PKCS1_PSS_PADDING, saltLength: 32 },
+  0x0102: { hash: 'sha512', keyType: 'rsa', padding: constants.RSA_PKCS1_PSS_PADDING, saltLength: 64 },
+  0x0103: { hash: 'sha256', keyType: 'rsa', padding: constants.RSA_PKCS1_PADDING },
+  0x0104: { hash: 'sha512', keyType: 'rsa', padding: constants.RSA_PKCS1_PADDING },
+  0x0201: { hash: 'sha256', keyType: 'ec' },
+  0x0202: { hash: 'sha512', keyType: 'ec' },
+  0x0301: { hash: 'sha256', keyType: 'dsa' },
 }
 
 const failures: string[] = []
@@ -337,6 +362,17 @@ for (const scheme of present) {
       const spec = ALGORITHMS[algoId]
       if (!spec) {
         fail(`${scheme.name}: unknown signature algorithm ${hex4(algoId)}`)
+        continue
+      }
+      // Node infers the key family from the key itself, so a record labelled
+      // ECDSA but filled with an RSA signature would verify here and be
+      // rejected on device. Bind the label to the key.
+      const family = (certKey.asymmetricKeyType ?? '').replace(/-pss$/, '')
+      if (family !== spec.keyType) {
+        fail(
+          `${scheme.name}: signature record claims ${hex4(algoId)} (${spec.keyType.toUpperCase()}) but the ` +
+            `pinned certificate holds a ${family.toUpperCase() || 'unknown'} key`,
+        )
         continue
       }
       const opts: Record<string, unknown> = { key: certKey }
