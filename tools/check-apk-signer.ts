@@ -1,50 +1,91 @@
 /**
- * Asserts an APK was signed by the keystore this repo commits.
+ * Asserts an APK was signed by the identity this repo pins — and that the
+ * signature is real, not merely a matching certificate sitting in a field.
  *
- * The failure this exists to catch: the APK builds green but carries a signing
- * identity nobody pinned. Measured 2026-08-21 (#13) — with no committed
- * keystore, Gradle mints a fresh debug key per build machine, so three CI runs
- * produced three distinct signer certificates. An APK signed by a different key
- * REFUSES to install over an installed one, and the only way through is an
- * uninstall, which clears app storage — the player's save. That makes repeated
- * delivery to a real phone (i.e. milestone B's device matrix) impossible.
+ * The failure this exists to catch: an APK builds green but carries a signing
+ * identity nobody pinned. Measured 2026-08-21 (#13) and re-verified 2026-08-22
+ * — with no committed keystore, Gradle mints a fresh debug key per build
+ * machine, so four CI runs produced four distinct signer certificates. An APK
+ * signed by a different key REFUSES to install over an installed one, and the
+ * only way through is an uninstall, which clears app storage — the player's
+ * save. That makes repeated delivery to a real phone (milestone B's device
+ * matrix) impossible.
  *
- * It is written as an assertion, not a report, because "stable" observed once
- * is a fact about yesterday. The expected fingerprint is derived from
- * `android/keystore/debug.keystore` at check time rather than pinned as a hex
- * string here, so there is no third copy to drift: the keystore is the source
- * of truth and this proves the shipped bytes came from it.
+ * Three things must agree, and the third is the one that matters:
  *
- * No Android SDK required — `apksigner` is not available in the agent
- * container, so the APK Signing Block is parsed directly (the recipe recorded
- * in docs/CAPABILITIES.md). Note that modern AGP emits no `META-INF/*.RSA`, so
- * an absent JAR signature is NOT evidence of an unsigned APK.
+ *   1. the certificate inside the APK,
+ *   2. the certificate in `android/keystore/debug.keystore`,
+ *   3. `android/keystore/debug-signer-sha256.txt` — an INDEPENDENT pin.
  *
- * What this establishes, and what it does not. It compares the signer
- * CERTIFICATE, which is exactly the property Android compares when deciding
- * whether one build may replace another — so it is the right and sufficient
- * check for the install-over-the-top question this exists to protect. It does
- * NOT cryptographically verify the signature over the APK's contents; that is
- * `apksigner verify`'s job (no SDK here) and Android's at install time. So a
- * pass means "this APK carries our committed identity", not "this APK is
- * intact".
+ * (3) exists because (1)+(2) alone check only same-build consistency, not the
+ * cross-build stability this is for: regenerate the keystore and both move
+ * together, the check stays green, and every phone holding an earlier build
+ * quietly loses the ability to update. The pin turns that into a red build.
+ * Changing the identity is then a deliberate two-file diff. (Codex P1 on #14.)
  *
- * Run: `pnpm check:apk-signer <path-to.apk>` (the android workflow runs it
- * immediately after `assembleDebug`, in both jobs).
+ * It also verifies the v2 signature cryptographically, so a corrupted or
+ * tampered signature cannot pass merely by carrying intact certificate bytes,
+ * and it requires EXACTLY ONE signer — Android treats the whole signer set as
+ * the package identity, so an APK with an extra signer is not update-compatible
+ * with a single-signer one even if the first certificate matches.
+ *
+ * Boundary, stated so a pass is not over-read: this verifies the signature over
+ * the v2 *signed-data* block. It does not recompute the content digests over
+ * the APK's chunks, which is `apksigner verify`'s job (no Android SDK here) and
+ * Android's at install time.
+ *
+ * No Android SDK required — the APK Signing Block is parsed directly (the
+ * recipe recorded in docs/CAPABILITIES.md). Modern AGP emits no
+ * `META-INF/*.RSA`, so an absent JAR signature is NOT evidence of an unsigned
+ * APK.
+ *
+ * Run: `pnpm check:apk-signer <path-to.apk>` (both android jobs run it
+ * immediately after `assembleDebug`).
  */
 import { execFileSync } from 'node:child_process'
-import { createHash } from 'node:crypto'
+import { constants, createHash, createPublicKey, verify as cryptoVerify } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const REPO = new URL('..', import.meta.url).pathname
 const KEYSTORE = join(REPO, 'android/keystore/debug.keystore')
+const PIN = join(REPO, 'android/keystore/debug-signer-sha256.txt')
 const STOREPASS = 'android'
 const ALIAS = 'androiddebugkey'
 
 const APK_SIG_BLOCK_MAGIC = 'APK Sig Block 42'
 const V2_BLOCK_ID = 0x7109871a
 const V3_BLOCK_ID = 0xf05368c0
+
+/** v2 signature algorithm IDs → how to verify them. */
+const ALGORITHMS: Record<number, { hash: string; padding?: number; saltLength?: number }> = {
+  0x0101: { hash: 'sha256', padding: constants.RSA_PKCS1_PSS_PADDING, saltLength: 32 },
+  0x0102: { hash: 'sha512', padding: constants.RSA_PKCS1_PSS_PADDING, saltLength: 64 },
+  0x0103: { hash: 'sha256', padding: constants.RSA_PKCS1_PADDING },
+  0x0104: { hash: 'sha512', padding: constants.RSA_PKCS1_PADDING },
+  0x0201: { hash: 'sha256' },
+  0x0202: { hash: 'sha512' },
+  0x0301: { hash: 'sha256' },
+}
+
+const failures: string[] = []
+const checks: string[] = []
+const fail = (m: string) => failures.push(m)
+const pass = (m: string) => checks.push(m)
+
+const sha256 = (b: Buffer) => createHash('sha256').update(b).digest('hex').toUpperCase()
+const pretty = (hex: string) => (hex.match(/../g) ?? []).join(':')
+
+function report(): never {
+  for (const c of checks) console.log(`  ok   ${c}`)
+  for (const f of failures) console.error(`  FAIL ${f}`)
+  if (failures.length > 0) {
+    console.error(`\napk signer check: ${failures.length} failure(s)`)
+    process.exit(1)
+  }
+  console.log(`\napk signer check: ${checks.length} checks passed — the APK carries the pinned identity`)
+  process.exit(0)
+}
 
 const apkPath = process.argv[2]
 if (!apkPath) {
@@ -56,11 +97,8 @@ if (!existsSync(apkPath)) {
   process.exit(2)
 }
 
-const sha256 = (b: Buffer) => createHash('sha256').update(b).digest('hex').toUpperCase()
-const pretty = (hex: string) => (hex.match(/../g) ?? []).join(':')
-
 /** The certificate the committed keystore holds, DER-encoded. */
-function expectedCert(): Buffer {
+function keystoreCert(): Buffer {
   if (!existsSync(KEYSTORE)) {
     console.error(`no committed keystore at ${KEYSTORE} — nothing to check against`)
     process.exit(2)
@@ -84,7 +122,6 @@ function expectedCert(): Buffer {
  *   uint64 size | (uint64 len, uint32 id, value)* | uint64 size | 16-byte magic
  */
 function signingBlock(apk: Buffer): Map<number, Buffer> {
-  // End of Central Directory — scan back from the tail for its signature.
   let eocd = -1
   for (let i = apk.length - 22; i >= Math.max(0, apk.length - 65557); i--) {
     if (apk.readUInt32LE(i) === 0x06054b50) {
@@ -122,19 +159,25 @@ function signingBlock(apk: Buffer): Map<number, Buffer> {
   return pairs
 }
 
-/** First signer's first certificate out of a v2/v3 block. */
-function firstCert(block: Buffer): Buffer {
-  // length-prefixed sequence of length-prefixed signers
-  const signers = block.subarray(4, 4 + block.readUInt32LE(0))
-  const signerLen = signers.readUInt32LE(0)
-  const signer = signers.subarray(4, 4 + signerLen)
-  // signer := signed data | signatures | public key, each length-prefixed
-  const signedData = signer.subarray(4, 4 + signer.readUInt32LE(0))
-  // signed data := digests | certificates | attributes, each length-prefixed
-  const digestsLen = signedData.readUInt32LE(0)
-  const certsAt = 4 + digestsLen
-  const certs = signedData.subarray(certsAt + 4, certsAt + 4 + signedData.readUInt32LE(certsAt))
-  return certs.subarray(4, 4 + certs.readUInt32LE(0))
+/** Split a length-prefixed sequence of length-prefixed elements. */
+function elements(seq: Buffer): Buffer[] {
+  const out: Buffer[] = []
+  let p = 0
+  while (p + 4 <= seq.length) {
+    const len = seq.readUInt32LE(p)
+    if (len < 0 || p + 4 + len > seq.length) throw new Error('malformed length-prefixed sequence')
+    out.push(seq.subarray(p + 4, p + 4 + len))
+    p += 4 + len
+  }
+  return out
+}
+
+/** field at `p`: uint32 length then that many bytes. */
+function field(buf: Buffer, p: number): { value: Buffer; next: number } {
+  if (p + 4 > buf.length) throw new Error('truncated length-prefixed field')
+  const len = buf.readUInt32LE(p)
+  if (p + 4 + len > buf.length) throw new Error('length-prefixed field runs past its container')
+  return { value: buf.subarray(p + 4, p + 4 + len), next: p + 4 + len }
 }
 
 const apk = readFileSync(apkPath)
@@ -142,38 +185,109 @@ let pairs: Map<number, Buffer>
 try {
   pairs = signingBlock(apk)
 } catch (err) {
-  console.error(`  FAIL ${(err as Error).message}`)
-  process.exit(1)
+  fail((err as Error).message)
+  report()
 }
 
 const v2 = pairs.get(V2_BLOCK_ID)
 if (!v2) {
-  console.error(
-    `  FAIL no APK Signature Scheme v2 block (0x${V2_BLOCK_ID.toString(16)}) — ` +
+  fail(
+    `no APK Signature Scheme v2 block (0x${V2_BLOCK_ID.toString(16)}) — ` +
       `found ids ${[...pairs.keys()].map((i) => '0x' + i.toString(16)).join(', ')}`,
   )
-  process.exit(1)
+  report()
 }
-
-const want = expectedCert()
-const got = firstCert(v2)
-const wantHex = sha256(want)
-const gotHex = sha256(got)
 
 console.log(`  apk        ${apkPath}`)
-console.log(`  signer     ${pretty(gotHex)}`)
-console.log(`  committed  ${pretty(wantHex)}`)
 console.log(`  schemes    v2${pairs.has(V3_BLOCK_ID) ? ' + v3' : ''}`)
 
-if (!got.equals(want)) {
-  console.error(
-    '\n  FAIL the APK was NOT signed by the committed keystore.\n' +
-      '       This is the per-run-key regression: builds signed by different keys\n' +
-      '       cannot be installed over one another, and the uninstall that would be\n' +
-      '       needed clears the save.',
-  )
-  process.exit(1)
+// 1 — exactly one signer. Android treats the whole signer set as the package
+//     identity, so an extra signer breaks update-compatibility with a
+//     single-signer build even when the first certificate matches.
+const signers = elements(field(v2, 0).value)
+if (signers.length !== 1) {
+  fail(`expected exactly 1 signer, found ${signers.length} — the signer set IS the package identity`)
+  report()
+}
+pass('exactly one signer')
+
+const signedDataF = field(signers[0], 0)
+const signaturesF = field(signers[0], signedDataF.next)
+const publicKeyF = field(signers[0], signaturesF.next)
+const signedData = signedDataF.value
+
+// signed data := digests | certificates | attributes, each length-prefixed
+const digestsF = field(signedData, 0)
+const certsF = field(signedData, digestsF.next)
+const certs = elements(certsF.value)
+if (certs.length !== 1) {
+  fail(`expected exactly 1 certificate in the signer, found ${certs.length}`)
+  report()
 }
 
-console.log('\napk signer check: the APK carries the committed debug identity')
-process.exit(0)
+// 2 — the APK's certificate, the committed keystore's, and the independent pin
+//     must ALL agree. See the header: (1)+(2) alone would only prove same-build
+//     consistency, which is not what this protects.
+const apkCert = certs[0]
+const apkHex = sha256(apkCert)
+const ksHex = sha256(keystoreCert())
+const pinHex = existsSync(PIN) ? readFileSync(PIN, 'utf8').trim().replace(/[^0-9A-Fa-f]/g, '').toUpperCase() : ''
+
+console.log(`  apk cert   ${pretty(apkHex)}`)
+console.log(`  keystore   ${pretty(ksHex)}`)
+console.log(`  pinned     ${pinHex ? pretty(pinHex) : '(missing)'}`)
+
+if (!pinHex) {
+  fail(`no pinned fingerprint at ${PIN} — without it a regenerated keystore would pass silently`)
+} else if (pinHex.length !== 64) {
+  fail(`pinned fingerprint is not a 64-char SHA-256: ${pinHex.length} hex chars`)
+} else {
+  if (apkHex !== pinHex) {
+    fail(
+      'the APK certificate does not match the PINNED identity — either this APK was not built ' +
+        'from the committed keystore, or the keystore was replaced without updating the pin. ' +
+        'Builds signed by different keys cannot be installed over one another, and the uninstall ' +
+        'that would force clears the save.',
+    )
+  } else {
+    pass('APK certificate matches the pinned identity')
+  }
+  if (ksHex !== pinHex) {
+    fail(
+      'the COMMITTED KEYSTORE does not match the pinned identity — the keystore appears to have ' +
+        'been regenerated or replaced. Every already-installed build becomes un-updatable. If this ' +
+        'is deliberate, update android/keystore/debug-signer-sha256.txt in the same commit and say why.',
+    )
+  } else {
+    pass('committed keystore matches the pinned identity')
+  }
+}
+
+// 3 — the signature is real, not just a matching certificate sitting in a field.
+try {
+  const publicKey = createPublicKey({ key: publicKeyF.value, format: 'der', type: 'spki' })
+  let verified = 0
+  for (const sig of elements(signaturesF.value)) {
+    const algoId = sig.readUInt32LE(0)
+    const spec = ALGORITHMS[algoId]
+    if (!spec) {
+      fail(`unknown v2 signature algorithm 0x${algoId.toString(16)}`)
+      continue
+    }
+    const bytes = field(sig, 4).value
+    const opts: Record<string, unknown> = { key: publicKey }
+    if (spec.padding !== undefined) opts.padding = spec.padding
+    if (spec.saltLength !== undefined) opts.saltLength = spec.saltLength
+    if (!cryptoVerify(spec.hash, signedData, opts as never, bytes)) {
+      fail(`v2 signature (algorithm 0x${algoId.toString(16)}) does NOT verify against the signer's public key`)
+    } else {
+      verified++
+    }
+  }
+  if (verified === 0) fail('no v2 signature could be verified')
+  else pass(`${verified} v2 signature(s) cryptographically verified against the signer's public key`)
+} catch (err) {
+  fail(`could not verify the v2 signature: ${(err as Error).message}`)
+}
+
+report()

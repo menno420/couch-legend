@@ -36,16 +36,32 @@ nothing in the UI to say why. `pnpm check:shell`
 ## Signing
 
 **A committed debug keystore** — `keystore/debug.keystore`, wired as the `debug`
-signing config in `app/build.gradle`. Every APK this repo produces therefore
-carries one stable signer certificate, and builds install over one another
-without an uninstall.
+signing config in `app/build.gradle`, with its certificate fingerprint pinned
+independently in `keystore/debug-signer-sha256.txt`. Every APK this repo
+produces therefore carries one stable signer certificate, which makes successive
+builds **signature-compatible**: it removes the signature mismatch that
+otherwise forces an uninstall.
 
-That is deliberate and it is checked, not trusted: both jobs in the android
-workflow run `pnpm check:apk-signer` on the APK they just assembled
-(`tools/check-apk-signer.ts`), which parses the APK Signing Block and asserts
-the signer certificate is the one in the committed keystore. The expected
-fingerprint is derived from the keystore at check time rather than pinned as a
-hex string anywhere, so there is no second copy to drift out of date.
+**Precisely what that does and does not establish.** Signature compatibility is
+the constraint this repo was breaking, and it is now measured on every build.
+Whether an install-over-the-top *succeeds*, and whether the save is preserved
+when it does, has **not** been observed — no APK has been installed over another
+on any device or emulator, because there is none here. Other update constraints
+exist. Treat it as the mismatch removed, pending the milestone-B device test.
+
+That much is checked, not trusted: both jobs in the android workflow run
+`pnpm check:apk-signer` on the APK they just assembled
+(`tools/check-apk-signer.ts`). It requires the APK's certificate, the committed
+keystore's certificate and the independent pin to **all three** agree, requires
+**exactly one signer** (Android treats the whole signer set as the package
+identity), and **cryptographically verifies** the v2 signature so intact
+certificate bytes around a broken signature cannot pass.
+
+The pin is the load-bearing third party. Deriving the expected value from the
+keystore alone would check only same-build consistency: regenerate the keystore
+and the APK and the keystore move together, the check stays green, and every
+phone holding an earlier build silently loses the ability to update. See
+`keystore/README.md` — changing the identity is a deliberate two-file diff.
 
 **The password is `android`, the alias is `androiddebugkey`, and both are public
 by convention.** This is not a secret and it is not in `.gitignore` on purpose
@@ -82,8 +98,8 @@ survive a force-stop*, cannot be asked twice.
 
 APKs built **before** this change carry a per-run key, so the first
 committed-keystore build **will not install over them.** Installing it needs an
-uninstall first, one time. After that, every future build installs cleanly over
-the last one and the save survives.
+uninstall first, one time. After that, builds are signature-compatible with one
+another, so the mismatch that forced the uninstall is gone.
 
 Before uninstalling anything, **export the save**: the game's portable save code
 (`exportCode` / `importCode` in `src/lib/save.ts`, exposed in the in-game

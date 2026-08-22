@@ -35,8 +35,9 @@ milestone B. B ships several builds to a real phone — that is what a device te
 matrix *is*. With per-run keys, every one of those builds costs the owner his
 save, which means the single most important question on the checklist, *does a
 save survive a force-stop*, cannot even be asked twice. Fix signing and the loop
-he actually needs works: install, play, take the next build, install over it,
-**save intact.**
+he actually needs becomes possible: install, play, take the next build, install
+over it — the signature mismatch that forced an uninstall is gone. (Whether the
+install then *succeeds* on hardware is his to observe; see the unmeasured list.)
 
 ## Scope
 
@@ -72,6 +73,12 @@ forecloses nothing), and DESIGN § 7's list, which stays owner-gated.
   step in **both** android jobs, and the docs
   (`android/README.md` § Signing rewritten around the measurement,
   `docs/CAPABILITIES.md`, `docs/current-state.md`).
+- `ee50b7a` — self-review fixes (the gradle comment understated its own
+  evidence at "three runs"; a trailing blank line) and the close-out draft.
+- The Codex round-1 repairs: the independent pin
+  (`android/keystore/debug-signer-sha256.txt` + `android/keystore/README.md`),
+  cryptographic v2 signature verification, an exactly-one-signer requirement,
+  and the overstated install-over claim qualified everywhere it appeared.
 - This flip commit — close-out and the guard-fires delta.
 
 **Verify (every command run; real exit codes, none read after a pipe — the one
@@ -146,6 +153,54 @@ re-measured):**
   **Guard recipe:** add `"tools"` to `tsconfig.json`'s `include` and `"node"` to
   `compilerOptions.types`; target `pnpm check`; expect to fix DOM-vs-node lib
   assumptions in both tools on the first run.
+
+**Codex trail — round 1 on `d37fcc77e`, 5 findings, 4 conceded.** Requested
+`10:31:52Z`, answered `10:39:21Z` — **7 m 29 s**, slower than any round on #11,
+so the ~5.5 min figure in the estate ledger is a central tendency and not a
+timeout. Findings arrived as inline review comments; the issue-comment endpoint
+stayed empty, i.e. the #11 lesson applies in both directions — poll all three,
+because which endpoint answers depends on whether there were findings.
+
+- `[conceded]` **P1 — "Pin the signing identity across commits."** The sharpest
+  finding of the session, and it defeated this PR's central claim. The checker
+  derived the expected certificate from the very keystore it was validating —
+  chosen deliberately, and reasoned in a comment, as "no second copy to drift".
+  Codex pointed out that regenerating the keystore moves *both* sides together,
+  so the check stays green while every phone holding an earlier build silently
+  loses the ability to update. It was checking same-build consistency, not the
+  cross-build stability it exists to protect. Fixed with an independent pin
+  (`debug-signer-sha256.txt`), now required to agree with both the APK and the
+  keystore; changing the identity is a deliberate two-file diff. **Verified by
+  reproducing the exact scenario**: the keystore was regenerated behind the pin
+  and the check went to exit 1 naming it.
+- `[conceded]` **P2 — "Verify the APK signature instead of trusting its
+  certificate field."** Intact certificate bytes around a broken signature would
+  have passed. Now `crypto.verify` checks the v2 signature over the signed-data
+  block against the signer's public key. **Verified non-vacuous**: flipping a
+  single bit of the signature, leaving the certificate untouched, drives it to
+  exit 1 while all three certificate comparisons still pass — before the fix
+  that file passed.
+- `[conceded]` **P2 — "Reject unexpected additional APK signers."** The parse
+  took the first signer's first certificate; Android treats the whole signer set
+  as the package identity, so an APK with an extra signer is not
+  update-compatible with a single-signer one. Now requires exactly one.
+- `[conceded]` **P2 — "Qualify the untested install-over claim."** Right, and it
+  is the finding this session asked for by name in the review request. The docs
+  said builds "install over one another"; what was measured is that they are
+  **signature-compatible** — the mismatch is removed. Nothing has been installed
+  on anything. Qualified in `android/README.md`, `docs/current-state.md` and the
+  hub's entry point. (The card's own unmeasured list already said this
+  correctly; the prose around it did not.)
+- `[partial]` **P1 — "Complete the session card before merging."** Two halves.
+  The born-red hold is correct and is the kit's designed convention, not a
+  defect — `check --strict` says so in as many words, and the flip is the
+  deliberate last commit. The other half — that the card still held five unresolved
+  auto-draft placeholder slots — was true of the reviewed SHA and already resolved in `ee50b7a`, which
+  Codex had not seen. No change taken; the observation is accurate about
+  `d37fcc7` and stale about the head.
+
+Per milestone A's own session idea — *a round that produced any `[conceded]` is
+not the last round* — round 2 was requested on the repaired head.
 
 ## ⟲ Previous-session review
 
