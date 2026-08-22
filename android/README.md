@@ -35,33 +35,88 @@ nothing in the UI to say why. `pnpm check:shell`
 
 ## Signing
 
-Gradle's standard **debug** signing. A debug-signed APK installs from unknown
-sources and needs no key management, which is all a sideload requires. Release
-signing and a managed keystore arrive with the first real release, deliberately
-not before ([D-0002]).
+**A committed debug keystore** — `keystore/debug.keystore`, wired as the `debug`
+signing config in `app/build.gradle`, with its certificate fingerprint pinned
+independently in `keystore/debug-signer-sha256.txt`. Every APK this repo
+produces therefore carries one stable signer certificate, which makes successive
+builds **signature-compatible**: it removes the signature mismatch that
+otherwise forces an uninstall.
 
-One consequence, and it is stronger than "not guaranteed" — it was **measured**
-2026-08-21 by extracting the v2 signer certificate from three APKs built by
-three separate CI runs of this workflow:
+**Precisely what that does and does not establish.** Signature compatibility is
+the constraint this repo was breaking, and it is now measured on every build.
+Whether an install-over-the-top *succeeds*, and whether the save is preserved
+when it does, has **not** been observed — no APK has been installed over another
+on any device or emulator, because there is none here. Other update constraints
+exist. Treat it as the mismatch removed, pending the milestone-B device test.
+
+That much is checked, not trusted: both jobs in the android workflow run
+`pnpm check:apk-signer` on the APK they just assembled
+(`tools/check-apk-signer.ts`). It requires the APK's certificate, the committed
+keystore's certificate and the independent pin to **all three** agree, requires
+**exactly one signer** (Android treats the whole signer set as the package
+identity), and **cryptographically verifies** each signature so intact
+certificate bytes around a broken signature cannot pass.
+
+It also closes four ways an APK can carry the pinned certificate while a *device*
+resolves a different identity — each found by adversarial review, and each now
+covered by a test that builds the bypass as a real file: duplicate signing-block
+ids (Android resolves an id to its **first** occurrence, so keeping the last one
+validates the wrong signer); a v3 block escorted by a pinned v2 one (Android 9+
+takes identity from v3, so **every** scheme block present is validated); a
+signature verified against the signer's own *declared* public key rather than the
+key inside the pinned certificate; and digest/signature algorithm lists that
+disagree, which Android rejects even when the signature verifies.
+
+The pin is the load-bearing third party. Deriving the expected value from the
+keystore alone would check only same-build consistency: regenerate the keystore
+and the APK and the keystore move together, the check stays green, and every
+phone holding an earlier build silently loses the ability to update. See
+`keystore/README.md` — changing the identity is a deliberate two-file diff.
+
+**The password is `android`, the alias is `androiddebugkey`, and both are public
+by convention.** This is not a secret and it is not in `.gitignore` on purpose
+(the Capacitor template ships those ignore lines commented out). It is also not
+a Play upload key — Play rejects debug-signed builds outright — so committing it
+forecloses nothing about release signing, which still arrives with the first
+real release ([D-0002]).
+
+### Why — the measurement that forced it
+
+Before this, the workflow committed no key, so Gradle minted a fresh one on each
+runner. The v2 signer certificate was extracted from APKs built by four separate
+runs:
 
 | APK | signer cert SHA-256 | cert valid from |
 |---|---|---|
 | `couch-legend-c31d653-debug.apk` | `f815828465d6ce40…` | 21:25:54 UTC |
 | `couch-legend-f2a54eb-debug.apk` | `387c7df1bc805a04…` | 21:52:14 UTC |
 | `couch-legend-02e27ca-debug.apk` | `d7f4a2dd77798044…` | 22:15:59 UTC |
+| `couch-legend-43bc128-debug.apk` | `04a12834c0c942ad…` | 22:42:51 UTC |
 
-Three runs, **three distinct certificates**, each stamped at its own build
-minute. The runner has no debug keystore until Gradle needs one, so it mints a
-fresh key every run. Therefore **every APK this workflow produces will refuse to
-install over any other one** — signature mismatch, not a maybe. Replacing an
-installed build means uninstalling first, **and uninstalling clears the app's
-local storage, which is where saves live.**
+Four runs, **four distinct certificates**, each stamped at its own build minute.
+So every APK refused to install over every other one — signature mismatch, not a
+maybe — and the only way to replace an installed build was to uninstall,
+**which clears the app's local storage, which is where saves live.**
 
-That is a design input for milestone B, not just an operational footnote: any
-workflow meant to deliver *repeated* builds to a real device needs a stable
-signing identity — a committed debug keystore (its password is public by
-convention, so it is not a secret) or real release signing. Sideloading one
-build for one measurement, which is all `[D-0002]` asked for, does not.
+That is a milestone-B blocker, not an operational footnote. B's device matrix
+(DESIGN § 7) tests pause/resume, upgrade over an installed build and
+force-stop/reopen — all of which mean putting *several* builds on one phone. At
+one save lost per build, the most important question on the list, *does a save
+survive a force-stop*, cannot be asked twice.
+
+### ⚠ The one-time cost, for anyone holding an older build
+
+APKs built **before** this change carry a per-run key, so the first
+committed-keystore build **will not install over them.** Installing it needs an
+uninstall first, one time. After that, builds are signature-compatible with one
+another, so the mismatch that forced the uninstall is gone.
+
+Before uninstalling anything, **export the save**: the game's portable save code
+(`exportCode` / `importCode` in `src/lib/save.ts`, exposed in the in-game
+settings panel) round-trips a save through a copyable string, and it is the only
+thing that bridges an uninstall — DESIGN § 7 calls it "the manual bridge".
+Browser storage and installed-app storage do not sync, and nothing else carries
+a save across a reinstall.
 
 ## What is generated, not authored
 

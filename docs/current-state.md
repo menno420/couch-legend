@@ -20,9 +20,25 @@ dataset — evidence `docs/sim/2026-08-20-life-story-balance.md` +
 
 ## In flight
 
-- (nothing — the Android shell landed; see below)
+- (nothing — the signing identity landed; see below)
 
 ## Recently shipped (newest first)
+
+- **A stable Android signing identity** (2026-08-22): a committed debug
+  keystore (`android/keystore/debug.keystore`, password `android` — public by
+  convention, not a secret, and not a Play upload key) replaces the key Gradle
+  used to mint per run. Measured across **four** CI runs, the old behaviour gave
+  four distinct signer certificates, so every APK refused to install over every
+  other one and each replacement cost an uninstall — **and an uninstall clears
+  the save.** `tools/check-apk-signer.ts` (`pnpm check:apk-signer`) parses the
+  APK Signing Block and asserts the shipped APK carries the committed
+  certificate; both android jobs run it, so the regression cannot return
+  quietly. This is a milestone-B prerequisite, not tidiness: B's device matrix
+  means putting several builds on one phone, which the old behaviour priced at
+  one lost save each. **Zero game changes.** ⚠ One-time cost: the first build
+  after this will not install over an older one — uninstall once, and
+  **export the save code first** (`src/lib/save.ts`, in-game settings; DESIGN
+  § 7's "manual bridge").
 
 - **The Android shell — milestone A, the first sideloadable APK** (#11,
   2026-08-21): a Capacitor 8 wrapper around this exact web build
@@ -77,7 +93,8 @@ owner installing the milestone-A APK and reporting how the game actually
 behaves on his phone: the asynchronous `SaveRepository` boundary, the
 pause/resume service, the Back / safe-area / haptics adapters, the device test
 matrix — and release signing with a managed keystore, on the phone-controller
-pattern. Writing that list before the device answers arrive is guesswork; the
+pattern (the committed *debug* keystore that landed 2026-08-22 is the sideload
+identity only; it deliberately does not pre-empt that release key). Writing that list before the device answers arrive is guesswork; the
 whole point of shipping A first was to replace guesses with a measurement.
 Alongside it, the
 open content work in DESIGN § 9.8 — arc-3 batches and the remaining 15
