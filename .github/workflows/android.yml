@@ -145,4 +145,3 @@ jobs:
         # shipped bytes came from android/keystore/debug.keystore, so the
         # regression cannot return quietly.
         run: pnpm check:apk-signer android/app/build/outputs/apk/debug/app-debug.apk
-

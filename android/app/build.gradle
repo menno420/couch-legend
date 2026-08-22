@@ -8,9 +8,10 @@ def appVersion = new groovy.json.JsonSlurper().parse(file('../../package.json'))
 // A COMMITTED debug keystore, deliberately, instead of the throwaway one Gradle
 // generates per build machine.
 //
-// Measured 2026-08-21 (#13, and the table in android/README.md): with nothing
-// checked in, the runner mints a FRESH debug key on every CI run — three runs,
-// three distinct signer certificates. Every APK then refuses to install over
+// Measured 2026-08-21 (#13) and re-verified independently 2026-08-22 (the table
+// in android/README.md): with nothing checked in, the runner mints a FRESH debug
+// key on every CI run — four runs, four distinct signer certificates, so this is
+// a property of the pipeline. Every APK then refuses to install over
 // every other one; replacing an installed build means uninstalling first, and
 // uninstalling clears app storage, which is where the save lives. Milestone B
 // ships repeated builds to a real phone, so one stable identity is a

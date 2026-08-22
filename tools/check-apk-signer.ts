@@ -20,6 +20,15 @@
  * in docs/CAPABILITIES.md). Note that modern AGP emits no `META-INF/*.RSA`, so
  * an absent JAR signature is NOT evidence of an unsigned APK.
  *
+ * What this establishes, and what it does not. It compares the signer
+ * CERTIFICATE, which is exactly the property Android compares when deciding
+ * whether one build may replace another — so it is the right and sufficient
+ * check for the install-over-the-top question this exists to protect. It does
+ * NOT cryptographically verify the signature over the APK's contents; that is
+ * `apksigner verify`'s job (no SDK here) and Android's at install time. So a
+ * pass means "this APK carries our committed identity", not "this APK is
+ * intact".
+ *
  * Run: `pnpm check:apk-signer <path-to.apk>` (the android workflow runs it
  * immediately after `assembleDebug`, in both jobs).
  */
