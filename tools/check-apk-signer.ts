@@ -45,13 +45,24 @@
  *    `digests` and `signatures` records must match, or Android rejects the
  *    signer even though the signature itself verifies.
  *
- * THREAT MODEL, stated because it decides what belongs here. This runs in CI on
- * an APK our own workflow assembled from our own source seconds earlier. What it
- * defends against is a **build-provenance regression** — the pipeline quietly
- * ceasing to use the committed key (a regenerated keystore, a dropped signing
- * config, a scheme we forgot to validate). It is NOT an adversarial APK
- * verifier: nothing here assumes a party crafting a hostile APK, because at this
- * point in the pipeline there is no such party.
+ * THREAT MODEL, stated because it decides what belongs here. This defends
+ * against a **build-provenance regression** — the pipeline quietly ceasing to
+ * use the committed key (a regenerated keystore, a dropped signing config, a
+ * scheme we forgot to validate). It is NOT an adversarial APK verifier.
+ *
+ * Its trust assumption, stated precisely because an earlier version of this
+ * paragraph got it wrong (Codex, #14 round 4): a pass means the identity is
+ * pinned **given that the source which produced the APK has been reviewed.** It
+ * is NOT "our own source" unconditionally. This repo is public and
+ * `.github/workflows/android.yml` runs on `pull_request`, checking out the PR
+ * head — so an untrusted contributor's branch can author both the APK and this
+ * checker. The `apk` job therefore uploads an artifact only for same-repository
+ * pull requests, which keeps a fork's build out of the download someone would
+ * install. That is defence in depth and not a proof: `pull_request` workflows
+ * run from the PR's own definition, so a fork can also edit the guard. **The
+ * real control is a maintainer reading the diff before trusting the artifact**,
+ * and this check is a statement about a reviewed build, never a substitute for
+ * reviewing it.
  *
  * That boundary is a decision, not an oversight, and three review rounds pushed
  * against it (Codex, #14). Deliberately NOT implemented, each because it is only

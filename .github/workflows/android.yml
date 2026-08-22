@@ -100,6 +100,15 @@ jobs:
           ls -lh "$out"
 
       - uses: actions/upload-artifact@v4
+        # Same-repository pull requests only. This workflow runs on every
+        # `pull_request` and builds the PR head, so a fork's branch controls both
+        # the Gradle project and the signer check — publishing that as a
+        # downloadable artifact would invite installing a build nobody reviewed.
+        # Defence in depth, not a proof: a fork can edit this condition too, and
+        # the real control is a maintainer reading the diff.
+        if: >-
+          github.event_name != 'pull_request' ||
+          github.event.pull_request.head.repo.full_name == github.repository
         with:
           name: couch-legend-apk-${{ steps.apk.outputs.short }}
           path: ${{ steps.apk.outputs.path }}

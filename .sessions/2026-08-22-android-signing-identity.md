@@ -79,6 +79,9 @@ forecloses nothing), and DESIGN § 7's list, which stays owner-gated.
   (`android/keystore/debug-signer-sha256.txt` + `android/keystore/README.md`),
   cryptographic v2 signature verification, an exactly-one-signer requirement,
   and the overstated install-over claim qualified everywhere it appeared.
+- The Codex round-4 repair: the threat model's trust assumption corrected (it
+  had claimed "our own source" for a workflow that builds fork PR heads), and
+  the APK artifact restricted to same-repository pull requests.
 - The Codex round-3 repairs: v3.1 added to the validated scheme list, algorithm
   IDs bound to their required key family, and the threat model written into the
   tool so the three declined findings are a recorded decision.
@@ -292,6 +295,34 @@ between them they found that the guard's baseline could move with the artifact i
 guarded, and four ways an APK could carry the pinned certificate while a device
 resolved a different identity. Not one of those was visible from reading the
 happy path.
+
+**Codex round 4 on `0e760bb`, 1 finding, conceded — and it refuted the previous
+round's reasoning, not the code.** Requested `11:12:42Z`, answered ~`11:14Z`.
+Round 3's declines rested on a threat model I had just written into the file, so
+round 4's request asked for exactly two things: a way *our own build* could drift
+into passing, or evidence the threat model itself was wrong. It took the second.
+
+- `[conceded]` **P2 — "Treat pull-request APKs as untrusted input."** The header
+  claimed this runs on "an APK our own workflow assembled from our own source".
+  That sentence is false for a fork: this repo is public, `android.yml` runs on
+  every `pull_request` and checks out `github.event.pull_request.head.sha`, so an
+  untrusted contributor's branch controls both the Gradle project and this
+  checker, and the `apk` job would have uploaded their build as a downloadable
+  artifact. Fixed twice over — the trust assumption is now stated accurately (a
+  pass means the identity is pinned *given a reviewed source*, never "our own
+  source" unconditionally), and the artifact upload is restricted to
+  same-repository pull requests. Both limits are stated rather than implied:
+  `pull_request` workflows run from the PR's own definition, so a fork can edit
+  the guard too, and the real control is a maintainer reading the diff.
+
+**On the convention this trail was tested against.** Milestone A's rule — *a round
+that produced any `[conceded]` is not the last round* — earned its keep here four
+times over, and round 4 is the strongest evidence for it: the concession was not
+a bug in the parser but a **false sentence I had written one round earlier while
+declining other findings**, i.e. exactly the kind of error that a round which
+"only" changed prose would have shipped. The finding counts also converged once
+the boundary was argued rather than left implicit — 5, 5, 5, then 1 — which is
+what round 3's non-convergence note was waiting to see.
 
 ## ⟲ Previous-session review
 
