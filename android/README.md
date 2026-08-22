@@ -54,8 +54,18 @@ That much is checked, not trusted: both jobs in the android workflow run
 (`tools/check-apk-signer.ts`). It requires the APK's certificate, the committed
 keystore's certificate and the independent pin to **all three** agree, requires
 **exactly one signer** (Android treats the whole signer set as the package
-identity), and **cryptographically verifies** the v2 signature so intact
+identity), and **cryptographically verifies** each signature so intact
 certificate bytes around a broken signature cannot pass.
+
+It also closes four ways an APK can carry the pinned certificate while a *device*
+resolves a different identity — each found by adversarial review, and each now
+covered by a test that builds the bypass as a real file: duplicate signing-block
+ids (Android resolves an id to its **first** occurrence, so keeping the last one
+validates the wrong signer); a v3 block escorted by a pinned v2 one (Android 9+
+takes identity from v3, so **every** scheme block present is validated); a
+signature verified against the signer's own *declared* public key rather than the
+key inside the pinned certificate; and digest/signature algorithm lists that
+disagree, which Android rejects even when the signature verifies.
 
 The pin is the load-bearing third party. Deriving the expected value from the
 keystore alone would check only same-build consistency: regenerate the keystore

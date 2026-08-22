@@ -79,6 +79,12 @@ forecloses nothing), and DESIGN § 7's list, which stays owner-gated.
   (`android/keystore/debug-signer-sha256.txt` + `android/keystore/README.md`),
   cryptographic v2 signature verification, an exactly-one-signer requirement,
   and the overstated install-over claim qualified everywhere it appeared.
+- The Codex round-2 repairs: duplicate signing-block ids rejected, every
+  identity scheme (v2 **and** v3) validated rather than v2 alone, signatures
+  verified with the key inside the pinned certificate rather than the signer's
+  declared one, digest/signature algorithm agreement required — plus the guard
+  recipe on this card rewritten, because it still taught the design round 1 had
+  just disproved.
 - This flip commit — close-out and the guard-fires delta.
 
 **Verify (every command run; real exit codes, none read after a pipe — the one
@@ -202,6 +208,50 @@ because which endpoint answers depends on whether there were findings.
 Per milestone A's own session idea — *a round that produced any `[conceded]` is
 not the last round* — round 2 was requested on the repaired head.
 
+**Codex round 2 on `fd599c9`, 5 findings, all 5 conceded.** Requested
+`10:47:03Z`, answered ~`10:53Z` — **~6 m**. Every finding was a way an APK could
+carry the pinned certificate while the *device* resolved a different identity,
+which is precisely the class the first two rounds had not exhausted.
+
+- `[conceded]` **P1 — "Bind the verified key to the pinned certificate."** The
+  signature was verified against `publicKey` from the signer record — a field the
+  APK supplies. An APK could embed the pinned certificate, sign with a different
+  key, declare that key, and pass everything. Android rejects this because the
+  signer's public key must match the first certificate's. Now verified with
+  `new X509Certificate(apkCert).publicKey`, and the declared key must equal that
+  certificate's SPKI. **Reproduced as a real file**: a 294-byte impostor RSA-2048
+  SPKI spliced in place (same length, so a byte-for-byte swap), pinned
+  certificate untouched — three checks still pass and the fourth catches it.
+- `[conceded]` **P1 — "Reject duplicate signing-scheme block IDs."** The parse
+  returned a `Map`, so a duplicate id kept the LAST block; Android resolves to
+  the FIRST. An unpinned signer in front of a pinned one would have been
+  validated by this checker and ignored by the device. Now an ordered list, and
+  duplicates are rejected outright. **Reproduced**: the v2 block duplicated in
+  front of the original (+1450 bytes, EOCD offset fixed) → exit 1.
+- `[conceded]` **P2 — "Validate the effective v3 signer as well."** Only v2 was
+  validated while Android 9+ takes package identity from v3, so a pinned v2
+  signer could escort an unpinned v3 one. Every identity-bearing block present is
+  now validated against the same pin, with v3's extra `minSDK`/`maxSDK` fields
+  handled in the signer layout. Untestable here beyond the code path — these
+  builds emit v2 only.
+- `[conceded]` **P2 — "Require matching signature and digest algorithm
+  records."** The digest field was read only to locate the certificates, so a
+  mismatched or empty digest list passed while Android rejects the signer. The
+  ordered algorithm lists must now agree.
+- `[conceded]` **P2 — "Update the guard recipe to retain the independent pin."**
+  The most valuable of the five, because it was about the record rather than the
+  code: the `💡` section still taught the superseded design — it argued that
+  deriving the expectation from the keystore *prevents* drift, the exact claim
+  round 1 had disproved — and named two functions that no longer exist. A future
+  session following it would have reintroduced the central defect. Rewritten, and
+  it now carries the explicit trap: **never update the pin to make a red build go
+  green.**
+
+**One bug of my own, caught by testing rather than review:** the first version of
+the round-2 fix passed the certificate's `KeyObject` through `createPublicKey()`,
+which throws `Invalid key object type public, expected private`. It would have
+reddened CI. Real exit codes on every bypass file are why it did not.
+
 ## ⟲ Previous-session review
 
 Milestone A's card (`2026-08-21-android-apk.md`) is the reason this session had
@@ -230,27 +280,59 @@ was honoured here.
 
 ## 💡 Session idea
 
-**A measurement of a defect is not a guard against it, and the cheapest moment
-to convert one into the other is the moment you measure.** #13 did excellent
-work: it turned a hedge into four hard fingerprints and wrote them into a README
-table. But a table is a fact about yesterday. Nothing in the repo would have
-noticed the day the keystore stopped being used, and the failure is silent by
-construction — the build stays green, the APK is real and signed, and the only
-symptom appears on a phone in someone else's hand, as a refused install and a
-lost save.
+**A measurement of a defect is not a guard against it — and a guard whose
+expected value lives inside the thing it guards is not a guard either.**
 
-What makes the conversion nearly free is that **the parser that measures the
-defect is the same code that guards it.** #13 already had to walk the APK
-Signing Block to produce its table; promoting that walk into
-`tools/check-apk-signer.ts` cost this session almost nothing beyond wiring, and
-the second half — deriving the expected value from the committed keystore rather
-than pinning the hex string the measurement produced — is what stops the guard
-becoming its own stale record.
+The first half is the cheap, generalisable win. #13 did excellent work: it turned
+a hedge into four hard fingerprints and wrote them into a README table. But a
+table is a fact about yesterday. Nothing in the repo would have noticed the day
+the keystore stopped being used, and the failure is silent by construction — the
+build stays green, the APK is real and signed, and the only symptom appears on a
+phone in someone else's hand, as a refused install and a lost save. What makes
+the conversion nearly free is that **the parser that measures the defect is the
+same code that guards it**: #13 already had to walk the APK Signing Block to
+produce its table, so promoting that walk into a committed check cost this
+session almost nothing beyond wiring.
 
-**Guard recipe:** the anchors are `tools/check-apk-signer.ts` (`expectedCert()`
-derives from the keystore at check time; `signingBlock()` + `firstCert()` are the
-parse) and the `Assert the APK carries the committed signing identity` step in
-**both** jobs of `.github/workflows/android.yml`. The generalisable rule, cheap
-to state in the estate's conventions: **when a session measures a defect by
-parsing an artifact, the parse belongs in a committed check before the session
-ends** — otherwise the next session inherits the number and not the protection.
+The second half is this session's actual lesson, and it was **not** obvious — I
+got it wrong, in writing, with a confident comment explaining why. The first
+checker derived its expected certificate from the very keystore it was
+validating, reasoned as *"no second copy to drift"*. That sounds like good
+hygiene and is the opposite: if the keystore is ever regenerated, both sides move
+together, the check stays green, and every already-installed phone silently loses
+the ability to update. **A baseline that can move with the artifact is decoration.**
+The fix is an independent pin (`android/keystore/debug-signer-sha256.txt`) that
+must agree with both, which converts "identity changed" from a silent event into a
+red build and a deliberate two-file diff.
+
+The third thing, which no amount of care in one head produced: **five more
+bypasses existed after the design was right.** Round 2 found that the signature
+was verified against the signer's own *declared* public key rather than the key
+inside the pinned certificate; that duplicate signing-block ids let an unpinned
+signer sit in front of a pinned one, because Android resolves to the FIRST match
+while a map keeps the last; that only v2 was validated while Android 9+ takes
+identity from v3; and that unmatched digest/signature algorithm lists pass here
+and are rejected on device. Every one is a way an APK carries the pinned
+certificate while the *device* resolves a different identity — none is visible by
+reading the happy path, and all four were found by an adversarial reader in
+minutes. The verification wall the owner names is exactly this: writing the check
+was the easy part; knowing it was wrong took a second reader and a test that
+built each bypass as a real file.
+
+**Guard recipe.** Anchors: `tools/check-apk-signer.ts` — `signingBlock()` returns
+an ordered list, never a map keyed by id (duplicates are rejected); the
+per-scheme loop over `SCHEMES` validates **every** identity-bearing block
+present, not just v2; the signature is verified with the key from
+`new X509Certificate(apkCert).publicKey`, and the signer's declared key must
+equal that certificate's SPKI. The pin is `android/keystore/debug-signer-sha256.txt`
+and `android/keystore/README.md` states the two-file-diff rule. The step is
+`Assert the APK carries the committed signing identity` in **both** jobs of
+`.github/workflows/android.yml`. **The trap for a future session: never update
+the pin to make a red build go green.** That reverses the mechanism entirely —
+the pin exists to make an identity change loud, so a red build means "confirm
+this is deliberate and say why in the commit", never "adjust the expectation".
+
+The rule worth stating in the estate's conventions, generalised past APKs:
+**when a session measures a defect by parsing an artifact, the parse belongs in a
+committed check before the session ends — and the value it compares against must
+live somewhere the defect cannot move.**
