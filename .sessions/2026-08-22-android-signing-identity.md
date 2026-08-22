@@ -1,8 +1,9 @@
 # 2026-08-22 — Milestone B, the unblocked slice: a stable Android signing identity
 
-> **Status:** `in-progress` — branch `claude/couch-legend-milestone-b-w6vwex`.
-> Born red on purpose; this holds `bootstrap.py check --strict` at exit 1 until
-> the close-out below is written and the status flips as the last commit.
+> **Status:** `complete` — branch `claude/couch-legend-milestone-b-w6vwex`,
+> PR #14. Born red until this flip; the close-out, the verify ledger with real
+> exit codes, the explicit unmeasured list and the five-round Codex trail are
+> below.
 
 - **📊 Model:** opus-5 · platform/CI slice (no game changes)
 
@@ -323,6 +324,24 @@ declining other findings**, i.e. exactly the kind of error that a round which
 "only" changed prose would have shipped. The finding counts also converged once
 the boundary was argued rather than left implicit — 5, 5, 5, then 1 — which is
 what round 3's non-convergence note was waiting to see.
+
+**Codex round 5 on `a86be152e4`: CLEAN.** *"Didn't find any major issues"*,
+requested `11:18:10Z` and answered `11:21:14Z` — **3 m 04 s**, the fastest round
+of the five. It arrived as an **issue comment with zero inline comments**, which
+is precisely the shape `docs/CAPABILITIES.md` warns reads as silence to anyone
+polling only the review endpoints. This session polled all three from the start
+and still nearly mis-scored it — the first poll's counter was written wrong and
+reported zero through 36 iterations while findings sat on the endpoint it was
+reading. The endpoint lesson held; the arithmetic was the weak link.
+
+**Trail totals: 5 rounds, 16 findings, 13 `[conceded]`, 3 `[survived]`.** The
+shape is worth keeping: rounds 1–2 broke the design (the guard's baseline could
+move with the artifact it guarded; four ways an APK carries the pinned
+certificate while a device resolves a different identity), round 3 crossed out of
+the tool's job and was declined on a written threat model, and round 4 then
+refuted **that written reasoning** — the trail's best moment, because the error
+was a sentence I wrote while declining, not code. Only after the boundary was
+argued explicitly did it converge to clean.
 
 ## ⟲ Previous-session review
 
