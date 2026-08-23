@@ -1,10 +1,10 @@
 # Couch Legend · status
-updated: 2026-08-21T20:34:45Z
-phase: research-backed visible progress — PR #9 landing (flip head)
+updated: 2026-08-23T09:49:48Z
+phase: plain-language purchase impact — PR #17 completion flip
 health: green
 kit: v1.21.0 · check: green · engaged: yes
-last-shipped: PR #9 — visible within-afternoon progress (presentation only)
+last-shipped: PR #16 — purchase-impact implementation claim
 blockers: none
 orders: acked= done=
-⚑ needs-owner: PR #7 feel pass remains open; PR #9 introduces none
-notes: 103 tests; exact-head Codex review clean on feature head 2269acd
+⚑ needs-owner: none introduced; PR #7 feel pass remains separate
+notes: 124 tests; exact-head Codex review clean on product head 851d340

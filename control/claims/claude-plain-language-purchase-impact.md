@@ -1,1 +1,0 @@
-- `claude/plain-language-purchase-impact` · **implement plain-language purchase impact** · src/lib + ShopTabs + tests + idea/current-state records · 2026-08-23

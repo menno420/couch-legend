@@ -1,6 +1,6 @@
 # 2026-08-23 — Plain-language purchase impact
 
-> **Status:** `in-progress` — branch `claude/plain-language-purchase-impact`.
+> **Status:** `complete` — branch `claude/plain-language-purchase-impact`.
 
 - **📊 Model:** GPT-5 · high · feature-build
 
@@ -26,15 +26,20 @@ chapter, Android, art or scene behavior changed.
 
 ## Close-out
 
-**Shipped on the PR #17 branch (merge waits for this card's final flip):**
+**Ready to merge in PR #17 (this flip closes the implementation session):**
 
 - `bb361cb` — this born-red session card, committed before product code.
 - `3d9dfef` — canonical item-local output helpers, the pure purchase-impact
   module, separate formatting, Shop row integration, 16 focused pure tests and
   the promoted/open idea record.
 - `c1137f8` — deterministic whole-percentage formatting for offline efficiency.
-- Final visual evidence was produced on exact product head `3c53ebf` by run
-  `32630729555`; its temporary workflow was then removed before review. The
+- `6b770bd` — review fixes for Work-cash scope, Sunday cash-per-hit and quiet
+  accessibility behavior.
+- `67b10b7` — canonical achievement collection, scoped Playlist wording and
+  nonzero formatting for small ritual changes.
+- `66b3ce6` — unclamped impact copy so compound last-ritual effects stay visible.
+- Final visual evidence was produced on exact product head `f14719f` by run
+  `32631881099`; its temporary workflow was then removed before review. The
   persistent capability recipe is in `docs/CAPABILITIES.md`.
 - This final close-out/flip — historical guard telemetry restored unchanged,
   capability and session evidence recorded, this session's claim removed.
@@ -42,7 +47,7 @@ chapter, Android, art or scene behavior changed.
 **Verify:**
 
 - GitHub Actions `pnpm check` (the exact repository product gate) → **exit 0**
-  on post-review run `32630602679`: TypeScript, all 121 tests (including 18
+  on clean-head run `32631950444`: TypeScript, all 124 tests (including 21
   purchase-impact tests), and the Vite production build passed.
 - Local `pnpm check` was attempted twice but did not reach pnpm: this Work
   runtime returned `Network request disconnected after 56 ms, before approval
@@ -53,17 +58,18 @@ chapter, Android, art or scene behavior changed.
   the checker naming this card and reporting `HOLD (by design)` / `This red is
   the designed hold, not a defect`. The post-flip result is recorded by the
   final required check on the flip head.
-- Browser interaction/visual run `32630729555` → **exit 0** on exact product
-  head `3c53ebf`: `×1`, `×10`, `×100`, funded Max, post-buy affordability refresh,
+- Browser interaction/visual run `32631881099` → **exit 0** on exact product
+  head `f14719f`: `×1`, `×10`, `×100`, funded Max, post-buy affordability refresh,
   zero-affordable Max, keyboard focus, Work cash wording, Hydration wording,
   Sunday cash-per-hit wording, Pillow Throne's Work-cash qualifier, absence of
-  row live regions, clipping across every phone ritual preview, runtime errors
-  and horizontal overflow all asserted. Logged values were
+  row live regions, purchase-triggered achievement copy, scoped Playlist copy,
+  all four effects of a last-missing Sunday ritual, absence of line clamps or
+  clipping, runtime errors and horizontal overflow all asserted. Logged values were
   `+2.6/s · becomes 5/s`, `+4.4/s · becomes 6.8/s`, `+196/s · becomes 198/s`,
   funded Max `+398/s · becomes 400/s`, then `Nothing affordable yet.` after
-  buying. Artifact `9490962758` was downloaded and inspected at true `412×915`
+  buying. The final run's screenshots were inspected at true `412×915`
   Grow/Ritual widths and `1365×900` desktop width.
-- Android run `32628888490` on product head `c1137f8` → **success**; it built
+- Android run `32631950547` on clean head `851d340` → **success**; it built
   the pinned-signer APK without Android source or behavior changes.
 
 **⚑ decide-and-flag:** none. The task introduced no owner decision and leaves
@@ -103,5 +109,9 @@ remains visible; normal rows retain the existing two-line minimum for stable
 quantity switching. This fix requires one final exact-head visual run and
 review before the card flip.
 
-**PR:** #17 is READY and open until the final card flip, claim deletion, exact-
-head strict check, required checks and requested Codex review are all green.
+**Codex round 4** reviewed exact clean head `851d3404a8` and reported no major
+issues. There are no unresolved review threads.
+
+**PR:** #17 is READY and open. This completion flip removes the claim and turns
+the deliberately red substrate gate green; merge follows only after its exact-
+head required checks pass.
