@@ -2,7 +2,7 @@
 
 > **Status:** `complete` — branch `claude/plain-language-purchase-impact`.
 
-- **📊 Model:** GPT-5 · high · feature-build
+- **📊 Model:** GPT-5 · high · feature build
 
 ## What is about to happen
 
