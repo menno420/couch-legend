@@ -43,7 +43,8 @@ chapter, Android, art or scene behavior changed.
 
 - GitHub Actions `pnpm check` (the exact repository product gate) → **exit 0**
   on run `32629933938`: TypeScript, all 119 tests (including 16 purchase-impact
-  tests), and the Vite production build passed.
+  tests), and the Vite production build passed. The post-review gate adds two
+  focused ritual assertions, bringing the expected final total to 121.
 - Local `pnpm check` was attempted twice but did not reach pnpm: this Work
   runtime returned `Network request disconnected after 56 ms, before approval
   could complete` (the earlier install attempt returned the same wall after
@@ -76,6 +77,13 @@ new permanent CI dependency.
 `.sessions/2026-08-22-android-signing-identity.md` and main's follow-up count
 correction (#15). Its pinned signer remained green here, and this feature does
 not touch the Android shell or signing path.
+
+**Codex round 1** reviewed exact head `7074da84e5` and raised three P2s, all
+conceded: qualify Pillow Throne's cash multiplier as Work cash because the
+passive trickle is unaffected; include Sunday Forever's derived cash-per-hit
+change; and remove the many simultaneous row live regions. The fixes stay in
+the semantic/format layer plus plain accessible text, with focused regression
+tests. A clean follow-up review is required before the final flip.
 
 **PR:** #17 is READY and open until the final card flip, claim deletion, exact-
 head strict check, required checks and requested Codex review are all green.

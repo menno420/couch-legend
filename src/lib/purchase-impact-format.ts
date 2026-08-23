@@ -11,7 +11,7 @@ function formatEffect(effect: RitualEffect): string {
     case 'production': {
       const target = effect.target === 'all' ? 'All production'
         : effect.target === 'nugs' ? 'Nug production'
-          : effect.target === 'cash' ? 'Cash production'
+          : effect.target === 'job-cash' ? 'Work cash'
             : 'High production'
       return `${target} +${percentChange(effect.before, effect.after)}`
     }
@@ -22,7 +22,13 @@ function formatEffect(effect: RitualEffect): string {
     case 'passive-buzz':
       return `Passive Buzz ${fmtRate(effect.before)} → ${fmtRate(effect.after)}`
     case 'hit': {
-      const target = effect.target === 'nugs' ? 'Hit nugs' : effect.target === 'high' ? 'High/hit' : 'Buzz/hit'
+      if (effect.target === 'nugs-cash') {
+        return `Hit nugs + cash +${percentChange(effect.before, effect.after)}`
+      }
+      const target = effect.target === 'nugs' ? 'Hit nugs'
+        : effect.target === 'cash' ? 'Cash/hit'
+          : effect.target === 'high' ? 'High/hit'
+            : 'Buzz/hit'
       return `${target} ${fmt(effect.before)} → ${fmt(effect.after)}`
     }
     case 'offline-cap':

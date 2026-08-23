@@ -28,11 +28,11 @@ export interface EmptyMaxPurchaseImpact extends PurchaseBase {
 }
 
 export type RitualEffect =
-  | { kind: 'production'; target: 'all' | 'nugs' | 'cash' | 'high'; before: number; after: number }
+  | { kind: 'production'; target: 'all' | 'nugs' | 'job-cash' | 'high'; before: number; after: number }
   | { kind: 'buzz-duration'; before: number; after: number }
   | { kind: 'auto-hits'; before: number; after: number }
   | { kind: 'passive-buzz'; before: number; after: number }
-  | { kind: 'hit'; target: 'nugs' | 'high' | 'buzz'; before: number; after: number }
+  | { kind: 'hit'; target: 'nugs' | 'cash' | 'nugs-cash' | 'high' | 'buzz'; before: number; after: number }
   | { kind: 'offline-cap'; before: number; after: number }
   | { kind: 'offline-efficiency'; before: number; after: number }
   | { kind: 'prestige-yield'; before: number; after: number }
@@ -72,7 +72,7 @@ export function ritualEffects(before: Rates, after: Rates): RitualEffect[] {
     effects.push({ kind: 'production', target: 'all', before: before.nugMult, after: after.nugMult })
   } else {
     if (nugChanged) effects.push({ kind: 'production', target: 'nugs', before: before.nugMult, after: after.nugMult })
-    if (cashChanged) effects.push({ kind: 'production', target: 'cash', before: before.cashMult, after: after.cashMult })
+    if (cashChanged) effects.push({ kind: 'production', target: 'job-cash', before: before.cashMult, after: after.cashMult })
     if (highChanged) effects.push({ kind: 'production', target: 'high', before: before.highMult, after: after.highMult })
   }
 
@@ -85,8 +85,18 @@ export function ritualEffects(before: Rates, after: Rates): RitualEffect[] {
   if (changed(before.lampBuzz, after.lampBuzz)) {
     effects.push({ kind: 'passive-buzz', before: before.lampBuzz, after: after.lampBuzz })
   }
-  if (changed(before.hitPower, after.hitPower)) {
-    effects.push({ kind: 'hit', target: 'nugs', before: before.hitPower, after: after.hitPower })
+  const hitNugsChanged = changed(before.hitPower, after.hitPower)
+  const hitCashChanged = changed(before.hitCash, after.hitCash)
+  if (hitNugsChanged && hitCashChanged
+    && sameRatio(before.hitPower, after.hitPower, before.hitCash, after.hitCash)) {
+    effects.push({ kind: 'hit', target: 'nugs-cash', before: before.hitPower, after: after.hitPower })
+  } else {
+    if (hitNugsChanged) {
+      effects.push({ kind: 'hit', target: 'nugs', before: before.hitPower, after: after.hitPower })
+    }
+    if (hitCashChanged) {
+      effects.push({ kind: 'hit', target: 'cash', before: before.hitCash, after: after.hitCash })
+    }
   }
   if (changed(before.hitHigh, after.hitHigh)) {
     effects.push({ kind: 'hit', target: 'high', before: before.hitHigh, after: after.hitHigh })

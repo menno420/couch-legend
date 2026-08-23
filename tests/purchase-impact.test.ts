@@ -161,6 +161,26 @@ describe('Ritual purchase impact', () => {
     expect(yieldEffect.after).toBe(computeRates({ ...state, rituals: { cushion: 1 } }).prestigeBonus)
   })
 
+  it('labels Pillow Throne as Work cash rather than total cash production', () => {
+    const state = save({ jobs: {}, rituals: {} })
+    const impact = ritualImpact(ritualPurchaseImpact(state, 'throne'))
+    const production = effect(impact, 'production')
+    expect(production).toMatchObject({ target: 'job-cash' })
+    expect(formatPurchaseImpact(impact)).toContain('Work cash +15.0%')
+    expect(computeRates({ ...state, rituals: { throne: 1 } }).cashRate).toBe(computeRates(state).cashRate)
+  })
+
+  it('includes Sunday Forever cash-per-hit without repeating the derived formula', () => {
+    const state = save({ rituals: {} })
+    const impact = ritualImpact(ritualPurchaseImpact(state, 'sunday'))
+    const hit = effect(impact, 'hit')
+    const before = computeRates(state)
+    const after = computeRates({ ...state, rituals: { sunday: 1 } })
+    expect(hit).toMatchObject({ target: 'nugs-cash', before: before.hitPower, after: after.hitPower })
+    expect(after.hitCash / before.hitCash).toBeCloseTo(after.hitPower / before.hitPower, 12)
+    expect(formatPurchaseImpact(impact)).toContain('Hit nugs + cash +28.0%')
+  })
+
   it('gives every current non-maxed ritual at least one semantic effect', () => {
     for (const ritual of RITUALS) {
       const impact = ritualImpact(ritualPurchaseImpact(save({ rituals: {} }), ritual.id))

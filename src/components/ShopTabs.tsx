@@ -122,7 +122,7 @@ function ShopRow({
         <p className="mt-0.5 line-clamp-2 text-sm text-muted">{blurb}</p>
         {owned > 0 ? <p className="mt-1 text-xs tabular-nums text-subtle">{meta}</p> : null}
         {impact ? (
-          <p aria-live="polite" aria-atomic="true" className="mt-1 min-h-8 line-clamp-2 text-xs leading-4 tabular-nums text-subtle sm:min-h-4 sm:line-clamp-1">
+          <p className="mt-1 min-h-8 line-clamp-2 text-xs leading-4 tabular-nums text-subtle sm:min-h-4 sm:line-clamp-1">
             {impact}
           </p>
         ) : null}
