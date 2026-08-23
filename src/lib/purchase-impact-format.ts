@@ -9,7 +9,7 @@ function percentChange(before: number, after: number): string {
 function formatEffect(effect: RitualEffect): string {
   switch (effect.kind) {
     case 'production': {
-      const target = effect.target === 'all' ? 'All production'
+      const target = effect.target === 'grow-work' ? 'Grow + Work'
         : effect.target === 'nugs' ? 'Nug production'
           : effect.target === 'job-cash' ? 'Work cash'
             : 'High production'
@@ -29,7 +29,7 @@ function formatEffect(effect: RitualEffect): string {
         : effect.target === 'cash' ? 'Cash/hit'
           : effect.target === 'high' ? 'High/hit'
             : 'Buzz/hit'
-      return `${target} ${fmt(effect.before)} → ${fmt(effect.after)}`
+      return `${target} +${percentChange(effect.before, effect.after)}`
     }
     case 'offline-cap':
       return `Offline cap ${fmtDuration(effect.before)} → ${fmtDuration(effect.after)}`
@@ -44,7 +44,8 @@ export function formatPurchaseImpact(impact: PurchaseImpact): string {
   if (impact.kind === 'empty-max') return 'Nothing affordable yet.'
   if (impact.kind === 'rate') {
     const resource = impact.resource === 'cash' ? ' cash' : ''
-    return `+${fmtRate(impact.delta)} · becomes ${fmtRate(impact.after)}${resource}`
+    const rate = `+${fmtRate(impact.delta)} · becomes ${fmtRate(impact.after)}${resource}`
+    return [rate, ...impact.effects.map(formatEffect)].join(' · ')
   }
   return impact.effects.map(formatEffect).join(' · ')
 }

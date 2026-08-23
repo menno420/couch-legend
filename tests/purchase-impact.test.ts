@@ -63,6 +63,9 @@ describe('Grow purchase impact', () => {
     expect(impact.before).toBeCloseTo(generatorOutput(tray, 24), 12)
     expect(impact.after).toBeCloseTo(generatorOutput(tray, 25), 12)
     expect(impact.delta).toBeCloseTo(2.6, 12)
+    expect(impact.effects).toEqual(expect.arrayContaining([
+      expect.objectContaining({ kind: 'production', target: 'nugs' }),
+    ]))
   })
 
   it('includes every milestone in a multi-milestone bulk crossing', () => {
@@ -106,6 +109,16 @@ describe('Work purchase impact', () => {
     expect(impact.after).toBe(jobCashOutput(thinker, 25))
     expect(impact.delta).toBeCloseTo(10.4, 12)
   })
+
+  it('includes a job-count achievement multiplier without adding passive High copy', () => {
+    const thinker = JOBS.find(item => item.id === 'thinker')!
+    const impact = rateImpact(jobPurchaseImpact(save({ jobs: { thinker: 79 } }), 'thinker', 1))
+    expect(impact.after).toBe(jobCashOutput(thinker, 80))
+    expect(impact.effects).toEqual(expect.arrayContaining([
+      expect.objectContaining({ kind: 'production', target: 'job-cash' }),
+    ]))
+    expect(formatPurchaseImpact(impact)).not.toContain('High')
+  })
 })
 
 describe('Ritual purchase impact', () => {
@@ -132,13 +145,14 @@ describe('Ritual purchase impact', () => {
     expect(passiveBuzz.after).toBe(computeRates({ ...state, rituals: { lamp: 1 } }).lampBuzz)
   })
 
-  it('collapses equal global rate changes into one all-production effect', () => {
+  it('collapses equal shop-output changes without claiming passive cash', () => {
     const state = save({ rituals: {} })
     const impact = ritualImpact(ritualPurchaseImpact(state, 'playlist'))
     expect(impact.effects).toHaveLength(1)
-    expect(impact.effects[0]).toMatchObject({ kind: 'production', target: 'all' })
+    expect(impact.effects[0]).toMatchObject({ kind: 'production', target: 'grow-work' })
     const production = effect(impact, 'production')
     expect(production.after / production.before).toBeCloseTo(1.08, 12)
+    expect(formatPurchaseImpact(impact)).toContain('Grow + Work +8.0%')
   })
 
   it('derives both offline duration and efficiency', () => {
@@ -179,6 +193,20 @@ describe('Ritual purchase impact', () => {
     expect(hit).toMatchObject({ target: 'nugs-cash', before: before.hitPower, after: after.hitPower })
     expect(after.hitCash / before.hitCash).toBeCloseTo(after.hitPower / before.hitPower, 12)
     expect(formatPurchaseImpact(impact)).toContain('Hit nugs + cash +28.0%')
+  })
+
+  it('keeps small Sunday hit changes visibly nonzero', () => {
+    const impact = ritualImpact(ritualPurchaseImpact(save({ rituals: { sunday: 1 } }), 'sunday'))
+    expect(formatPurchaseImpact(impact)).toContain('High/hit +5.7%')
+    expect(formatPurchaseImpact(impact)).not.toContain('High/hit 1.1 → 1.1')
+  })
+
+  it('includes an achievement multiplier unlocked by a ritual purchase', () => {
+    const impact = ritualImpact(ritualPurchaseImpact(save({ rituals: { roommate: 4 } }), 'roommate'))
+    expect(impact.effects).toEqual(expect.arrayContaining([
+      expect.objectContaining({ kind: 'auto-hits' }),
+      expect.objectContaining({ kind: 'production', target: 'nugs' }),
+    ]))
   })
 
   it('gives every current non-maxed ritual at least one semantic effect', () => {

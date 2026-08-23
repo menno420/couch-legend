@@ -1,4 +1,5 @@
 import { GENERATORS, JOBS, RITUALS, stageUnlocked } from './content'
+import { collectAchievements } from './actions'
 import {
   bulkCost, computeRates, DEFAULT_TUNING, generatorOutput, jobCashOutput,
   maxAffordable, type Rates, type SaveState, type Tuning,
@@ -18,6 +19,7 @@ export interface RatePurchaseImpact extends PurchaseBase {
   before: number
   delta: number
   after: number
+  effects: RitualEffect[]
 }
 
 export interface EmptyMaxPurchaseImpact extends PurchaseBase {
@@ -28,7 +30,7 @@ export interface EmptyMaxPurchaseImpact extends PurchaseBase {
 }
 
 export type RitualEffect =
-  | { kind: 'production'; target: 'all' | 'nugs' | 'job-cash' | 'high'; before: number; after: number }
+  | { kind: 'production'; target: 'grow-work' | 'nugs' | 'job-cash' | 'high'; before: number; after: number }
   | { kind: 'buzz-duration'; before: number; after: number }
   | { kind: 'auto-hits'; before: number; after: number }
   | { kind: 'passive-buzz'; before: number; after: number }
@@ -64,12 +66,12 @@ export function ritualEffects(before: Rates, after: Rates): RitualEffect[] {
   const nugChanged = changed(before.nugMult, after.nugMult)
   const cashChanged = changed(before.cashMult, after.cashMult)
   const highChanged = changed(before.highMult, after.highMult)
-  const allProduction = nugChanged && cashChanged && highChanged
+  const growWorkProduction = nugChanged && cashChanged && highChanged
     && sameRatio(before.nugMult, after.nugMult, before.cashMult, after.cashMult)
     && sameRatio(before.nugMult, after.nugMult, before.highMult, after.highMult)
 
-  if (allProduction) {
-    effects.push({ kind: 'production', target: 'all', before: before.nugMult, after: after.nugMult })
+  if (growWorkProduction) {
+    effects.push({ kind: 'production', target: 'grow-work', before: before.nugMult, after: after.nugMult })
   } else {
     if (nugChanged) effects.push({ kind: 'production', target: 'nugs', before: before.nugMult, after: after.nugMult })
     if (cashChanged) effects.push({ kind: 'production', target: 'job-cash', before: before.cashMult, after: after.cashMult })
@@ -134,15 +136,21 @@ export function generatorPurchaseImpact(
 ): PurchaseImpact | null {
   const def = GENERATORS.find(item => item.id === id)
   if (!def || save.high < def.unlockHigh || !stageUnlocked(save.lifeHigh, def.stage)) return null
-  const owned = save.generators[id] ?? 0
+  const beforeSave = collectAchievements(save).save
+  const owned = beforeSave.generators[id] ?? 0
   const quantity = selectedQuantity(amount, def.baseCost, def.costScale, owned, save.nugs)
   if (quantity === 0) return { kind: 'empty-max', quantity: 0, cost: 0, affordable: false }
   const cost = bulkCost(def.baseCost, def.costScale, owned, quantity)
   const before = generatorOutput(def, owned, tuning)
   const after = generatorOutput(def, owned + quantity, tuning)
+  const afterSave = collectAchievements({
+    ...beforeSave,
+    generators: { ...beforeSave.generators, [id]: owned + quantity },
+  }).save
   return {
     kind: 'rate', resource: 'nugs', quantity, cost, affordable: save.nugs >= cost,
     before, delta: after - before, after,
+    effects: ritualEffects(computeRates(beforeSave, tuning), computeRates(afterSave, tuning)),
   }
 }
 
@@ -154,15 +162,21 @@ export function jobPurchaseImpact(
 ): PurchaseImpact | null {
   const def = JOBS.find(item => item.id === id)
   if (!def || save.high < def.unlockHigh || !stageUnlocked(save.lifeHigh, def.stage)) return null
-  const owned = save.jobs[id] ?? 0
+  const beforeSave = collectAchievements(save).save
+  const owned = beforeSave.jobs[id] ?? 0
   const quantity = selectedQuantity(amount, def.baseCost, def.costScale, owned, save.cash)
   if (quantity === 0) return { kind: 'empty-max', quantity: 0, cost: 0, affordable: false }
   const cost = bulkCost(def.baseCost, def.costScale, owned, quantity)
   const before = jobCashOutput(def, owned, tuning)
   const after = jobCashOutput(def, owned + quantity, tuning)
+  const afterSave = collectAchievements({
+    ...beforeSave,
+    jobs: { ...beforeSave.jobs, [id]: owned + quantity },
+  }).save
   return {
     kind: 'rate', resource: 'cash', quantity, cost, affordable: save.cash >= cost,
     before, delta: after - before, after,
+    effects: ritualEffects(computeRates(beforeSave, tuning), computeRates(afterSave, tuning)),
   }
 }
 
@@ -173,16 +187,17 @@ export function ritualPurchaseImpact(
 ): RitualPurchaseImpact | null {
   const def = RITUALS.find(item => item.id === id)
   if (!def || save.high < def.unlockHigh || !stageUnlocked(save.lifeHigh, def.stage)) return null
-  const level = save.rituals[id] ?? 0
+  const beforeSave = collectAchievements(save).save
+  const level = beforeSave.rituals[id] ?? 0
   const cost = def.costs[level]
   if (level >= def.maxLevel || cost == null) return null
-  const afterSave: SaveState = {
-    ...save,
-    rituals: { ...save.rituals, [id]: level + 1 },
-  }
+  const afterSave = collectAchievements({
+    ...beforeSave,
+    rituals: { ...beforeSave.rituals, [id]: level + 1 },
+  }).save
   const funds = def.currency === 'nugs' ? save.nugs : save.cash
   return {
     kind: 'ritual', quantity: 1, cost, affordable: funds >= cost,
-    effects: ritualEffects(computeRates(save, tuning), computeRates(afterSave, tuning)),
+    effects: ritualEffects(computeRates(beforeSave, tuning), computeRates(afterSave, tuning)),
   }
 }

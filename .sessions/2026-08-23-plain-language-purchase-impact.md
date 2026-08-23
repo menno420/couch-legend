@@ -86,5 +86,14 @@ change; and remove the many simultaneous row live regions. The fixes stay in
 the semantic/format layer plus plain accessible text, with focused regression
 tests. A clean follow-up review is required before the final flip.
 
+**Codex round 2** reviewed exact head `1d5a85a5f5` and raised four P2s. Three
+were conceded: qualify Playlist as Grow + Work output, include canonical
+achievement multipliers triggered by the proposed purchase, and render small
+hit changes as percentages so they never appear unchanged. One was declined
+because it directly conflicts with the binding task brief: Work remains focused
+on its existing primary cash-production display and is not redesigned around
+passive High. The response records that evidence; a final review must judge the
+repaired head.
+
 **PR:** #17 is READY and open until the final card flip, claim deletion, exact-
 head strict check, required checks and requested Codex review are all green.
