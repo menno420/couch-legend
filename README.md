@@ -45,6 +45,8 @@ shell over this build — DESIGN.md § 7).
 - **Prestige legibility** — the Lore tab shows the current Clarity multiplier
   and what it becomes after the pending Wake & Bake.
 - **Tab signals** — a quiet dot marks tabs holding something affordable.
+- **Purchase impact** — usable shop rows quietly show what the selected buy
+  quantity or next ritual level changes before you press Buy.
 - **A visible next step** — the High panel previews the nearest currently
   available mood or shop unlock on one within-afternoon progress rail, without
   spoiling distant names or future chapters.

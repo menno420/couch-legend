@@ -2,8 +2,12 @@ import type { ReactNode } from 'react'
 import { Leaf, Briefcase, Sparkles, ScrollText } from 'lucide-react'
 import { useGame, type BuyQty, type Tab } from '../lib/store'
 import { GENERATORS, JOBS, RITUALS, stageUnlocked } from '../lib/content'
-import { bulkCost, maxAffordable, milestoneMult } from '../lib/engine'
+import { bulkCost, generatorOutput, jobCashOutput, maxAffordable } from '../lib/engine'
 import { fmt, fmtRate } from '../lib/format'
+import {
+  generatorPurchaseImpact, jobPurchaseImpact, ritualPurchaseImpact,
+} from '../lib/purchase-impact'
+import { formatPurchaseImpact } from '../lib/purchase-impact-format'
 import { isUnlockNameRevealed } from '../lib/progress'
 import { Button, cx } from './ui'
 
@@ -98,11 +102,16 @@ interface RowProps {
   canAfford: boolean
   locked: boolean
   maxed?: boolean
+  impact?: string
+  emptySelection?: boolean
   currency?: 'nugs' | 'cash'
   onBuy: () => void
 }
 
-function ShopRow({ name, blurb, owned, meta, cost, canAfford, locked, maxed, currency = 'nugs', onBuy }: RowProps) {
+function ShopRow({
+  name, blurb, owned, meta, cost, canAfford, locked, maxed, impact,
+  emptySelection, currency = 'nugs', onBuy,
+}: RowProps) {
   return (
     <div className={cx('surface-card flex items-stretch gap-3 rounded-[14px] p-3 transition-[border-color,box-shadow] duration-200', canAfford && !locked && !maxed && 'shop-ready', locked && 'surface-card-muted')}>
       <div className="min-w-0 flex-1">
@@ -112,6 +121,11 @@ function ShopRow({ name, blurb, owned, meta, cost, canAfford, locked, maxed, cur
         </div>
         <p className="mt-0.5 line-clamp-2 text-sm text-muted">{blurb}</p>
         {owned > 0 ? <p className="mt-1 text-xs tabular-nums text-subtle">{meta}</p> : null}
+        {impact ? (
+          <p className="mt-1 min-h-8 text-xs leading-4 tabular-nums text-subtle">
+            {impact}
+          </p>
+        ) : null}
       </div>
       <Button
         size="sm"
@@ -122,6 +136,11 @@ function ShopRow({ name, blurb, owned, meta, cost, canAfford, locked, maxed, cur
       >
         {maxed ? (
           <span>Done</span>
+        ) : emptySelection ? (
+          <>
+            <span className="text-sm leading-none">None</span>
+            <span className="text-xs uppercase tracking-[0.08em] opacity-85">affordable</span>
+          </>
         ) : (
           <>
             <span className="text-sm leading-none tabular-nums">{fmt(cost)}</span>
@@ -152,21 +171,19 @@ function Section({ icon, title, hint, qty, children }: { icon: ReactNode; title:
 }
 
 export function GrowTab() {
-  const high = useGame(s => s.high)
-  const lifeHigh = useGame(s => s.lifeHigh)
-  const nugs = useGame(s => s.nugs)
-  const generators = useGame(s => s.generators)
-  const buyQty = useGame(s => s.buyQty)
-  const buy = useGame(s => s.buyGenerator)
+  const save = useGame()
+  const { high, lifeHigh, nugs, generators, buyQty } = save
+  const buy = save.buyGenerator
   return (
     <Section icon={<Leaf className="size-4" aria-hidden />} title="Grow" hint="Idle nugs. Buy them once, forget them forever." qty>
       {GENERATORS.filter(g => stageUnlocked(lifeHigh, g.stage)).map(g => {
         const locked = high < g.unlockHigh
         const deepLocked = locked && !isUnlockNameRevealed(high, g.unlockHigh)
         const owned = generators[g.id] ?? 0
-        const qty = buyQty === 'max' ? Math.max(1, maxAffordable(g.baseCost, g.costScale, owned, nugs)) : buyQty
-        const cost = bulkCost(g.baseCost, g.costScale, owned, qty)
-        const rate = g.baseRate * owned * milestoneMult(owned)
+        const fallbackQty = buyQty === 'max' ? Math.max(1, maxAffordable(g.baseCost, g.costScale, owned, nugs)) : buyQty
+        const impact = generatorPurchaseImpact(save, g.id, buyQty)
+        const cost = impact?.cost ?? bulkCost(g.baseCost, g.costScale, owned, fallbackQty)
+        const rate = generatorOutput(g, owned)
         return (
           <ShopRow
             key={g.id}
@@ -175,8 +192,10 @@ export function GrowTab() {
             owned={owned}
             meta={owned > 0 ? fmtRate(rate) : 'idle nugs'}
             cost={cost}
-            canAfford={!locked && nugs >= cost}
+            canAfford={!locked && (impact?.affordable ?? nugs >= cost)}
             locked={locked}
+            impact={impact ? formatPurchaseImpact(impact) : undefined}
+            emptySelection={impact?.kind === 'empty-max'}
             onBuy={() => buy(g.id)}
           />
         )
@@ -186,21 +205,19 @@ export function GrowTab() {
 }
 
 export function WorkTab() {
-  const high = useGame(s => s.high)
-  const lifeHigh = useGame(s => s.lifeHigh)
-  const cash = useGame(s => s.cash)
-  const jobs = useGame(s => s.jobs)
-  const buyQty = useGame(s => s.buyQty)
-  const buy = useGame(s => s.buyJob)
+  const save = useGame()
+  const { high, lifeHigh, cash, jobs, buyQty } = save
+  const buy = save.buyJob
   return (
     <Section icon={<Briefcase className="size-4" aria-hidden />} title="Work" hint="Jobs that happen while you stare at the lamp." qty>
       {JOBS.filter(j => stageUnlocked(lifeHigh, j.stage)).map(j => {
         const locked = high < j.unlockHigh
         const deepLocked = locked && !isUnlockNameRevealed(high, j.unlockHigh)
         const owned = jobs[j.id] ?? 0
-        const qty = buyQty === 'max' ? Math.max(1, maxAffordable(j.baseCost, j.costScale, owned, cash)) : buyQty
-        const cost = bulkCost(j.baseCost, j.costScale, owned, qty)
-        const rate = j.cashRate * owned * milestoneMult(owned)
+        const fallbackQty = buyQty === 'max' ? Math.max(1, maxAffordable(j.baseCost, j.costScale, owned, cash)) : buyQty
+        const impact = jobPurchaseImpact(save, j.id, buyQty)
+        const cost = impact?.cost ?? bulkCost(j.baseCost, j.costScale, owned, fallbackQty)
+        const rate = jobCashOutput(j, owned)
         return (
           <ShopRow
             key={j.id}
@@ -209,8 +226,10 @@ export function WorkTab() {
             owned={owned}
             meta={owned > 0 ? `${fmtRate(rate)} cash` : 'idle cash'}
             cost={cost}
-            canAfford={!locked && cash >= cost}
+            canAfford={!locked && (impact?.affordable ?? cash >= cost)}
             locked={locked}
+            impact={impact ? formatPurchaseImpact(impact) : undefined}
+            emptySelection={impact?.kind === 'empty-max'}
             currency="cash"
             onBuy={() => buy(j.id)}
           />
@@ -221,12 +240,9 @@ export function WorkTab() {
 }
 
 export function RitualsTab() {
-  const high = useGame(s => s.high)
-  const lifeHigh = useGame(s => s.lifeHigh)
-  const nugs = useGame(s => s.nugs)
-  const cash = useGame(s => s.cash)
-  const rituals = useGame(s => s.rituals)
-  const buy = useGame(s => s.buyRitual)
+  const save = useGame()
+  const { high, lifeHigh, nugs, cash, rituals } = save
+  const buy = save.buyRitual
   return (
     <Section icon={<Sparkles className="size-4" aria-hidden />} title="Rituals" hint="Set-and-forget. This is the idle part.">
       {RITUALS.filter(r => stageUnlocked(lifeHigh, r.stage)).map(r => {
@@ -236,6 +252,7 @@ export function RitualsTab() {
         const cost = level >= r.maxLevel ? null : r.costs[level]
         const maxed = cost == null
         const funds = r.currency === 'nugs' ? nugs : cash
+        const impact = ritualPurchaseImpact(save, r.id)
         return (
           <ShopRow
             key={r.id}
@@ -243,10 +260,11 @@ export function RitualsTab() {
             blurb={locked ? (deepLocked ? 'A habit waiting to happen.' : `Unlocks at High ${fmt(r.unlockHigh)}`) : r.blurb}
             owned={level}
             meta={maxed ? 'complete' : `lv ${level}/${r.maxLevel}`}
-            cost={cost ?? 0}
-            canAfford={!locked && !maxed && funds >= (cost ?? Infinity)}
+            cost={impact?.cost ?? cost ?? 0}
+            canAfford={!locked && !maxed && (impact?.affordable ?? funds >= (cost ?? Infinity))}
             locked={locked}
             maxed={maxed}
+            impact={impact ? formatPurchaseImpact(impact) : undefined}
             currency={r.currency}
             onBuy={() => buy(r.id)}
           />

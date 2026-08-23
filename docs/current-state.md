@@ -20,7 +20,11 @@ dataset — evidence `docs/sim/2026-08-20-life-story-balance.md` +
 
 ## In flight
 
-- (nothing — the signing identity landed; see below)
+- **Plain-language purchase impact** (PR #17, open): a presentation-only pure
+  before/after layer now derives the selected Grow/Work quantity and each
+  ritual's next-level effect from canonical engine calculations. Implementation,
+  tests and phone/desktop visual verification are in progress; no economy, save,
+  unlock, stage, prestige, offline, chapter, art or Android behavior changes.
 
 ## Recently shipped (newest first)
 

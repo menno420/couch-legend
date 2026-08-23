@@ -44,8 +44,12 @@ frontmatter keeps the score.
 
 (Captured ideas, each with a state and a next destination — none left at `raw`.)
 
+*(empty)*
+
+## Promoted (implementation in flight)
+
 - [Plain-language purchase impact](plain-language-purchase-impact-2026-08-21.md)
-  — routed to a structured presentation plan after the life-story UI settles.
+  — implementation is open in PR #17; outcome remains open until merge.
 
 ## Shipped (survive window open)
 

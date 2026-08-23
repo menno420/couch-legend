@@ -1,5 +1,5 @@
 ---
-state: routed
+state: promoted
 origin: lab
 shipped_pr: null
 shipped_repo: null
@@ -9,7 +9,8 @@ outcome: open
 
 # Plain-language purchase impact
 
-> **Status:** `ideas`
+> **Status:** `ideas` — promoted into PR #17; this remains `outcome: open`
+> until the feature has actually merged.
 
 ## Intake
 
@@ -34,8 +35,10 @@ before/after effect of the quantity currently selected.
 - No price, production, unlock, reward or save behavior changes.
 - Unit tests pin displayed deltas against the engine for ×1, bulk and Max cases.
 
-## Guard recipe
+## Implementation route
 
-Derive display deltas beside `bulkCost` / `milestoneMult` in `src/lib/engine.ts`,
-consume them in `ShopRow` in `src/components/ShopTabs.tsx`, and pin them in a
-dedicated pure test before touching copy.
+PR #17 centralizes item-local output in `src/lib/engine.ts`, derives semantic
+before/after effects in `src/lib/purchase-impact.ts`, formats them separately,
+and consumes the result in `ShopRow`. Its pure tests cover quantity selection,
+Max, milestone crossings, the adopted cap, Work and the ritual effect classes.
+No ship fields are filled before merge.
