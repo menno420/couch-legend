@@ -55,7 +55,15 @@ jobs:
             generators: { tray: 24 },
             jobs: { thinker: 24 },
             rituals: {},
-            achievements: [],
+            achievements: [
+              'first-hit', 'ceiling', 'remote', 'hits-1k', 'high-10', 'high-50',
+              'high-200', 'high-1k', 'high-10k', 'high-100k', 'job-1',
+              'job-forgot', 'job-career', 'all-jobs', 'gen-1', 'gen-25',
+              'gen-100', 'gen-cloud', 'cash-1k', 'cash-1m', 'nugs-1m',
+              'roommate', 'autopilot', 'wake', 'wake-10', 'play-1h', 'play-1d',
+              'buzz-50', 'buzz-500', 'rituals-10', 'all-rituals', 'napper-job',
+              'minister',
+            ],
           }
 
           function assert(condition, message) {
