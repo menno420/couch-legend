@@ -2,9 +2,80 @@
 
 > **Status:** `in-progress` — branch `claude/plain-language-purchase-impact`.
 
+- **📊 Model:** GPT-5 · high · feature-build
+
 ## What is about to happen
 
 Graduate the routed purchase-impact idea into a pure derived engine capability
 and a quiet shop preview, so Grow, Work and Ritual rows explain the exact next
 purchase before the player buys without changing mechanics, saves, unlocks or
 the Lucid Chronicle hierarchy.
+
+## What changed
+
+The shop now asks one pure derived layer for the consequence of a proposed
+purchase. Grow and Work compare the row's canonical item-local output before
+and after the selected quantity; Max uses the quantity the canonical
+`maxAffordable` calculation actually returns. Rituals compare canonical
+`computeRates` fields before and after the next level and translate only the
+material changes into a short semantic vocabulary. React formats that semantic
+result but owns no economy arithmetic.
+
+No economy, Clarity, prestige, unlock, stage, save, offline, achievement,
+chapter, Android, art or scene behavior changed.
+
+## Close-out
+
+**Shipped on the PR #17 branch (merge waits for this card's final flip):**
+
+- `bb361cb` — this born-red session card, committed before product code.
+- `3d9dfef` — canonical item-local output helpers, the pure purchase-impact
+  module, separate formatting, Shop row integration, 16 focused pure tests and
+  the promoted/open idea record.
+- `c1137f8` — deterministic whole-percentage formatting for offline efficiency.
+- Visual evidence was produced on exact PR head `32f22ab` by run
+  `32629933963`; its temporary workflow was then removed before review. The
+  persistent capability recipe is in `docs/CAPABILITIES.md`.
+- This final close-out/flip — historical guard telemetry restored unchanged,
+  capability and session evidence recorded, this session's claim removed.
+
+**Verify:**
+
+- GitHub Actions `pnpm check` (the exact repository product gate) → **exit 0**
+  on run `32629933938`: TypeScript, all 119 tests (including 16 purchase-impact
+  tests), and the Vite production build passed.
+- Local `pnpm check` was attempted twice but did not reach pnpm: this Work
+  runtime returned `Network request disconnected after 56 ms, before approval
+  could complete` (the earlier install attempt returned the same wall after
+  73 ms). CI therefore supplies the actual command result; this local runtime
+  does not.
+- `python3 bootstrap.py check --strict` → **exit 1 before the flip only**, with
+  the checker naming this card and reporting `HOLD (by design)` / `This red is
+  the designed hold, not a defect`. The post-flip result is recorded by the
+  final required check on the flip head.
+- Browser interaction/visual run `32629933963` → **exit 0** on exact head
+  `32f22ab`: `×1`, `×10`, `×100`, funded Max, post-buy affordability refresh,
+  zero-affordable Max, keyboard focus, Work cash wording, Hydration wording,
+  runtime errors and horizontal overflow all asserted. Logged values were
+  `+2.6/s · becomes 5/s`, `+4.4/s · becomes 6.8/s`, `+196/s · becomes 198/s`,
+  funded Max `+398/s · becomes 400/s`, then `Nothing affordable yet.` after
+  buying. Artifact `9490745036` was downloaded and inspected at true `412×915`
+  Grow/Ritual widths and `1365×900` desktop width.
+- Android run `32628888490` on product head `c1137f8` → **success**; it built
+  the pinned-signer APK without Android source or behavior changes.
+
+**⚑ decide-and-flag:** none. The task introduced no owner decision and leaves
+the separate Clarity-spend/Morning Routine idea untouched.
+
+**💡 Session idea:** make the proven narrow-shop production-build browser smoke
+a permanent, dependency-pinned check in a separate infrastructure slice. This
+session kept it temporary so a presentation feature did not quietly acquire a
+new permanent CI dependency.
+
+**⟲ previous-session review:** reviewed
+`.sessions/2026-08-22-android-signing-identity.md` and main's follow-up count
+correction (#15). Its pinned signer remained green here, and this feature does
+not touch the Android shell or signing path.
+
+**PR:** #17 is READY and open until the final card flip, claim deletion, exact-
+head strict check, required checks and requested Codex review are all green.
