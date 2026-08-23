@@ -90,10 +90,10 @@ jobs:
 
               const one = await impact.innerText()
               assert(one.includes('becomes'), `×1 preview missing before/after language: ${one}`)
-              await phonePage.getByRole('button', { name: '×10' }).click()
+              await phonePage.getByRole('button', { name: '×10', exact: true }).click()
               const ten = await impact.innerText()
               assert(ten !== one, `×10 preview stayed stale: ${ten}`)
-              await phonePage.getByRole('button', { name: '×100' }).click()
+              await phonePage.getByRole('button', { name: '×100', exact: true }).click()
               const hundred = await impact.innerText()
               assert(hundred !== ten, `×100 preview stayed stale: ${hundred}`)
               await phonePage.getByRole('button', { name: 'Max' }).click()
@@ -103,8 +103,8 @@ jobs:
               const maxAfterBuy = await impact.innerText()
               assert(maxAfterBuy !== maxBeforeBuy, `Max preview stayed stale after affordability changed: ${maxAfterBuy}`)
 
-              await phonePage.getByRole('button', { name: '×1' }).focus()
-              assert(await phonePage.getByRole('button', { name: '×1' }).evaluate(node => document.activeElement === node), 'quantity control lost keyboard focusability')
+              await phonePage.getByRole('button', { name: '×1', exact: true }).focus()
+              assert(await phonePage.getByRole('button', { name: '×1', exact: true }).evaluate(node => document.activeElement === node), 'quantity control lost keyboard focusability')
               assert(await phonePage.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), 'phone layout has horizontal overflow')
               const impactBox = await impact.boundingBox()
               const rowBox = await trayRow.boundingBox()
