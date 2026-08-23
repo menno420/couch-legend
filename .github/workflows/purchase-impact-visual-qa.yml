@@ -63,7 +63,7 @@ jobs:
           }
 
           async function openSeeded(browser, viewport, patch = {}) {
-            const context = await browser.newContext({ viewportSize: viewport, deviceScaleFactor: 1, hasTouch: viewport.width < 600 })
+            const context = await browser.newContext({ viewport, deviceScaleFactor: 1, hasTouch: viewport.width < 600 })
             const state = { ...baseSave, ...patch, lastTick: Date.now() }
             await context.addInitScript(save => {
               localStorage.setItem('couch-legend-save', JSON.stringify(save))
