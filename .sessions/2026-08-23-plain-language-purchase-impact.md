@@ -95,5 +95,13 @@ on its existing primary cash-production display and is not redesigned around
 passive High. The response records that evidence; a final review must judge the
 repaired head.
 
+**Codex round 3** reviewed exact head `8eb78d3940` and found one remaining
+presentation defect: a last-missing ritual can add its own effects plus the
+canonical `all-rituals` achievement multiplier, while the impact paragraph's
+line clamp could hide a clause. The clamp is removed so every derived effect
+remains visible; normal rows retain the existing two-line minimum for stable
+quantity switching. This fix requires one final exact-head visual run and
+review before the card flip.
+
 **PR:** #17 is READY and open until the final card flip, claim deletion, exact-
 head strict check, required checks and requested Codex review are all green.
