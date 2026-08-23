@@ -20,13 +20,17 @@ dataset — evidence `docs/sim/2026-08-20-life-story-balance.md` +
 
 ## In flight
 
-- **Plain-language purchase impact** (PR #17, open): a presentation-only pure
-  before/after layer now derives the selected Grow/Work quantity and each
-  ritual's next-level effect from canonical engine calculations. Implementation,
-  tests and phone/desktop visual verification are in progress; no economy, save,
-  unlock, stage, prestige, offline, chapter, art or Android behavior changes.
+*(none)*
 
 ## Recently shipped (newest first)
+
+- **Plain-language purchase impact** (#17, 2026-08-23): usable Grow and Work
+  rows now preview the exact selected quantity, including canonical Max,
+  milestone-cap and purchase-triggered achievement effects; rituals translate
+  canonical before/after mechanics into short next-level language. The layer is
+  pure derived presentation state, with no economy, save, unlock, stage,
+  prestige, offline, chapter, art or Android behavior change. Verified with 124
+  tests plus exact 412×915 and 1365×900 production-bundle visual runs.
 
 - **A stable Android signing identity** (2026-08-22): a committed debug
   keystore (`android/keystore/debug.keystore`, password `android` — public by

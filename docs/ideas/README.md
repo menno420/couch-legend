@@ -48,14 +48,16 @@ frontmatter keeps the score.
 
 ## Promoted (implementation in flight)
 
-- [Plain-language purchase impact](plain-language-purchase-impact-2026-08-21.md)
-  — implementation is open in PR #17; outcome remains open until merge.
+*(empty)*
 
 ## Shipped (survive window open)
 
 (Promoted ideas whose PR merged; the revert-scan flips them `survived`
 after the 30-day window, `reverted` otherwise.)
 
+- [Plain-language purchase impact](plain-language-purchase-impact-2026-08-21.md)
+  — shipped in PR #17; exact selected quantities, Max and ritual effects from
+  canonical mechanics.
 - [Visible within-afternoon goal](visible-within-afternoon-goal-2026-08-21.md)
   — shipped in PR #9; presentation-only next-threshold rail.
 

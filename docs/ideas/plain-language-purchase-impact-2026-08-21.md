@@ -1,16 +1,15 @@
 ---
 state: promoted
 origin: lab
-shipped_pr: null
-shipped_repo: null
-merged_date: null
-outcome: open
+shipped_pr: 17
+shipped_repo: menno420/couch-legend
+merged_date: 2026-08-23
+outcome: shipped
 ---
 
 # Plain-language purchase impact
 
-> **Status:** `ideas` — promoted into PR #17; this remains `outcome: open`
-> until the feature has actually merged.
+> **Status:** `ideas` — shipped in PR #17 on 2026-08-23.
 
 ## Intake
 
@@ -41,4 +40,4 @@ PR #17 centralizes item-local output in `src/lib/engine.ts`, derives semantic
 before/after effects in `src/lib/purchase-impact.ts`, formats them separately,
 and consumes the result in `ShopRow`. Its pure tests cover quantity selection,
 Max, milestone crossings, the adopted cap, Work and the ritual effect classes.
-No ship fields are filled before merge.
+The ship fields were filled only after GitHub confirmed PR #17 merged.
