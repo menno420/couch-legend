@@ -112,6 +112,6 @@ review before the card flip.
 **Codex round 4** reviewed exact clean head `851d3404a8` and reported no major
 issues. There are no unresolved review threads.
 
-**PR:** #17 is READY and open. This completion flip removes the claim and turns
-the deliberately red substrate gate green; merge follows only after its exact-
-head required checks pass.
+**PR:** #17 merged via squash as `6a203521dd5cf8cb268d2d3d2f43d751e69a09bb`
+after exact-head CI, substrate, Android and Codex review were green. The
+post-merge lifecycle PR records the idea as shipped without backdating it.
