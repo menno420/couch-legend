@@ -1,0 +1,200 @@
+name: purchase impact visual qa
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  visual-qa:
+    if: github.head_ref == 'claude/plain-language-purchase-impact'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: VITE_BASE=./ pnpm build
+      - name: Install a temporary browser harness
+        run: |
+          pnpm add --save-dev --lockfile=false playwright@1.55.0
+          pnpm exec playwright install --with-deps chromium
+      - name: Exercise the exact purchase-impact bundle
+        run: |
+          mkdir -p visual-qa
+          python3 -m http.server 4173 --bind 127.0.0.1 --directory dist >visual-qa/server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          node <<'NODE'
+          const { chromium } = require('playwright')
+
+          const baseSave = {
+            version: 2,
+            high: 3000,
+            lifeHigh: 2000,
+            peakHigh: 3000,
+            buzz: 100,
+            nugs: 1e9,
+            cash: 1e9,
+            enlightenment: 0,
+            totalHits: 100,
+            playTime: 1000,
+            lastTick: Date.now(),
+            startedAt: Date.now() - 1000000,
+            sound: false,
+            booted: true,
+            generators: { tray: 24 },
+            jobs: { thinker: 24 },
+            rituals: {},
+            achievements: [
+              'first-hit', 'ceiling', 'remote', 'hits-1k', 'high-10', 'high-50',
+              'high-200', 'high-1k', 'high-10k', 'high-100k', 'job-1',
+              'job-forgot', 'job-career', 'all-jobs', 'gen-1', 'gen-25',
+              'gen-100', 'gen-cloud', 'cash-1k', 'cash-1m', 'nugs-1m',
+              'roommate', 'autopilot', 'wake', 'wake-10', 'play-1h', 'play-1d',
+              'buzz-50', 'buzz-500', 'rituals-10', 'all-rituals', 'napper-job',
+              'minister',
+            ],
+          }
+
+          function assert(condition, message) {
+            if (!condition) throw new Error(message)
+          }
+
+          async function openSeeded(browser, viewport, patch = {}) {
+            const context = await browser.newContext({ viewport, deviceScaleFactor: 1, hasTouch: viewport.width < 600 })
+            const state = { ...baseSave, ...patch, lastTick: Date.now() }
+            await context.addInitScript(save => {
+              localStorage.setItem('couch-legend-save', JSON.stringify(save))
+            }, state)
+            const page = await context.newPage()
+            const errors = []
+            page.on('pageerror', error => errors.push(`page: ${error.message}`))
+            page.on('console', message => {
+              if (message.type() === 'error') errors.push(`console: ${message.text()}`)
+            })
+            await page.goto('http://127.0.0.1:4173/', { waitUntil: 'networkidle' })
+            await page.getByRole('heading', { name: 'Grow' }).waitFor()
+            return { context, page, errors }
+          }
+
+          ;(async () => {
+            const browser = await chromium.launch({ headless: true })
+            try {
+              const phone = await openSeeded(browser, { width: 412, height: 915 })
+              const phonePage = phone.page
+              const trayRow = phonePage.locator('.surface-card').filter({ hasText: 'Rolling Tray' }).first()
+              const impact = trayRow.locator('p.text-subtle').last()
+              await trayRow.scrollIntoViewIfNeeded()
+
+              const one = await impact.innerText()
+              assert(one.includes('becomes'), `×1 preview missing before/after language: ${one}`)
+              await phonePage.getByRole('button', { name: '×10', exact: true }).click()
+              const ten = await impact.innerText()
+              assert(ten !== one, `×10 preview stayed stale: ${ten}`)
+              await phonePage.getByRole('button', { name: '×100', exact: true }).click()
+              const hundred = await impact.innerText()
+              assert(hundred !== ten, `×100 preview stayed stale: ${hundred}`)
+              await phonePage.getByRole('button', { name: 'Max' }).click()
+              const maxBeforeBuy = await impact.innerText()
+              assert(!maxBeforeBuy.includes('Nothing affordable'), `funded Max reported zero: ${maxBeforeBuy}`)
+              await trayRow.locator('button').click()
+              const maxAfterBuy = await impact.innerText()
+              assert(maxAfterBuy !== maxBeforeBuy, `Max preview stayed stale after affordability changed: ${maxAfterBuy}`)
+
+              await phonePage.getByRole('button', { name: '×1', exact: true }).focus()
+              assert(await phonePage.getByRole('button', { name: '×1', exact: true }).evaluate(node => document.activeElement === node), 'quantity control lost keyboard focusability')
+              assert(await phonePage.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), 'phone layout has horizontal overflow')
+              const impactBox = await impact.boundingBox()
+              const rowBox = await trayRow.boundingBox()
+              assert(impactBox && rowBox && impactBox.width <= rowBox.width, 'phone impact text escapes its row')
+              await phonePage.screenshot({ path: 'visual-qa/phone-grow.png', fullPage: false })
+
+              await phonePage.getByRole('button', { name: 'Work' }).click()
+              const thinkerRow = phonePage.locator('.surface-card').filter({ hasText: 'Unemployed Philosopher' }).first()
+              const workImpact = thinkerRow.locator('p.text-subtle').last()
+              assert((await workImpact.innerText()).includes('cash'), 'Work preview stopped describing primary cash output')
+              await phonePage.getByRole('button', { name: 'Rituals' }).click()
+              const hydration = phonePage.locator('.surface-card').filter({ hasText: 'Hydration' }).first()
+              assert((await hydration.locator('p.text-subtle').last().innerText()).includes('Buzz lasts'), 'Hydration has no plain-language decay preview')
+              const playlist = phonePage.locator('.surface-card').filter({ hasText: 'Infinite Playlist' }).first()
+              assert((await playlist.locator('p.text-subtle').last().innerText()).includes('Grow + Work'), 'Playlist preview overstates its production scope')
+              const sunday = phonePage.locator('.surface-card').filter({ hasText: 'Sunday Forever' }).first()
+              const throne = phonePage.locator('.surface-card').filter({ hasText: 'Pillow Throne' }).first()
+              const sundayImpact = sunday.locator('p.text-subtle').last()
+              assert((await sundayImpact.innerText()).includes('Hit nugs + cash'), 'Sunday omitted its cash-per-hit change')
+              assert((await sundayImpact.innerText()).includes('%'), 'Sunday small canonical hit change is not visible')
+              assert((await throne.locator('p.text-subtle').last().innerText()).includes('Work cash'), 'Pillow Throne overstates its job-only multiplier')
+              assert(await phonePage.locator('.surface-card p[aria-live]').count() === 0, 'shop rows still create simultaneous live regions')
+              const clipped = await phonePage.locator('.surface-card').evaluateAll(cards => cards
+                .map(card => [...card.querySelectorAll('p.text-subtle')].at(-1))
+                .filter(node => node && node.scrollHeight > node.clientHeight + 1)
+                .map(node => node.textContent))
+              assert(clipped.length === 0, `phone ritual preview is visually clipped: ${clipped.join(' | ')}`)
+              await sunday.scrollIntoViewIfNeeded()
+              await phonePage.screenshot({ path: 'visual-qa/phone-rituals.png', fullPage: false })
+              assert(phone.errors.length === 0, `phone runtime errors: ${phone.errors.join(' | ')}`)
+              await phone.context.close()
+
+              const empty = await openSeeded(browser, { width: 412, height: 915 }, { nugs: 0, generators: {} })
+              await empty.page.getByRole('button', { name: 'Max' }).click()
+              const emptyRow = empty.page.locator('.surface-card').filter({ hasText: 'Rolling Tray' }).first()
+              assert((await emptyRow.locator('p.text-subtle').last().innerText()) === 'Nothing affordable yet.', 'zero Max displayed a fictional gain')
+              assert(await emptyRow.getByRole('button', { name: 'None affordable' }).isDisabled(), 'zero Max buy button is not disabled')
+              assert(empty.errors.length === 0, `empty-Max runtime errors: ${empty.errors.join(' | ')}`)
+              await empty.context.close()
+
+              const achievementSave = { achievements: baseSave.achievements.filter(id => id !== 'gen-25'), generators: { tray: 24 } }
+              const achievement = await openSeeded(browser, { width: 412, height: 915 }, achievementSave)
+              const achievementRow = achievement.page.locator('.surface-card').filter({ hasText: 'Rolling Tray' }).first()
+              assert((await achievementRow.locator('p.text-subtle').last().innerText()).includes('Nug production'), 'purchase-triggered achievement effect is absent')
+              assert(await achievement.page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), 'achievement preview causes horizontal overflow')
+              assert(achievement.errors.length === 0, `achievement preview runtime errors: ${achievement.errors.join(' | ')}`)
+              await achievement.context.close()
+
+              const lastRitual = await openSeeded(browser, { width: 412, height: 915 }, {
+                achievements: baseSave.achievements.filter(id => id !== 'all-rituals'),
+                rituals: { water: 1, snacks: 1, roommate: 1, lighter: 1, playlist: 1, lamp: 1, curtains: 1, plants: 1, cushion: 1, throne: 1 },
+              })
+              await lastRitual.page.getByRole('button', { name: 'Rituals' }).click()
+              const lastSunday = lastRitual.page.locator('.surface-card').filter({ hasText: 'Sunday Forever' }).first()
+              const lastImpact = lastSunday.locator('p.text-subtle').last()
+              const lastText = await lastImpact.innerText()
+              assert(lastText.includes('Nug production') && lastText.includes('Hit nugs + cash') && lastText.includes('High/hit') && lastText.includes('Buzz/hit'), `last-ritual effects incomplete: ${lastText}`)
+              assert(await lastImpact.evaluate(node => node.scrollHeight <= node.clientHeight + 1), 'last-ritual impact is clipped')
+              assert(await lastImpact.evaluate(node => getComputedStyle(node).webkitLineClamp === 'none'), 'last-ritual impact still has a line clamp')
+              assert(await lastRitual.page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), 'last-ritual preview causes horizontal overflow')
+              assert(lastRitual.errors.length === 0, `last-ritual runtime errors: ${lastRitual.errors.join(' | ')}`)
+              await lastRitual.context.close()
+
+              const desktop = await openSeeded(browser, { width: 1365, height: 900 })
+              const desktopRow = desktop.page.locator('.surface-card').filter({ hasText: 'Rolling Tray' }).first()
+              await desktopRow.scrollIntoViewIfNeeded()
+              assert(await desktop.page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), 'desktop layout has horizontal overflow')
+              await desktop.page.screenshot({ path: 'visual-qa/desktop-grow.png', fullPage: false })
+              assert(desktop.errors.length === 0, `desktop runtime errors: ${desktop.errors.join(' | ')}`)
+              await desktop.context.close()
+
+              console.log(JSON.stringify({ one, ten, hundred, maxBeforeBuy, maxAfterBuy, phone: '412x915', desktop: '1365x900' }))
+            } finally {
+              await browser.close()
+            }
+          })().catch(error => {
+            console.error(error)
+            process.exit(1)
+          })
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: purchase-impact-visual-qa
+          path: visual-qa/*.png
+          if-no-files-found: error
