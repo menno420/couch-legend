@@ -21,8 +21,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pn`m
-      - run: pn`m install --frozen-lockfile
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
       - run: VITE_BASE=./ pnpm build
       - name: Install a temporary browser harness
         run: |
@@ -86,7 +86,7 @@ jobs:
               const phonePage = phone.page
               const trayRow = phonePage.locator('.surface-card').filter({ hasText: 'Rolling Tray' }).first()
               const impact = trayRow.locator('[aria-live="polite"]')
-              await trayRow.scrollIntoViewIfNeded()
+              await trayRow.scrollIntoViewIfNeeded()
 
               const one = await impact.innerText()
               assert(one.includes('becomes'), `×1 preview missing before/after language: ${one}`)
@@ -98,7 +98,7 @@ jobs:
               assert(hundred !== ten, `×100 preview stayed stale: ${hundred}`)
               await phonePage.getByRole('button', { name: 'Max' }).click()
               const maxBeforeBuy = await impact.innerText()
-            assert(!maxBeforeBuy.includes('Nothing affordable'), `funded Max reported zero: ${maxBeforeBuy}`)
+              assert(!maxBeforeBuy.includes('Nothing affordable'), `funded Max reported zero: ${maxBeforeBuy}`)
               await trayRow.locator('button').click()
               const maxAfterBuy = await impact.innerText()
               assert(maxAfterBuy !== maxBeforeBuy, `Max preview stayed stale after affordability changed: ${maxAfterBuy}`)
