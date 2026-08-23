@@ -5,7 +5,10 @@
 // runaway; docs/sim/2026-08-20-life-story-balance.md). Nothing in this file
 // touches the DOM — it is fully unit-tested.
 
-import { ACHIEVEMENTS, GENERATORS, JOBS, type AchievementState } from './content'
+import {
+  ACHIEVEMENTS, GENERATORS, JOBS,
+  type AchievementState, type GeneratorDef, type JobDef,
+} from './content'
 
 export interface SaveState extends AchievementState {
   version: number
@@ -105,6 +108,16 @@ export function milestoneMult(count: number, t: Tuning = DEFAULT_TUNING): number
   return 2 ** Math.min(Math.floor(count / 25), t.milestoneCapDoublings)
 }
 
+/** Item-local output shown by a Grow row, before global multipliers. */
+export function generatorOutput(def: GeneratorDef, count: number, t: Tuning = DEFAULT_TUNING): number {
+  return def.baseRate * count * milestoneMult(count, t)
+}
+
+/** Primary item-local cash output shown by a Work row, before global multipliers. */
+export function jobCashOutput(def: JobDef, count: number, t: Tuning = DEFAULT_TUNING): number {
+  return def.cashRate * count * milestoneMult(count, t)
+}
+
 /** Total cost of buying `qty` units starting from `owned` (geometric series). */
 export function bulkCost(baseCost: number, scale: number, owned: number, qty: number): number {
   if (qty <= 0) return 0
@@ -154,6 +167,7 @@ export interface Rates {
   buzzMult: number
   nugMult: number
   cashMult: number
+  highMult: number
   hitPower: number
   hitHigh: number
   hitBuzz: number
@@ -184,11 +198,12 @@ export function computeRates(s: SaveState, t: Tuning = DEFAULT_TUNING): Rates {
 
   const nugMult = clarity * playlist * plants * snackBoost * ach.nug * buzzMult
   const cashMult = clarity * playlist * throne * ach.cash * buzzMult
+  const highMult = clarity * playlist * (1 + Math.sqrt(Math.max(0, s.buzz)) * 0.04)
 
   let nugRate = 0
   for (const g of GENERATORS) {
     const n = lv(s.generators, g.id)
-    nugRate += g.baseRate * n * milestoneMult(n, t)
+    nugRate += generatorOutput(g, n, t)
   }
   nugRate *= nugMult
 
@@ -196,11 +211,11 @@ export function computeRates(s: SaveState, t: Tuning = DEFAULT_TUNING): Rates {
   let highRate = 0
   for (const j of JOBS) {
     const n = lv(s.jobs, j.id)
-    cashRate += j.cashRate * n * milestoneMult(n, t)
+    cashRate += jobCashOutput(j, n, t)
     highRate += j.highRate * n
   }
   cashRate *= cashMult
-  highRate *= clarity * playlist * (1 + Math.sqrt(Math.max(0, s.buzz)) * 0.04)
+  highRate *= highMult
 
   const decay = 0.012 / (1 + water * 0.28) / (1 + snacks * 0.18)
   const autoHits = roommate * 0.32
@@ -219,7 +234,7 @@ export function computeRates(s: SaveState, t: Tuning = DEFAULT_TUNING): Rates {
 
   return {
     nugRate, cashRate, highRate, autoHits, lampBuzz, decay,
-    buzzMult, nugMult, cashMult, hitPower, hitHigh, hitBuzz, hitCash,
+    buzzMult, nugMult, cashMult, highMult, hitPower, hitHigh, hitBuzz, hitCash,
     offlineCap, offlineEff, prestigeBonus,
   }
 }
