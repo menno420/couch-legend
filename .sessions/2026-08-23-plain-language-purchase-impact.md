@@ -33,8 +33,8 @@ chapter, Android, art or scene behavior changed.
   module, separate formatting, Shop row integration, 16 focused pure tests and
   the promoted/open idea record.
 - `c1137f8` — deterministic whole-percentage formatting for offline efficiency.
-- Visual evidence was produced on exact PR head `32f22ab` by run
-  `32629933963`; its temporary workflow was then removed before review. The
+- Final visual evidence was produced on exact product head `3c53ebf` by run
+  `32630729555`; its temporary workflow was then removed before review. The
   persistent capability recipe is in `docs/CAPABILITIES.md`.
 - This final close-out/flip — historical guard telemetry restored unchanged,
   capability and session evidence recorded, this session's claim removed.
@@ -42,9 +42,8 @@ chapter, Android, art or scene behavior changed.
 **Verify:**
 
 - GitHub Actions `pnpm check` (the exact repository product gate) → **exit 0**
-  on run `32629933938`: TypeScript, all 119 tests (including 16 purchase-impact
-  tests), and the Vite production build passed. The post-review gate adds two
-  focused ritual assertions, bringing the expected final total to 121.
+  on post-review run `32630602679`: TypeScript, all 121 tests (including 18
+  purchase-impact tests), and the Vite production build passed.
 - Local `pnpm check` was attempted twice but did not reach pnpm: this Work
   runtime returned `Network request disconnected after 56 ms, before approval
   could complete` (the earlier install attempt returned the same wall after
@@ -54,13 +53,15 @@ chapter, Android, art or scene behavior changed.
   the checker naming this card and reporting `HOLD (by design)` / `This red is
   the designed hold, not a defect`. The post-flip result is recorded by the
   final required check on the flip head.
-- Browser interaction/visual run `32629933963` → **exit 0** on exact head
-  `32f22ab`: `×1`, `×10`, `×100`, funded Max, post-buy affordability refresh,
+- Browser interaction/visual run `32630729555` → **exit 0** on exact product
+  head `3c53ebf`: `×1`, `×10`, `×100`, funded Max, post-buy affordability refresh,
   zero-affordable Max, keyboard focus, Work cash wording, Hydration wording,
-  runtime errors and horizontal overflow all asserted. Logged values were
+  Sunday cash-per-hit wording, Pillow Throne's Work-cash qualifier, absence of
+  row live regions, clipping across every phone ritual preview, runtime errors
+  and horizontal overflow all asserted. Logged values were
   `+2.6/s · becomes 5/s`, `+4.4/s · becomes 6.8/s`, `+196/s · becomes 198/s`,
   funded Max `+398/s · becomes 400/s`, then `Nothing affordable yet.` after
-  buying. Artifact `9490745036` was downloaded and inspected at true `412×915`
+  buying. Artifact `9490962758` was downloaded and inspected at true `412×915`
   Grow/Ritual widths and `1365×900` desktop width.
 - Android run `32628888490` on product head `c1137f8` → **success**; it built
   the pinned-signer APK without Android source or behavior changes.
