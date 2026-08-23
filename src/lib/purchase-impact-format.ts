@@ -28,7 +28,7 @@ function formatEffect(effect: RitualEffect): string {
     case 'offline-cap':
       return `Offline cap ${fmtDuration(effect.before)} → ${fmtDuration(effect.after)}`
     case 'offline-efficiency':
-      return `keeps ${fmt(effect.before * 100, 0)}% → ${fmt(effect.after * 100, 0)}%`
+      return `keeps ${fmt(Math.round(effect.before * 100), 0)}% → ${fmt(Math.round(effect.after * 100), 0)}%`
     case 'prestige-yield':
       return `Wake & Bake yield ×${fmt(effect.before)} → ×${fmt(effect.after)}`
   }
