@@ -112,7 +112,8 @@ jobs:
               await phonePage.screenshot({ path: 'visual-qa/phone-grow.png', fullPage: false })
 
               await phonePage.getByRole('button', { name: 'Work' }).click()
-              const workImpact = phonePage.locator('[aria-live="polite"]').first()
+              const thinkerRow = phonePage.locator('.surface-card').filter({ hasText: 'Unemployed Philosopher' }).first()
+              const workImpact = thinkerRow.locator('[aria-live="polite"]')
               assert((await workImpact.innerText()).includes('cash'), 'Work preview stopped describing primary cash output')
               await phonePage.getByRole('button', { name: 'Rituals' }).click()
               const hydration = phonePage.locator('.surface-card').filter({ hasText: 'Hydration' }).first()
