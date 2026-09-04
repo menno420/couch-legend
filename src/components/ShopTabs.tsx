@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
-import { Leaf, Briefcase, Sparkles, ScrollText } from 'lucide-react'
+import { Leaf, Briefcase, Sparkles, ScrollText, Sofa } from 'lucide-react'
 import { useGame, type BuyQty, type Tab } from '../lib/store'
 import { GENERATORS, JOBS, RITUALS, stageUnlocked } from '../lib/content'
-import { bulkCost, generatorOutput, jobCashOutput, maxAffordable } from '../lib/engine'
+import { bulkCost, generatorOutput, jobCashOutput, keepsakeEffects, keepsakeSlots, maxAffordable } from '../lib/engine'
 import { fmt, fmtRate } from '../lib/format'
 import {
   generatorPurchaseImpact, jobPurchaseImpact, ritualPurchaseImpact,
@@ -40,6 +40,8 @@ function useTabSignals(): Record<Tab, boolean> {
   return useGame(s => {
     const growReady = GENERATORS.some(g => s.high >= g.unlockHigh && stageUnlocked(s.lifeHigh, g.stage) && s.nugs >= bulkCost(g.baseCost, g.costScale, s.generators[g.id] ?? 0, 1))
     const workReady = JOBS.some(j => s.high >= j.unlockHigh && stageUnlocked(s.lifeHigh, j.stage) && s.cash >= bulkCost(j.baseCost, j.costScale, s.jobs[j.id] ?? 0, 1))
+    const couchReady = s.keepsakes.length > s.equipped.length
+      && s.equipped.length < keepsakeSlots({ lifeHigh: s.lifeHigh, equipped: s.equipped })
     const ritualReady = RITUALS.some(r => {
       if (s.high < r.unlockHigh || !stageUnlocked(s.lifeHigh, r.stage)) return false
       const level = s.rituals[r.id] ?? 0
@@ -48,12 +50,12 @@ function useTabSignals(): Record<Tab, boolean> {
       return (r.currency === 'nugs' ? s.nugs : s.cash) >= cost
     })
     // Encode as a string selector to keep zustand's shallow compare happy.
-    return `${growReady ? 1 : 0}${workReady ? 1 : 0}${ritualReady ? 1 : 0}`
+    return `${growReady ? 1 : 0}${workReady ? 1 : 0}${ritualReady ? 1 : 0}${couchReady ? 1 : 0}`
   }).split('').reduce((acc, v, i) => {
-    const tabs: Tab[] = ['grow', 'work', 'rituals']
+    const tabs: Tab[] = ['grow', 'work', 'rituals', 'couch']
     acc[tabs[i]] = v === '1'
     return acc
-  }, { grow: false, work: false, rituals: false, lore: false } as Record<Tab, boolean>)
+  }, { grow: false, work: false, rituals: false, couch: false, lore: false } as Record<Tab, boolean>)
 }
 
 export function TabBar() {
@@ -64,6 +66,7 @@ export function TabBar() {
     { id: 'grow', label: 'Grow', icon: <Leaf className="size-4" aria-hidden /> },
     { id: 'work', label: 'Work', icon: <Briefcase className="size-4" aria-hidden /> },
     { id: 'rituals', label: 'Rituals', icon: <Sparkles className="size-4" aria-hidden /> },
+    { id: 'couch', label: 'Couch', icon: <Sofa className="size-4" aria-hidden /> },
     { id: 'lore', label: 'Chronicle', icon: <ScrollText className="size-4" aria-hidden /> },
   ]
   return (
@@ -174,6 +177,7 @@ export function GrowTab() {
   const save = useGame()
   const { high, lifeHigh, nugs, generators, buyQty } = save
   const buy = save.buyGenerator
+  const step = keepsakeEffects(save).growMilestoneStep
   return (
     <Section icon={<Leaf className="size-4" aria-hidden />} title="Grow" hint="Idle nugs. Buy them once, forget them forever." qty>
       {GENERATORS.filter(g => stageUnlocked(lifeHigh, g.stage)).map(g => {
@@ -183,7 +187,7 @@ export function GrowTab() {
         const fallbackQty = buyQty === 'max' ? Math.max(1, maxAffordable(g.baseCost, g.costScale, owned, nugs)) : buyQty
         const impact = generatorPurchaseImpact(save, g.id, buyQty)
         const cost = impact?.cost ?? bulkCost(g.baseCost, g.costScale, owned, fallbackQty)
-        const rate = generatorOutput(g, owned)
+        const rate = generatorOutput(g, owned, undefined, step)
         return (
           <ShopRow
             key={g.id}
@@ -208,6 +212,7 @@ export function WorkTab() {
   const save = useGame()
   const { high, lifeHigh, cash, jobs, buyQty } = save
   const buy = save.buyJob
+  const step = keepsakeEffects(save).workMilestoneStep
   return (
     <Section icon={<Briefcase className="size-4" aria-hidden />} title="Work" hint="Jobs that happen while you stare at the lamp." qty>
       {JOBS.filter(j => stageUnlocked(lifeHigh, j.stage)).map(j => {
@@ -217,7 +222,7 @@ export function WorkTab() {
         const fallbackQty = buyQty === 'max' ? Math.max(1, maxAffordable(j.baseCost, j.costScale, owned, cash)) : buyQty
         const impact = jobPurchaseImpact(save, j.id, buyQty)
         const cost = impact?.cost ?? bulkCost(j.baseCost, j.costScale, owned, fallbackQty)
-        const rate = jobCashOutput(j, owned)
+        const rate = jobCashOutput(j, owned, undefined, step)
         return (
           <ShopRow
             key={j.id}

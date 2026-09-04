@@ -20,7 +20,16 @@ dataset — evidence `docs/sim/2026-08-20-life-story-balance.md` +
 
 ## In flight
 
-*(none)*
+- **The couch — keepsakes** (branch `claude/couch-legend-design-arch-iwpo96`):
+  every chapter after the first now leaves one permanent object with the
+  couch, there are always fewer places than objects, and every effect
+  transforms a system that already existed. Plus a store **design preview**
+  that cannot transact and is compiled out of production builds. Design:
+  [`DESIGN.md`](DESIGN.md) §§ 11–12 · plan:
+  [`planning/2026-09-04-long-form-redesign.md`](planning/2026-09-04-long-form-redesign.md) ·
+  evidence: [`sim/2026-09-04-couch-balance.md`](sim/2026-09-04-couch-balance.md) ·
+  research: [`research/2026-09-04-long-form-idle-research.md`](research/2026-09-04-long-form-idle-research.md)
+  and its [contract sheet](research/2026-09-04-CONTRACTS.md).
 
 ## Recently shipped (newest first)
 
@@ -95,6 +104,13 @@ dataset — evidence `docs/sim/2026-08-20-life-story-balance.md` +
   `docs/ORIGIN.md`.
 
 ## Next (the owner's stated order)
+
+**New, and it is a feel pass rather than a build:** the couch shipped with
+simulator evidence that it is fair, reachable and idle-safe (rails 1/3/4/6 all
+hold or improve; the one breach is stated in the balance doc § 4). Simulation
+cannot say whether *arranging* it is interesting. That is the owner's call and
+it gates the next family (the Morning Routine, DESIGN § 8.1).
+
 
 **Milestone B — the working Android handoff** (DESIGN § 7's list), gated on the
 owner installing the milestone-A APK and reporting how the game actually

@@ -1,20 +1,23 @@
 import { create } from 'zustand'
 import {
-  advance, applyOffline, computeRates, defaultSave, prestigeGain,
+  advance, defaultSave, prestigeGain,
   type OfflineSummary, type SaveState,
 } from './engine'
 import {
-  applyHit, applyPrestige, purchaseGenerator, purchaseJob, purchaseRitual,
-  collectAchievements as collectPure,
+  applyAutoBuy, applyHit, applyOfflineWithAutomation, applyPrestige, arrangeModeFor,
+  collectKeepsakes, equipKeepsake, fillBudgetFor, hitPreview, purchaseGenerator,
+  purchaseJob, purchaseRitual, unequipKeepsake,
+  collectAchievements as collectPure, type ArrangeMode,
 } from './actions'
 import {
   ACHIEVEMENTS, INTERJECTIONS, MOODS, NEWS_LINES,
-  stageCrossed, type StageDef,
+  keepsakeById, stageCrossed, type StageDef,
 } from './content'
 import { loadSave, persistSave, pickSave, requestPersistence, importCode } from './save'
+import { fmt } from './format'
 import { blipSound, chimeSound, ensureAudio, puffSound, setMuted } from './audio'
 
-export type Tab = 'grow' | 'work' | 'rituals' | 'lore'
+export type Tab = 'grow' | 'work' | 'rituals' | 'couch' | 'lore'
 export type BuyQty = 1 | 10 | 100 | 'max'
 
 export interface Toast {
@@ -61,6 +64,36 @@ function collectAchievements(save: SaveState, toasts: Toast[]): AchievementResul
   return { save: collected, toasts: next, fresh: true }
 }
 
+/** Mint any keepsake the story has just left, and say so. Auto-arranged
+ * ones are announced too, so the couch never changes silently. */
+function collectCouch(
+  save: SaveState,
+  toasts: Toast[],
+  mode: ArrangeMode = 'fresh-only',
+  fillBudget = Infinity,
+): { save: SaveState; toasts: Toast[]; fresh: boolean } {
+  const { save: next, fresh, arranged } = collectKeepsakes(save, mode, fillBudget)
+  if (fresh.length === 0 && arranged.length === 0) return { save: next, toasts, fresh: false }
+  let out = toasts
+  for (const id of fresh) {
+    const k = keepsakeById(id)
+    if (k) out = pushToast(out, `The couch keeps it — ${k.name}`, k.blurb)
+  }
+  // Arrangements that were not also minted just now are almost always a
+  // migrating save catching up on chapters it already lived. One toast per
+  // keepsake would bury the screen on that first load, so more than one
+  // collapses into a single line — the Couch tab is where the detail lives.
+  const quiet = arranged.filter(id => !fresh.includes(id))
+  if (quiet.length === 1) {
+    const k = keepsakeById(quiet[0])
+    if (k) out = pushToast(out, `${k.name} is on the couch`, k.surface)
+  } else if (quiet.length > 1) {
+    const names = quiet.map(id => keepsakeById(id)?.name).filter(Boolean)
+    out = pushToast(out, 'The couch was keeping things', `${names.join(', ')} — all on the couch now. Rearrange them any time.`)
+  }
+  return { save: next, toasts: out, fresh: true }
+}
+
 /** Revelations key on lifeHigh — the story axis — so they genuinely survive
  * Wake & Bake (the § 9.2 re-key; the old peakHigh filter lost them on every
  * prestige). Each threshold crosses exactly once in a life. */
@@ -97,6 +130,7 @@ export interface GameStore extends SaveState {
   buyGenerator: (id: string) => void
   buyJob: (id: string) => void
   buyRitual: (id: string) => void
+  toggleKeepsake: (id: string) => void
   setTab: (t: Tab) => void
   setBuyQty: (q: BuyQty) => void
   toggleSound: () => void
@@ -140,21 +174,26 @@ export const useGame = create<GameStore>()((set, get) => ({
       return
     }
     const elapsed = Math.max(0, (now - stored.lastTick) / 1000)
-    const { save: progressed, summary } = applyOffline(stored, elapsed)
+    // Automation runs on the same clock whether the app was open or not, and
+    // at its own boundaries rather than all at the end.
+    const { save: progressed, summary } = applyOfflineWithAutomation(stored, elapsed)
     const withTick = { ...progressed, lastTick: now }
     const ach = collectAchievements(withTick, [])
+    // Catch the couch up only for a save that has never had one arranged —
+    // otherwise a reload silently refills a place the player emptied.
+    const couch = collectCouch(ach.save, ach.toasts, ach.save.couchSeeded ? 'fresh-only' : 'fill')
     setMuted(!withTick.sound)
     requestPersistence()
     set({
-      ...ach.save,
+      ...couch.save,
       ...uiDefaults,
       ready: true,
-      toasts: ach.toasts,
+      toasts: couch.toasts,
       newsIndex: Math.floor(Math.random() * NEWS_LINES.length),
       newsAt: performance.now(),
       offline: summary,
       // Offline progress emits at most ONE chapter turn — the final stage.
-      chapterTurn: stageCrossed(stored.lifeHigh, ach.save.lifeHigh),
+      chapterTurn: stageCrossed(stored.lifeHigh, couch.save.lifeHigh),
     })
   },
 
@@ -167,20 +206,25 @@ export const useGame = create<GameStore>()((set, get) => ({
   hit: (x, y) => {
     ensureAudio()
     const s = get()
-    const r = computeRates(s)
+    // What this press ACTUALLY pays — an echo doubles it and a banked return
+    // gift rides along, and the floater is the display surface both keepsakes
+    // name. Reading hitPower alone under-reported it. (Codex CL#19 R1, P2.)
+    const preview = hitPreview(pickSave(s))
     const quote = INTERJECTIONS[Math.floor(Math.random() * INTERJECTIONS.length)]
     const floaters: Floater[] = [
       ...s.floaters,
-      { id: `f${serial++}`, text: `+${r.hitPower < 10 ? r.hitPower.toFixed(1) : Math.round(r.hitPower)}`, kind: 'nug' as const, x, y, born: performance.now() },
+      { id: `f${serial++}`, text: `+${preview.nugs < 10 ? preview.nugs.toFixed(1) : fmt(preview.nugs)}`, kind: 'nug' as const, x, y, born: performance.now() },
       { id: `f${serial++}`, text: quote, kind: 'quote' as const, x: x + (Math.random() * 40 - 20), y: y - 18, born: performance.now() },
     ].slice(-14)
-    const next = applyHit(pickSave(s))
+    const base = pickSave(s)
+    const next = applyHit(base)
     const ach = collectAchievements(next, s.toasts)
-    const mood = collectRevelations(s.lifeHigh, ach.save, ach.toasts)
-    const turn = stageCrossed(s.lifeHigh, ach.save.lifeHigh)
+    const couch = collectCouch(ach.save, ach.toasts, arrangeModeFor(base, ach.save), fillBudgetFor(base, ach.save))
+    const mood = collectRevelations(s.lifeHigh, couch.save, couch.toasts)
+    const turn = stageCrossed(s.lifeHigh, couch.save.lifeHigh)
     if (s.sound) puffSound()
-    if ((ach.fresh || mood.fresh || turn) && s.sound) chimeSound()
-    set({ ...ach.save, floaters, toasts: mood.toasts, hitPulse: 1, ...(turn ? { chapterTurn: turn } : {}) })
+    if ((ach.fresh || couch.fresh || mood.fresh || turn) && s.sound) chimeSound()
+    set({ ...couch.save, floaters, toasts: mood.toasts, hitPulse: 1, ...(turn ? { chapterTurn: turn } : {}) })
   },
 
   buyGenerator: (id) => {
@@ -213,6 +257,16 @@ export const useGame = create<GameStore>()((set, get) => ({
     set({ ...ach.save, toasts: ach.toasts })
   },
 
+  /** Arranging the couch: free, instant, reversible, no cost of any kind. */
+  toggleKeepsake: (id) => {
+    const s = get()
+    const base = pickSave(s)
+    const next = base.equipped.includes(id) ? unequipKeepsake(base, id) : equipKeepsake(base, id)
+    if (!next) return
+    if (s.sound) blipSound()
+    set({ ...next })
+  },
+
   setTab: (tab) => set({ tab }),
   setBuyQty: (buyQty) => set({ buyQty }),
 
@@ -226,11 +280,14 @@ export const useGame = create<GameStore>()((set, get) => ({
   tick: (dt) => {
     const s = get()
     if (!s.ready || !s.booted) return
-    const progressed = { ...advance(pickSave(s), dt), lastTick: Date.now() }
+    const base = pickSave(s)
+    const advanced = advance(base, dt)
+    const progressed = { ...applyAutoBuy(base, advanced), lastTick: Date.now() }
     const ach = collectAchievements(progressed, s.toasts)
-    const mood = collectRevelations(s.lifeHigh, ach.save, ach.toasts)
-    const turn = stageCrossed(s.lifeHigh, ach.save.lifeHigh)
-    if ((ach.fresh || mood.fresh || turn) && s.sound) chimeSound()
+    const couch = collectCouch(ach.save, ach.toasts, arrangeModeFor(base, ach.save), fillBudgetFor(base, ach.save))
+    const mood = collectRevelations(s.lifeHigh, couch.save, couch.toasts)
+    const turn = stageCrossed(s.lifeHigh, couch.save.lifeHigh)
+    if ((ach.fresh || couch.fresh || mood.fresh || turn) && s.sound) chimeSound()
     const now = performance.now()
     const rotateNews = now - s.newsAt > 14000
     // While a chapter turn owns the screen the toast stack is hidden — hold
@@ -238,7 +295,7 @@ export const useGame = create<GameStore>()((set, get) => ({
     // dismiss handler re-stamps survivors for their full display window.
     const turnActive = turn ?? s.chapterTurn
     set({
-      ...ach.save,
+      ...couch.save,
       toasts: turnActive ? mood.toasts : mood.toasts.filter(t => now - t.born < TOAST_MS),
       floaters: s.floaters.filter(f => now - f.born < FLOATER_MS),
       hitPulse: s.hitPulse > 0 ? Math.max(0, s.hitPulse - 0.08) : 0,
@@ -284,20 +341,21 @@ export const useGame = create<GameStore>()((set, get) => ({
     if (!parsed) return false
     const now = Date.now()
     const elapsed = Math.max(0, (now - parsed.lastTick) / 1000)
-    const { save: progressed, summary } = applyOffline(parsed, elapsed)
+    const { save: progressed, summary } = applyOfflineWithAutomation(parsed, elapsed)
     const withTick = { ...progressed, lastTick: now, booted: true }
     const ach = collectAchievements(withTick, [])
+    const couch = collectCouch(ach.save, ach.toasts, ach.save.couchSeeded ? 'fresh-only' : 'fill')
     setMuted(!withTick.sound)
     set({
-      ...ach.save,
+      ...couch.save,
       ...uiDefaults,
       ready: true,
-      toasts: pushToast(ach.toasts, 'Save imported', 'The couch remembers everything.'),
+      toasts: pushToast(couch.toasts, 'Save imported', 'The couch remembers everything.'),
       newsIndex: Math.floor(Math.random() * NEWS_LINES.length),
       newsAt: performance.now(),
       offline: summary,
       // As on hydrate: at most one final turn for any crossings while away.
-      chapterTurn: stageCrossed(parsed.lifeHigh, ach.save.lifeHigh),
+      chapterTurn: stageCrossed(parsed.lifeHigh, couch.save.lifeHigh),
     })
     get().flushSave()
     return true

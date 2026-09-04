@@ -9,10 +9,12 @@
     "build:shell": "VITE_BASE=./ pnpm build && cap sync android",
     "preview": "vite preview",
     "test": "vitest run",
-    "check": "tsc --noEmit && vitest run && vite build",
+    "check": "tsc --noEmit && vitest run && vite build && tsx tools/check-store-preview.ts",
     "check:shell": "tsx tools/check-shell-assets.ts",
     "check:apk-signer": "tsx tools/check-apk-signer.ts",
-    "sim": "tsx tools/simulate.ts"
+    "sim": "tsx tools/simulate.ts",
+    "check:store-preview": "tsx tools/check-store-preview.ts",
+    "build:store-preview": "VITE_STORE_PREVIEW=1 vite build --outDir dist-store-preview"
   },
   "dependencies": {
     "@capacitor/android": "8.5.0",
@@ -29,6 +31,7 @@
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.1",
     "@vitejs/plugin-react": "^5.0.4",
+    "playwright": "1.55.0",
     "tailwindcss": "^4.1.16",
     "tsx": "^4.23.12",
     "typescript": "^5.9.3",

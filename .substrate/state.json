@@ -49,10 +49,10 @@
   },
   "review_log": [],
   "session_anchor": {
-    "branch": "main",
-    "epoch": 1787338353.934516,
-    "head": "1e8c685640898dbd1010d832cfb69ecc08190506",
-    "ts": "2026-08-21T18:52:33+00:00"
+    "branch": "claude/couch-legend-design-arch-iwpo96",
+    "epoch": 1788524275.74693,
+    "head": "d877ed0b611418f35ad9e578785b012a844d1992",
+    "ts": "2026-09-04T12:17:55+00:00"
   },
   "session_count": 0,
   "slot_values": {

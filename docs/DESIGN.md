@@ -220,8 +220,13 @@ known.
 ## 8 · Open design questions (OPEN — decided later, on purpose)
 
 1. **Clarity spend** — a small "Morning Routine" shop that spends Clarity on
-   permanent perks would deepen prestige. Deliberately not designed yet; the
-   passive multiplier is enough until real play data exists.
+   permanent perks would deepen prestige. Still OPEN, and now with a reason to
+   do it: Cookie Clicker players describe a prestige layer that is only a flat
+   multiplier on the same loop as "killing the unique experience of the run",
+   and Clarity is currently exactly that shape. Any design must keep § 9.6
+   rail 6 (banked Clarity strictly grows every cycle) — an outright spend
+   breaks it as written, so the likely shape is allocation, not expenditure.
+   See § 11's family portfolio for where it sits.
 2. **Balance pass** — RESOLVED 2026-08-21: the sim-tested knee+cap curve is
    the adopted default (identical through the playtested hours, braking the
    measured late-game runaway; § 9.6's rails are the regression bounds).
@@ -509,5 +514,231 @@ max-buy inversion, milestone doubling (and its adopted cap), the clarity knee,
 decay and offline shapes including the cap/efficiency ladder, prestige gating
 and yield, lifeHigh accrual/migration/prestige-carry, stage-table invariants
 and stage gates, the presentation registry, achievement multipliers, content
-invariants (unique ids, monotonic unlocks, ladder lengths). Anything touching
+invariants (unique ids, monotonic unlocks, ladder lengths), and — since
+2026-09-04 — the couch: one keepsake per chapter after the first, always
+fewer places than keepsakes, a bare couch producing byte-identical rates,
+kinds never stacking, deterministic hit echo, bounded auto-buy catch-up,
+rate-neutral v2→v3 migration, and the § 11.4 rate-neutral-early-chapters rule
+that keeps rail 5a intact. Anything touching
 balance or pacing also carries simulator evidence (`pnpm sim`, § 9.6).
+
+
+## 11 · The couch: keepsakes (DECIDED 2026-09-04 — shipped)
+
+> **Why this section exists.** § 9 gave the game eighteen permanent chapters.
+> It did not give them eighteen different things to *do*. Measured at
+> `d877ed0` with `tools/stage-evolution.ts` (an instrument that imports the
+> live content tables and passes 6 known positives and 5 known negatives):
+> **2 of 18 stages gate any new content row, and 0 of 18 introduce a new
+> mechanic, verb or system.** Measured from the committed `adopted` simulator
+> dataset: a balanced player first-buys **all 38 shop rows within 78
+> minutes**, after which **99.6 % of the 14-day authored story** passes with
+> no new purchasable row, and **13 of the 18 chapters arrive with nothing new
+> to buy**. Sixteen chapters were the same loop with new scenery.
+>
+> **The same instrument, re-run after this change: `introduce a new MECHANIC`
+> goes from 0/18 to 14/18**, with a further **3/18** *deepening* a shape an
+> earlier chapter introduced — so **17 of 18 chapters deliver something new**
+> and only First Light, the bare couch, delivers nothing. Its self-test grew
+> from 13 to **22** checks across the same work, so the after-number is
+> measured by a stricter instrument than the before-number.
+>
+> *(An earlier version of this line said 17/18 introduce a mechanic. That
+> conflated a stronger value of an existing shape with a new one — Codex
+> CL#19 R3, P1, conceded; the instrument now separates them and every
+> published copy of the inflated figure was corrected.)*
+>
+> Keepsakes are the answer to that, and they are deliberately not a fourth
+> economy. Research support and its limits:
+> [`research/2026-09-04-long-form-idle-research.md`](research/2026-09-04-long-form-idle-research.md).
+> Balance evidence, before and after, with the one stated rail breach:
+> [`sim/2026-09-04-couch-balance.md`](sim/2026-09-04-couch-balance.md).
+> The wider plan this is phase A of — the six-family portfolio, the full
+> 18-stage matrix and what comes next:
+> [`planning/2026-09-04-long-form-redesign.md`](planning/2026-09-04-long-form-redesign.md).
+
+### 11.1 The shape
+
+- **Minting.** Entering a chapter for the first time leaves **one keepsake**
+  with the couch, permanently. Chapters 2–18 → **17 keepsakes**. Chapter 1 is
+  the bare couch. Keepsakes are never bought, never farmed, never random and
+  never missable: reaching the chapter is the only way to have one, so no
+  amount of grinding produces one and missing a day costs nothing.
+- **Slots.** The couch has shelf space, opened by six chapters
+  (`SLOT_STAGES`) → **6 places for 17 keepsakes**, plus one net place from
+  The Accession Card. There are always fewer places than keepsakes, pinned by
+  test at every point in the life — that gap is the decision.
+- **Arranging.** Free, instant, reversible, unlimited. No cost, no cooldown,
+  no lost progress. *(Antimatter Dimensions charges a Reality to unequip a
+  glyph; this game deliberately does not — the no-punishment pillar wins.)*
+- **Auto-arrange.** New keepsakes fill FREE places by themselves and never
+  displace a player's choice, so a player who never opens the Couch tab is
+  never worse off for ignoring it. It skips anything already superseded.
+- **Permanence.** Wake & Bake keeps every keepsake and the arrangement. The
+  afternoon resets; the couch does not.
+
+### 11.2 The effect vocabulary — ten shapes, no new currency
+
+Every effect transforms a system that shipped before keepsakes did:
+`work-nugs` and `grow-cash` cross-wire the two shelves · `buzz-floor` holds
+decay above a share of the afternoon's own peak (it can never *add* buzz) ·
+`return-gift` banks production while away and pays it on the first hit back ·
+`offline-uncap` removes the offline cap at a deliberately worse flat rate ·
+`hit-echo` lands every Nth hit twice · `milestone-early` shortens one shelf's
+doubling step · `auto-buy` buys the cheapest affordable row on a shelf on a
+clock · `clarity-yield` raises the Wake & Bake payout · `shelf` grants places.
+
+Two rules keep the set legible:
+1. **Kinds never stack; the strongest of a kind wins.** A later chapter's
+   keepsake therefore RETIRES an earlier one and frees its place — the family
+   gains depth instead of gaining rows. The UI marks the weaker superseded.
+2. **Everything is deterministic.** `hit-echo` is "every Nth hit", not a dice
+   roll, so the seeded simulator and the recorded replay traces both survive.
+   *(Melvor Idle players name RNG-gated loss as punishment felt without cause;
+   determinism is a design choice here, not only an engineering one.)*
+
+### 11.3 Where it lives
+
+`content.ts` (`KEEPSAKES`, `SLOT_STAGES`, `baseSlotsFor`, `keepsakesEarnedBy`)
+→ `engine.ts` (`keepsakeEffects` folded into `computeRates`, `advance`,
+`applyOffline`, `prestigeGain`) → `actions.ts` (`collectKeepsakes`,
+`equipKeepsake`, `unequipKeepsake`, `applyAutoBuy`) → `store.ts` / `save.ts`
+→ the **Couch** tab. The simulator consumes the same actions; there is no
+second implementation. Save is **v3** (`keepsakes`, `equipped`, `peakBuzz`,
+`returnGift`), and the v2→v3 migration grants the chapters a save already
+lived while arranging **none** of them — so migration is rate-neutral by
+construction and the recorded replay fixtures keep validating the seam they
+recorded (`replay.ts` calls `collectAchievements` and deliberately not
+`collectKeepsakes`).
+
+### 11.4 What the evidence says (`couch` dataset, 27 runs, 2026-09-04)
+
+The `adopted-*` dataset is frozen as the pre-keepsake **before**; `couch-*` is
+the live state. Against the § 9.6 rails:
+
+| rail | before | after | verdict |
+|---|---|---|---|
+| 1 · reachability | balanced 12.5 d | **12.0 d** | holds; the ~2-week north star is protected |
+| 3 · attended dead time | worst 44.8 m (arc 3, bound 45 m) | **38.0 m** | improved where it was tightest |
+| 4 · check-ins with a move (≥ 90 %) | balanced 96.9 % | **98.0 %** | improved; all playing lanes ≥ 97.5 % |
+| 5a · felt-upgrade floor (≥ 2 %) | 0 of 24 runs below | **1 of 27** | see the boundary below |
+| 6 · rebuild ≤ 0.95 (patient lanes) | 0.88 / 0.92 / 0.90 | **0.88 / 0.92 / 0.90** | unchanged |
+
+**Stated boundary, not hidden:** the one sub-2 % reading is the *new*
+`keepsake-optimizer` archetype, one seed of three, two rows of 38
+(`collective` 0.14 %, `dispensary` 0.89 %, both at 1.25 h). It is the
+cross-wire diluting a global tile for a player who deliberately curates the
+couch; the affected rows' own displayed output still moves from "idle nugs"
+to a real rate on that purchase. An earlier version of this feature broke the
+same rail far more widely (idle-only fell to **0.3 %**) by minting the
+cross-wire at chapter 2; it now mints at chapter 5, and a test pins that
+chapters 2–4 may carry only rate-neutral effect kinds.
+
+**The load-bearing result:** arranging the couch well is worth a great deal of
+currency and *nothing* in story progress. `keepsake-optimizer` ends 14 days
+with **2.3× the nugs and 1 690× the cash** of the auto-arranging `balanced`
+lane, and **0.98× its lifeHigh** — a slightly *slower* life, not a faster one.
+Optimising pays inside an afternoon; it is not a route through the story,
+which is what keeps idle-first play whole.
+
+**Automation spends spare change only.** A row buys itself only while it costs
+at most 25 % of the balance (`AUTO_BUY_RESERVE_SHARE`), and that is a **hard
+bound per catch-up, not per round** — the purse is taken once and spent down,
+because a per-round quarter would compound to 5.6 % over ten rounds. The bound
+is not decoration: with both auto-buy keepsakes equipped and no reserve, the
+optimiser lane's check-ins-offering-a-move fell to **64.7 %** against a 90 %
+rail, because the room had already bought everything the returning player
+might have. The rail stayed where it was and the mechanic changed.
+
+**An absence replays automation at its own boundaries.** `applyOfflineWithAutomation`
+splits the away window at the auto-buy interval so a row bought early produces
+for the rest of the absence, rather than every purchase landing at the end
+against departure rates. **The offline cap is applied once, to the whole
+absence, before any splitting** — segmenting an uncapped elapsed and letting
+each piece re-cap would multiply the cap, and a test pins that it does not.
+
+**One defect the simulator could not have found.** The behaviour smoke against
+the real bundle caught that a player could not take a keepsake off at all:
+auto-arrange refilled every free place on every 50 ms tick. The shipped rule
+fills a place **the story opened** and leaves alone a place **the player
+emptied** (`arrangeModeFor`); the intermediate fix, which placed only freshly
+minted keepsakes, was measured to break rail 5a far more widely (idle-only
+0.0 %) and was rejected rather than shipped.
+
+## 12 · Monetization (DESIGNED 2026-09-04 — mockups only, no billing)
+
+**Nothing in the repository can take money.** There is no billing SDK, no
+receipt verification, no backend and no store-console object. `store-catalog.ts`
+holds the catalog and a `BillingAdapter` interface whose only implementation
+is `mockBilling`, which has no code path that can complete a transaction. The
+preview is behind a **compile-time** flag: an ordinary `pnpm build` — what CI,
+the deployed site and the Android shell all run — evaluates
+`STORE_PREVIEW_ENABLED` to `false` and the whole tree is dead code.
+`pnpm check:store-preview` asserts the emitted bytes and is proven to fire
+against a build where the flag is on.
+
+### 12.1 The philosophy, and the evidence under it
+
+- **The authored story is never for sale.** No chapter, no mechanic, no pacing.
+- **Permanent, non-gating products only.** Measured in this genre: players
+  recommend *permanent* purchases to each other and call *time-limited* boosts
+  "whale traps" (Idle Slayer); a collection resented for expecting "perfect
+  everything" sits beside a cosmetic set praised precisely because it is "not
+  necessary content" (same game, same review corpus).
+- **Never sold** (`NEVER_SOLD`, kept as data so a future session must delete a
+  line rather than merely forget a principle): the story · time or skips ·
+  energy or refills · randomised items · timed boosts · streak insurance · a
+  better rate than someone who never spent.
+- **No energy, ever.** The genre's own idle time already *is* "a natural
+  energy system without the need for an energy currency" (Kongregate, via
+  Game Developer); selling refills would regress the genre, not monetize it.
+- **No randomised paid items**, so Apple's 3.1.1 loot-box odds-disclosure rule
+  is not applicable by design rather than by omission.
+
+### 12.2 The recommended catalog (mock prices, not commitments)
+
+Three permanent, non-gating products plus a bundle: **Keep the Lights On**
+($4.99, a Chronicle bookplate) · **The Illustrated Chronicle** ($6.99, the
+chapter paintings full-screen and the postcards) · **The Reupholstery Kit**
+($2.99, couch and room colourways) · **The Whole Afternoon** ($9.99, all
+three). The band is chosen from prices actually read on live store pages in
+comparable idle games: **$1.99** (Universal Paperclips iOS) · **$2.99**
+(Kittens Game iOS) · **$4.99** (Cookie Clicker Steam, and its ad-free Android
+build) · **$9.99** (Melvor Idle, which ships zero microtransactions).
+
+### 12.3 Store requirements, read from the live policy pages (2026-09-04)
+
+These are what a real launch would face. They are **not** blockers for
+anything in this repository today.
+
+- **Apple.** The controlling drug guideline is **1.4.3 Physical Harm**, and
+  its operative verb is *encourage*, not *depict*. **5.1.1(ix)**'s
+  legal-entity and geo-restriction requirements bind apps that facilitate
+  real cannabis *sale/service*, which this is not. **3.1.1** requires IAP for
+  any in-app unlock; **3.1.1(a)** external purchase links need no entitlement
+  on the **US storefront only**.
+- **Apple age rating — the number that matters.** The scale is now
+  **4+/9+/13+/16+/18+**; *17+ no longer exists*. The
+  "Alcohol, Tobacco, or Drug Use or References" descriptor merges references
+  and depictions, and maps **Infrequent → 13+, Frequent → 18+, with no 16+
+  tier for this descriptor at all**. Couch Legend's core loop is a character
+  getting progressively elevated, so the honest answer is **Frequent → 18+**.
+  Any store mockup shows an 18+ badge, never 17+.
+- **Google Play — and an honest gap.** The Marijuana clause bans *facilitating
+  the sale* of marijuana, not depicting it. **But there is no written
+  fictional-game exemption for drugs**: the Violence subsection on the same
+  page explicitly allows "fictional violence in the context of a game" and the
+  drug subsections carry no equivalent sentence. Do not tell anyone Google
+  explicitly permits fictional drug depiction — the margin rests on the clause
+  being scoped to commerce, not on a carve-out. Separately absolute: no real
+  cultivation instructions, and **no character depicted as a minor** using,
+  growing or dealing. The IARC questionnaire must be answered honestly;
+  misrepresentation is itself sanctionable.
+
+### 12.4 The seven preview states
+
+Store landing · offer cards · offer detail · purchase-confirmation handoff ·
+result / owned · restore purchases · unavailable-offline. Every state carries
+the same unmissable "DESIGN PREVIEW · NO CHARGE" banner and a provenance line
+naming the adapter and whether the connection is live. Review screenshots at
+412×915, 1365×900 and 320×844: `node tools/review-shots.mjs dist-store-preview <out>`.

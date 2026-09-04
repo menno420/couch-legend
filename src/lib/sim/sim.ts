@@ -10,9 +10,11 @@
 // exactly once at return, as the store does on hydrate.
 
 import {
-  advance, applyHit, applyOffline, applyPrestige, collectAchievements,
-  computeRates, DEFAULT_TUNING, defaultSave, prestigeGain, purchaseGenerator,
-  purchaseJob, purchaseRitual, type SaveState, type Tuning,
+  advance, applyAutoBuy, applyHit, applyOfflineWithAutomation,
+  applyPrestige, arrangeModeFor,
+  collectAchievements, collectKeepsakes, computeRates, DEFAULT_TUNING,
+  defaultSave, equipKeepsake, prestigeGain, purchaseGenerator, purchaseJob,
+  purchaseRitual, unequipKeepsake, type SaveState, type Tuning,
 } from '../actions'
 import { GENERATORS, JOBS, MOODS, RITUALS, stageUnlocked, type StageDef } from '../content'
 
@@ -42,6 +44,14 @@ export interface Policy {
   buy: (s: SaveState, tuning: Tuning) => BuyAction | null
   /** Whether to Wake & Bake right now given the pending Clarity gain. */
   prestigeWhen: (s: SaveState, gain: number) => boolean
+  /**
+   * How this player arranges the couch (DESIGN § 11). Returns the keepsake
+   * ids it wants on the couch, or null to leave the arrangement alone.
+   * OMITTING this is the honest default and models the majority case: a
+   * player who never opens the Couch tab and lets auto-arrange fill the
+   * empty slots. A lane that DOES arrange exists to bound the other end.
+   */
+  arrange?: (s: SaveState) => string[] | null
 }
 
 export interface SimEvent { t: number; kind: string; id?: string; n?: number }
@@ -87,6 +97,8 @@ export interface SimResult {
   series: SeriesPoint[]
   /** First-reach times: `mood:<id>`, `stage:<id>`, `unlock:<id>`, `prestige:1`. */
   reach: Record<string, number>
+  /** Keepsakes on the couch at the horizon, and how many the life earned. */
+  keepsakes?: { earned: number; equipped: string[]; slots: number }
   /** Max attended dead stretch (s) per stage index actually visited. */
   deadMax: Record<number, number>
   /** Every attended dead stretch, for re-bucketing against a moved stage table. */
@@ -240,8 +252,29 @@ export function runSim(opts: SimOptions): SimResult {
     }
   }
 
+  /** Put the policy's chosen set on the couch, one legal move at a time. */
+  const arrangeCouch = () => {
+    if (!policy.arrange) return
+    const want = policy.arrange(s)
+    if (!want) return
+    for (const id of s.equipped) {
+      if (!want.includes(id)) s = unequipKeepsake(s, id) ?? s
+    }
+    for (const id of want) {
+      if (s.equipped.includes(id)) continue
+      s = equipKeepsake(s, id) ?? s
+    }
+  }
+
   const decisionPass = (attended: boolean) => {
+    const passStart = s
     s = collectAchievements(s).save
+    // The couch mints on the story axis, so this runs everywhere the game
+    // runs it — never inside advance(), which the recorded replay traces use.
+    // Mode comes from the same rule the store uses: fill a place a new
+    // chapter opened, leave alone a place a player emptied.
+    s = collectKeepsakes(s, arrangeModeFor(passStart, s)).save
+    arrangeCouch()
     // Sync the cursors to the state the elapsed chunk produced BEFORE any
     // purchase is recorded: a stage crossed during the chunk must be the
     // stage its newly-unlocked rows' first-buys carry (Codex R3 — the
@@ -270,6 +303,7 @@ export function runSim(opts: SimOptions): SimResult {
     }
     if (purchases > 0) events.push({ t, kind: 'buy-pass', n: purchases })
     s = collectAchievements(s).save
+    s = collectKeepsakes(s, arrangeModeFor(passStart, s)).save
     let didPrestige = false
     const gain = prestigeGain(s, tuning)
     if (gain > 0 && policy.prestigeWhen(s, gain)) {
@@ -291,6 +325,7 @@ export function runSim(opts: SimOptions): SimResult {
       events.push({ t, kind: 'prestige', n: gain })
       prevPeak = s.peakHigh
       s = collectAchievements(applyPrestige(s, t * 1000, tuning) ?? s).save
+      s = collectKeepsakes(s, 'fill').save
       cursors.mood = 0
       cycleStart = t
       rebuildPending = { target: prevPeak, since: t, row: prestiges.length - 1 }
@@ -324,7 +359,8 @@ export function runSim(opts: SimOptions): SimResult {
       const sliceEnd = Math.min(t + policy.decisionEvery, until)
       while (t < sliceEnd) {
         const step = Math.min(dt, sliceEnd - t)
-        s = advance(s, step, tuning)
+        const before = s
+        s = applyAutoBuy(before, advance(before, step, tuning), tuning)
         t += step
         while (t >= nextHitAt) {
           s = applyHit(s, tuning)
@@ -351,11 +387,17 @@ export function runSim(opts: SimOptions): SimResult {
       }
       if (t >= horizon) break
       const away = Math.min(policy.session.away, horizon - t)
-      const { save: back } = applyOffline({ ...s, lastTick: t * 1000 }, away, tuning)
+      // The same scheduled replay the store's hydrate uses, so the simulator
+      // measures the automation the player actually gets — not a version that
+      // buys nothing while away (R1) nor one that buys it all at the end (R2).
+      const { save: back } = applyOfflineWithAutomation({ ...s, lastTick: t * 1000 }, away, tuning)
       s = back
       t += away
       nextHitAt = policy.clickHz > 0 ? t + hitGap() : Infinity
       s = collectAchievements(s).save
+      // Returning from away is a load-like moment, exactly as the store's
+      // hydrate is: catch the couch up on any chapter crossed while gone.
+      s = collectKeepsakes(s, 'fill').save
       checkCrossings()
       checkIns.total++
       const pass = decisionPass(false)
@@ -387,6 +429,11 @@ export function runSim(opts: SimOptions): SimResult {
   return {
     policy: policy.name, seed, dt, horizon,
     events, series, reach, deadMax, deadSpans, checkIns, impacts, prestiges,
+    keepsakes: {
+      earned: s.keepsakes.length,
+      equipped: s.equipped,
+      slots: computeRates(s, tuning).keepsakes.slots,
+    },
     final: {
       t, high: s.high, lifeHigh: s.lifeHigh, nugs: s.nugs, cash: s.cash, buzz: s.buzz,
       enlightenment: s.enlightenment, stage: cursors.stage,
