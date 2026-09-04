@@ -132,6 +132,13 @@ export function applyPrestige(s: SaveState, now = Date.now(), t: Tuning = DEFAUL
     // restarting a run (DESIGN § 11.3).
     keepsakes: s.keepsakes,
     equipped: s.equipped,
+    // Both of these are life-long too, and the defaultSave spread would reset
+    // them: manualHits is the echo's cadence (promised across the life, not
+    // the afternoon), and couchSeeded records that the player has arranged
+    // the couch at all — losing it would refill a deliberately cleared couch
+    // on the next reload. (Codex CL#19 R2, P2.)
+    manualHits: s.manualHits,
+    couchSeeded: s.couchSeeded,
     sound: s.sound,
     booted: true,
     startedAt: s.startedAt,
@@ -285,15 +292,58 @@ export const AUTO_BUY_RESERVE_SHARE = 0.25
  * boring choice a player would not bother making by hand.
  */
 /**
- * Settle the automatic purchases an absence is owed.
+ * Apply an absence, replaying the couch's automation AT ITS OWN BOUNDARIES.
  *
- * The couch's automation promises the same schedule "watched or not", and
- * `applyOffline` advances `playTime` — so the away transition owes exactly the
- * same bounded catch-up an attended tick does. Without this, a Window Placard
- * bought nothing at all while the app was closed. (Codex CL#19 R1, P1.)
+ * The naive version ran `applyOffline` over the whole absence and only then
+ * settled every owed purchase, so a row bought at the first interval produced
+ * nothing for the rest of the absence and the returning player was quietly
+ * short-changed against the same schedule played watched. (Codex CL#19 R2.)
+ *
+ * The absence is instead split at the auto-buy interval and each segment is
+ * advanced, then bought against. **The offline cap is applied ONCE, to the
+ * whole absence, before any splitting** — segmenting an uncapped elapsed and
+ * letting each piece re-cap would multiply the cap, which is an exploit, not
+ * a fidelity fix.
  */
-export function applyOfflineAutoBuy(before: SaveState, after: SaveState, t: Tuning = DEFAULT_TUNING): SaveState {
-  return applyAutoBuy(before, after, t)
+export function applyOfflineWithAutomation(
+  s: SaveState,
+  elapsed: number,
+  t: Tuning = DEFAULT_TUNING,
+): { save: SaveState; summary: OfflineSummary | null } {
+  const rates = computeRates(s, t)
+  const every = [rates.keepsakes.autoBuyGrowEvery, rates.keepsakes.autoBuyWorkEvery]
+    .filter((x): x is number => x != null && x > 0)
+    .reduce((a, b) => Math.min(a, b), Infinity)
+  const capped = Math.min(elapsed, rates.offlineCap)
+  const rounds = Number.isFinite(every) ? Math.min(AUTO_BUY_CATCHUP_CAP, Math.floor(capped / every)) : 0
+  if (rounds <= 0) return applyOffline(s, elapsed, t)
+
+  // The whole capped window, split into equal segments summing to exactly it.
+  const segment = capped / (rounds + 1)
+  let cur = s
+  let seconds = 0
+  let nugs = 0
+  let cash = 0
+  let high = 0
+  for (let i = 0; i <= rounds; i++) {
+    const before = cur
+    const { save: advanced, summary } = applyOffline({ ...cur, lastTick: 0 }, segment, t)
+    cur = advanced
+    if (summary) {
+      seconds += summary.seconds
+      nugs += summary.nugs
+      cash += summary.cash
+      high += summary.high
+    }
+    if (i < rounds) {
+      // One scheduled purchase per boundary, on the state that segment built.
+      cur = applyAutoBuy({ ...before, playTime: 0 }, { ...cur, playTime: every }, t)
+    }
+  }
+  return {
+    save: cur,
+    summary: seconds > 0 ? { seconds, nugs, cash, high, capped: elapsed > rates.offlineCap } : null,
+  }
 }
 
 export function applyAutoBuy(prev: SaveState, next: SaveState, t: Tuning = DEFAULT_TUNING): SaveState {

@@ -4,7 +4,7 @@ import {
   ARC_NAMES, KEEPSAKES, SLOT_STAGES, STAGES, nextStage,
   stageForLifeHigh, type KeepsakeDef, type KeepsakeEffect,
 } from '../lib/content'
-import { isSuperseded, keepsakeEffects } from '../lib/engine'
+import { isSuperseded, keepsakeEffects, keepsakeSlots } from '../lib/engine'
 import { pickSave } from '../lib/save'
 import { fmt } from '../lib/format'
 import { Button, cx } from './ui'
@@ -88,7 +88,13 @@ export function CouchTab() {
           const on = save.equipped.includes(k.id)
           const dim = on && isSuperseded(k.id, mods)
           const ch = chapterOf(k)
-          const blocked = !on && free === 0
+          // Capacity is judged on the CANDIDATE arrangement, exactly as
+          // `equipKeepsake` judges it — otherwise the Accession Card, which
+          // takes one place and grants two, reads as blocked on a full couch
+          // and the player is made to remove something first for no reason.
+          // (Codex CL#19 R2, P2.)
+          const candidate = [...save.equipped, k.id]
+          const blocked = !on && candidate.length > keepsakeSlots({ lifeHigh: save.lifeHigh, equipped: candidate })
           return (
             <li
               key={k.id}

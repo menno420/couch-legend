@@ -11,7 +11,7 @@ import {
 import {
   applyAutoBuy, applyHit, applyPrestige, arrangeModeFor, collectKeepsakes,
   equipKeepsake, fillBudgetFor, hitPreview, unequipKeepsake, AUTO_BUY_CATCHUP_CAP,
-  AUTO_BUY_RESERVE_SHARE,
+  AUTO_BUY_RESERVE_SHARE, applyOfflineWithAutomation,
 } from '../src/lib/actions'
 import { jobPurchaseImpact } from '../src/lib/purchase-impact'
 import { formatPurchaseImpact } from '../src/lib/purchase-impact-format'
@@ -576,5 +576,102 @@ describe('automation leaves the player their money (rail 4)', () => {
     const after = applyAutoBuy(s, { ...s, playTime: 45 * 500 })
     expect(after.nugs).toBeGreaterThan(GENERATORS[0].baseCost)
     expect(after.cash).toBeGreaterThan(JOBS[0].baseCost)
+  })
+})
+
+describe('the reserve is a hard bound per catch-up, not per round', () => {
+  it('a full catch-up can never spend more than the share of the starting balance', () => {
+    // Per-ROUND the reserve compounds: ten rounds at a quarter each would
+    // leave 5.6 % of the balance. The purse is taken once and spent down.
+    const s = save({
+      high: 1e5, lifeHigh: Infinity, nugs: 1e6, cash: 1e6, playTime: 0,
+      keepsakes: ['window-placard', 'standing-order'], equipped: ['window-placard', 'standing-order'],
+      generators: { tray: 5 }, jobs: { thinker: 5 },
+    })
+    const after = applyAutoBuy(s, { ...s, playTime: 45 * 500 })
+    expect(s.nugs - after.nugs).toBeLessThanOrEqual(s.nugs * AUTO_BUY_RESERVE_SHARE + 1e-6)
+    expect(s.cash - after.cash).toBeLessThanOrEqual(s.cash * AUTO_BUY_RESERVE_SHARE + 1e-6)
+    expect(after.nugs).toBeGreaterThanOrEqual(s.nugs * (1 - AUTO_BUY_RESERVE_SHARE) - 1e-6)
+  })
+
+  it('still buys something when it can', () => {
+    const s = save({
+      high: 1e5, lifeHigh: Infinity, nugs: 1e9, cash: 1e9, playTime: 0,
+      keepsakes: ['window-placard'], equipped: ['window-placard'],
+    })
+    const after = applyAutoBuy(s, { ...s, playTime: 45 * 20 })
+    expect(Object.values(after.generators).reduce((a, b) => a + b, 0)).toBeGreaterThan(0)
+  })
+
+  it('never buys a row the player could not have afforded outright', () => {
+    const s = save({
+      high: 1e5, lifeHigh: Infinity, nugs: 5, cash: 5, playTime: 0,
+      keepsakes: ['window-placard'], equipped: ['window-placard'],
+    })
+    const after = applyAutoBuy(s, { ...s, playTime: 45 * 50 })
+    expect(after.generators).toEqual({})
+    expect(after.nugs).toBe(5)
+  })
+})
+
+describe('review round 2 (Codex CL#19 R2) — regression pins', () => {
+  it('migration validates capacity against the RETAINED arrangement (P2)', () => {
+    // Slots computed from the full list and then sliced could drop the very
+    // shelf keepsake that supplied the extra place.
+    const s = migrateSave({
+      version: 3, high: 10, peakHigh: 10, lifeHigh: STAGES[14].minLifeHigh,
+      keepsakes: KEEPSAKES.map(k => k.id),
+      equipped: [...KEEPSAKES.filter(k => k.id !== 'accession-card').map(k => k.id), 'accession-card'],
+    } as never)
+    expect(s.equipped.length).toBeLessThanOrEqual(keepsakeSlots(s))
+  })
+
+  it('Wake & Bake carries the life-long fields, not just the couch (P2)', () => {
+    const s = save({
+      peakHigh: 1e6, lifeHigh: 1e12, enlightenment: 3,
+      keepsakes: ['exact-change'], equipped: ['exact-change'],
+      manualHits: 4321, couchSeeded: true,
+    })
+    const after = applyPrestige(s, 1)!
+    expect(after.manualHits).toBe(4321)   // the echo cadence is life-long
+    expect(after.couchSeeded).toBe(true)  // a cleared couch stays cleared
+  })
+
+  it('a pre-v3 save cannot claim its couch was already seeded (P2)', () => {
+    const s = migrateSave({
+      version: 2, high: 10, peakHigh: 10, lifeHigh: STAGES[8].minLifeHigh, couchSeeded: true,
+    } as never)
+    expect(s.couchSeeded).toBe(false)
+    // ...so the migration catch-up it needs still runs.
+    expect(collectKeepsakes(s, 'fill').arranged.length).toBeGreaterThan(0)
+  })
+
+  it('offline automation buys at its boundaries, and never multiplies the cap (P2)', () => {
+    const s = save({
+      high: 1e5, lifeHigh: Infinity, nugs: 1e8, cash: 1e8, lastTick: 0,
+      generators: { tray: 20 }, jobs: { thinker: 20 },
+      keepsakes: ['window-placard'], equipped: ['window-placard'],
+    })
+    const cap = computeRates(s).offlineCap
+    const scheduled = applyOfflineWithAutomation(s, cap * 4)
+    // The purchases happen — and early ones produce for the later segments.
+    expect(Object.values(scheduled.save.generators).reduce((a, b) => a + b, 0))
+      .toBeGreaterThan(Object.values(s.generators).reduce((a, b) => a + b, 0))
+    // THE INVARIANT THAT MATTERS: splitting must never let the absence earn
+    // more than one capped window. An upper bound is a single capped window
+    // at the FINAL (richest) rates.
+    const ceiling = computeRates(scheduled.save).nugRate * cap * computeRates(scheduled.save).offlineEff
+      + (scheduled.save.nugs - scheduled.save.nugs)
+    expect(scheduled.summary!.nugs).toBeLessThanOrEqual(ceiling + 1)
+    expect(scheduled.summary!.capped).toBe(true)
+    expect(scheduled.summary!.seconds).toBeLessThanOrEqual(cap * computeRates(s).offlineEff + 1e-6)
+  })
+
+  it('falls back to a plain offline pass when nothing automates', () => {
+    const s = save({ high: 1e5, lifeHigh: Infinity, generators: { tray: 20 }, lastTick: 0 })
+    const a = applyOfflineWithAutomation(s, 3600)
+    const b = applyOffline(s, 3600)
+    expect(a.save.nugs).toBeCloseTo(b.save.nugs, 6)
+    expect(a.summary!.seconds).toBeCloseTo(b.summary!.seconds, 6)
   })
 })

@@ -636,11 +636,20 @@ Optimising pays inside an afternoon; it is not a route through the story,
 which is what keeps idle-first play whole.
 
 **Automation spends spare change only.** A row buys itself only while it costs
-at most 25 % of the balance (`AUTO_BUY_RESERVE_SHARE`). That bound is not
-decoration: with both auto-buy keepsakes equipped and no reserve, the
+at most 25 % of the balance (`AUTO_BUY_RESERVE_SHARE`), and that is a **hard
+bound per catch-up, not per round** — the purse is taken once and spent down,
+because a per-round quarter would compound to 5.6 % over ten rounds. The bound
+is not decoration: with both auto-buy keepsakes equipped and no reserve, the
 optimiser lane's check-ins-offering-a-move fell to **64.7 %** against a 90 %
 rail, because the room had already bought everything the returning player
 might have. The rail stayed where it was and the mechanic changed.
+
+**An absence replays automation at its own boundaries.** `applyOfflineWithAutomation`
+splits the away window at the auto-buy interval so a row bought early produces
+for the rest of the absence, rather than every purchase landing at the end
+against departure rates. **The offline cap is applied once, to the whole
+absence, before any splitting** — segmenting an uncapped elapsed and letting
+each piece re-cap would multiply the cap, and a test pins that it does not.
 
 **One defect the simulator could not have found.** The behaviour smoke against
 the real bundle caught that a player could not take a keepsake off at all:

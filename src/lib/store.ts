@@ -1,10 +1,10 @@
 import { create } from 'zustand'
 import {
-  advance, applyOffline, defaultSave, prestigeGain,
+  advance, defaultSave, prestigeGain,
   type OfflineSummary, type SaveState,
 } from './engine'
 import {
-  applyAutoBuy, applyHit, applyOfflineAutoBuy, applyPrestige, arrangeModeFor,
+  applyAutoBuy, applyHit, applyOfflineWithAutomation, applyPrestige, arrangeModeFor,
   collectKeepsakes, equipKeepsake, fillBudgetFor, hitPreview, purchaseGenerator,
   purchaseJob, purchaseRitual, unequipKeepsake,
   collectAchievements as collectPure, type ArrangeMode,
@@ -174,10 +174,10 @@ export const useGame = create<GameStore>()((set, get) => ({
       return
     }
     const elapsed = Math.max(0, (now - stored.lastTick) / 1000)
-    const { save: progressed, summary } = applyOffline(stored, elapsed)
-    // Automation runs on the same clock whether the app was open or not.
-    const settled = applyOfflineAutoBuy(stored, progressed)
-    const withTick = { ...settled, lastTick: now }
+    // Automation runs on the same clock whether the app was open or not, and
+    // at its own boundaries rather than all at the end.
+    const { save: progressed, summary } = applyOfflineWithAutomation(stored, elapsed)
+    const withTick = { ...progressed, lastTick: now }
     const ach = collectAchievements(withTick, [])
     // Catch the couch up only for a save that has never had one arranged —
     // otherwise a reload silently refills a place the player emptied.
@@ -341,9 +341,8 @@ export const useGame = create<GameStore>()((set, get) => ({
     if (!parsed) return false
     const now = Date.now()
     const elapsed = Math.max(0, (now - parsed.lastTick) / 1000)
-    const { save: progressed, summary } = applyOffline(parsed, elapsed)
-    const settled = applyOfflineAutoBuy(parsed, progressed)
-    const withTick = { ...settled, lastTick: now, booted: true }
+    const { save: progressed, summary } = applyOfflineWithAutomation(parsed, elapsed)
+    const withTick = { ...progressed, lastTick: now, booted: true }
     const ach = collectAchievements(withTick, [])
     const couch = collectCouch(ach.save, ach.toasts, ach.save.couchSeeded ? 'fresh-only' : 'fill')
     setMuted(!withTick.sound)

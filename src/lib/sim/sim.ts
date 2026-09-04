@@ -10,7 +10,8 @@
 // exactly once at return, as the store does on hydrate.
 
 import {
-  advance, applyAutoBuy, applyHit, applyOffline, applyPrestige, arrangeModeFor,
+  advance, applyAutoBuy, applyHit, applyOfflineWithAutomation,
+  applyPrestige, arrangeModeFor,
   collectAchievements, collectKeepsakes, computeRates, DEFAULT_TUNING,
   defaultSave, equipKeepsake, prestigeGain, purchaseGenerator, purchaseJob,
   purchaseRitual, unequipKeepsake, type SaveState, type Tuning,
@@ -386,12 +387,11 @@ export function runSim(opts: SimOptions): SimResult {
       }
       if (t >= horizon) break
       const away = Math.min(policy.session.away, horizon - t)
-      const beforeAway = s
-      const { save: back } = applyOffline({ ...s, lastTick: t * 1000 }, away, tuning)
-      // Automation settles the absence here, exactly as the store's hydrate
-      // does — otherwise the simulator measures a Window Placard that buys
-      // nothing at all while the player is away. (Codex CL#19 R1, P1.)
-      s = applyAutoBuy(beforeAway, back, tuning)
+      // The same scheduled replay the store's hydrate uses, so the simulator
+      // measures the automation the player actually gets — not a version that
+      // buys nothing while away (R1) nor one that buys it all at the end (R2).
+      const { save: back } = applyOfflineWithAutomation({ ...s, lastTick: t * 1000 }, away, tuning)
+      s = back
       t += away
       nextHitAt = policy.clickHz > 0 ? t + hitGap() : Infinity
       s = collectAchievements(s).save

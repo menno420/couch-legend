@@ -104,6 +104,11 @@ export function migrateSave(raw: Partial<SaveState>): SaveState {
   if (fromVersion >= 3) {
     merged.keepsakes = Array.isArray(raw.keepsakes) ? raw.keepsakes.filter(id => keepsakeById(id) != null) : []
     merged.equipped = Array.isArray(raw.equipped) ? raw.equipped.filter(id => keepsakeById(id) != null) : []
+  } else {
+    // `couchSeeded` belongs to the same gate: a pre-v3 code carrying it true
+    // would mark an empty couch as already arranged and suppress the very
+    // catch-up the migration exists to perform. (Codex CL#19 R2, P2.)
+    merged.couchSeeded = false
   }
   // v1 → v2: `lifeHigh`. A v1 save carries no record of prestiged
   // afternoons, so the conservative floor is the current one:
@@ -125,13 +130,20 @@ export function migrateSave(raw: Partial<SaveState>): SaveState {
   // Return a LEGAL arrangement rather than leaving `computeRates` to ignore
   // overflow: a hand-edited save could otherwise list the same keepsake many
   // times, and duplicate shelf keepsakes would each be counted for a place.
+  // Capacity is validated INCREMENTALLY against what is actually retained.
+  // Computing the slot count from the full list and then slicing could drop
+  // the very shelf keepsake that supplied the extra place, leaving more
+  // entries than the retained arrangement has room for. (Codex CL#19 R2, P2.)
   const seen = new Set<string>()
-  const unique = merged.equipped.filter(id => {
-    if (!merged.keepsakes.includes(id) || seen.has(id)) return false
+  const retained: string[] = []
+  for (const id of merged.equipped) {
+    if (!merged.keepsakes.includes(id) || seen.has(id)) continue
+    const tentative = [...retained, id]
+    if (tentative.length > keepsakeSlots({ lifeHigh: merged.lifeHigh, equipped: tentative })) continue
     seen.add(id)
-    return true
-  })
-  merged.equipped = unique.slice(0, Math.max(0, keepsakeSlots({ lifeHigh: merged.lifeHigh, equipped: unique })))
+    retained.push(id)
+  }
+  merged.equipped = retained
   merged.manualHits = Number.isFinite(merged.manualHits) && merged.manualHits > 0 ? merged.manualHits : 0
   merged.couchSeeded = merged.equipped.length > 0 ? true : merged.couchSeeded === true
   merged.peakBuzz = Number.isFinite(merged.peakBuzz) ? Math.max(merged.peakBuzz, merged.buzz, 0) : Math.max(merged.buzz, 0)
