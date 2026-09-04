@@ -345,10 +345,22 @@ export function nextMood(high: number): MoodDef | null {
 // depth instead of gaining rows.
 
 export type KeepsakeEffect =
-  /** Work jobs also produce nugs, at `share` x their cash output. */
-  | { kind: 'work-nugs'; share: number }
-  /** Grow generators also produce cash, at `share` x their nug output. */
-  | { kind: 'grow-cash'; share: number }
+  /**
+   * Work jobs also produce nugs, at `share` x their cash output — but never
+   * more than `ceiling` x what the garden already grows itself. The ceiling
+   * exists because an uncapped cross-wire let one shelf swamp the other: with
+   * a big Work shelf and The Standing Glass on, a first Grow purchase moved
+   * the nug/s tile by 0.14 % (§ 9.6 rail 5a asks ≥ 2 %), and every Grow row
+   * became decoration for the player holding it. Capped at a multiple of the
+   * receiving shelf, the dilution of a first purchase is bounded at
+   * (1 + ceiling) by construction, and a bigger garden raises what the jobs
+   * may bring home — the two shelves need each other again.
+   */
+  | { kind: 'work-nugs'; share: number; ceiling: number }
+  /** Grow generators also produce cash, at `share` x their nug output — never
+   * more than `ceiling` x what the Work shelf already earns itself. The same
+   * rule as `work-nugs`, mirrored. */
+  | { kind: 'grow-cash'; share: number; ceiling: number }
   /** Buzz never decays below `share` x the highest Buzz of this afternoon. */
   | { kind: 'buzz-floor'; share: number }
   /** The first hit after coming back pays `seconds` of current production. */
@@ -392,16 +404,23 @@ export const KEEPSAKES: KeepsakeDef[] = [
   { id: 'spare-key', name: 'The Spare Key', stage: 'the-couch', blurb: 'Cut badly, works anyway. Every fifth try the lock gives twice.', effect: { kind: 'hit-echo', everyNth: 5 }, surface: 'every fifth hit pays a double floater' },
   // The cross-wire lands here rather than at chapter 2 for the rail-5a reason
   // above: by this chapter every early Grow row has long since been bought.
-  { id: 'standing-glass', name: 'The Standing Glass', stage: 'rituals-of-the-room', blurb: 'Never empty, never washed. The room starts paying you in both directions.', effect: { kind: 'work-nugs', share: 0.1 }, surface: 'the nugs/s tile climbs when you buy a job' },
+  // The ceiling is why this can sit at chapter 5 at all: without it, a lane
+  // that reached this chapter with a mid-tier Grow row still unbought saw
+  // that row's first unit move the nug/s tile by 0.14 % (measured, seed 23
+  // of the couch dataset at 4934955). Capped at the garden, the same
+  // purchase moves the tile by at least half of what it would on a bare
+  // couch — pinned in tests/keepsakes.test.ts, "a cross-wire never outgrows
+  // the shelf it feeds".
+  { id: 'standing-glass', name: 'The Standing Glass', stage: 'rituals-of-the-room', blurb: 'Never empty, never washed. The room starts paying you in both directions.', effect: { kind: 'work-nugs', share: 0.1, ceiling: 1 }, surface: 'the nugs/s tile climbs when you buy a job — and, while the jobs already bring home as much as the garden grows, when you buy a Grow row instead' },
   { id: 'sunday-ledger', name: 'The Sunday Ledger', stage: 'long-sunday', blurb: 'A notebook of afternoons, each one graded generously.', effect: { kind: 'clarity-yield', value: 1.12 }, surface: 'the Wake & Bake preview shows the larger Clarity gain' },
   { id: 'the-cutting', name: 'The Cutting', stage: 'green-thumbs', blurb: 'Snipped from the first plant that survived you. It kept going.', effect: { kind: 'milestone-early', target: 'grow', units: 4 }, surface: 'Grow rows reach their next doubling sooner (the row meta and nugs/s)' },
   { id: 'name-tag-drawer', name: 'The Name Tag Drawer', stage: 'working-stiff', blurb: 'Eleven jobs, eleven plastic rectangles, one drawer.', effect: { kind: 'milestone-early', target: 'work', units: 4 }, surface: 'Work rows reach their next doubling sooner (the row meta and cash/s)' },
   { id: 'evidence-tag', name: 'The Evidence Tag', stage: 'the-operation', blurb: 'Wire-tied to one arm. Nobody ever came to cut it off.', effect: { kind: 'offline-uncap', efficiency: 0.3 }, surface: 'the offline report stops saying "capped"' },
   { id: 'window-placard', name: 'The Window Placard', stage: 'local-legend', blurb: 'AS SEEN FROM THE STREET. It was not a joke for very long.', effect: { kind: 'auto-buy', target: 'grow', everySeconds: 45 }, surface: 'Grow rows buy themselves out of spare change; the nugs/s tile ticks up unattended' },
   { id: 'standing-order', name: 'The Standing Order', stage: 'head-in-the-cloud', blurb: 'Someone, somewhere, renews it. You have never seen the paperwork.', effect: { kind: 'auto-buy', target: 'work', everySeconds: 45 }, surface: 'Work rows buy themselves out of spare change; the cash/s tile ticks up unattended' },
-  { id: 'earth-in-the-window', name: 'Earth in the Window', stage: 'garden-upstairs', blurb: 'Blue, slow, and entirely someone else’s problem this afternoon.', effect: { kind: 'grow-cash', share: 0.06 }, surface: 'the cash/s tile climbs when you buy a Grow row' },
+  { id: 'earth-in-the-window', name: 'Earth in the Window', stage: 'garden-upstairs', blurb: 'Blue, slow, and entirely someone else’s problem this afternoon.', effect: { kind: 'grow-cash', share: 0.06, ceiling: 1 }, surface: 'the cash/s tile climbs when you buy a Grow row — and, while the garden already pays as much cash as the jobs earn, when you buy a job instead' },
   { id: 'jar-of-that-light', name: 'A Jar of That Light', stage: 'mythic-canopy', blurb: 'Screwed shut before anyone could explain why it glows.', effect: { kind: 'buzz-floor', share: 0.4 }, surface: 'the Buzz number and bar hold much higher between hits' },
-  { id: 'first-follower', name: 'The First Follower', stage: 'the-civilization', blurb: 'Sat down on the other end without asking. Stayed a decade.', effect: { kind: 'work-nugs', share: 0.3 }, surface: 'the nugs/s tile climbs when you buy a job' },
+  { id: 'first-follower', name: 'The First Follower', stage: 'the-civilization', blurb: 'Sat down on the other end without asking. Stayed a decade.', effect: { kind: 'work-nugs', share: 0.3, ceiling: 3 }, surface: 'the nugs/s tile climbs when you buy a job, up to three gardens\' worth — and, once it is there, when you buy a Grow row instead' },
   { id: 'accession-card', name: 'The Accession Card', stage: 'the-archive', blurb: 'Catalogued, numbered, and returned to you with an apology.', effect: { kind: 'shelf', slots: 2 }, surface: 'the couch gains a slot (it takes one and gives two)' },
   { id: 'long-now-clock', name: 'The Long Now Clock', stage: 'the-long-now', blurb: 'Ticks once a year. You have watched it do this twice.', effect: { kind: 'return-gift', seconds: 300 }, surface: 'the first hit back pays a very large floater' },
   { id: 'the-overlap', name: 'The Overlap', stage: 'almost-everything', blurb: 'Two rooms at once, agreeing about the couch and nothing else.', effect: { kind: 'hit-echo', everyNth: 3 }, surface: 'every third hit pays a double floater' },

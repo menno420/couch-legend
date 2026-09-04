@@ -25,8 +25,24 @@ export interface RatePurchaseImpact extends PurchaseBase {
    * the two shelves. Absent when nothing on the couch does that. Without it
    * the preview promised half of what a job or a generator actually pays.
    * (Codex CL#19 R1, P2.)
+   *
+   * `before`/`after` are the WHOLE cross-wire (what the sending shelf hands
+   * the other, after its ceiling), not this row's share of it — the ceiling
+   * makes a row's contribution inseparable, and a per-row figure would
+   * promise nugs the cap withholds. `delta` is therefore exactly what the
+   * tile will move by, before global multipliers; it is 0 when the ceiling
+   * already binds, and `capped` says so in words.
    */
-  crossWired?: { resource: 'nugs' | 'cash'; before: number; delta: number; after: number }
+  crossWired?: { resource: 'nugs' | 'cash'; before: number; delta: number; after: number; capped: boolean }
+  /**
+   * What the OTHER shelf's cross-wire adds to THIS row's own currency because
+   * the purchase raised its ceiling: a Grow row bought under The Standing
+   * Glass lifts what the jobs may bring home, so the nug/s tile moves by
+   * more than the row alone. Present only when it is non-zero. Without it
+   * the preview under-promised — the mirror of the defect `crossWired`
+   * exists to prevent.
+   */
+  matched?: { resource: 'nugs' | 'cash'; delta: number }
   effects: RitualEffect[]
 }
 
@@ -159,20 +175,39 @@ export function generatorPurchaseImpact(
     ...beforeSave,
     generators: { ...beforeSave.generators, [id]: owned + quantity },
   }).save
-  // Earth in the Window makes a Grow row pay cash too; the preview must say so.
+  const ratesBefore = computeRates(beforeSave, tuning)
+  const ratesAfter = computeRates(afterSave, tuning)
+  // Earth in the Window makes a Grow row pay cash too; the preview must say
+  // so — and say exactly what the economy will pay, ceiling included.
   const crossWired = mods.growCashShare > 0
-    ? {
-        resource: 'cash' as const,
-        before: before * mods.growCashShare,
-        delta: (after - before) * mods.growCashShare,
-        after: after * mods.growCashShare,
-      }
+    ? crossWireDelta('cash', ratesBefore.shelves.growToCash, ratesAfter.shelves.growToCash,
+        ratesAfter.shelves.work * mods.growCashCeiling)
     : undefined
+  const matched = matchedDelta('nugs', ratesBefore.shelves.workToNugs, ratesAfter.shelves.workToNugs)
   return {
     kind: 'rate', resource: 'nugs', quantity, cost, affordable: save.nugs >= cost,
-    before, delta: after - before, after, crossWired,
-    effects: ritualEffects(computeRates(beforeSave, tuning), computeRates(afterSave, tuning)),
+    before, delta: after - before, after, crossWired, matched,
+    effects: ritualEffects(ratesBefore, ratesAfter),
   }
+}
+
+/** The other shelf's cross-wire rising because this purchase lifted its
+ * ceiling — reported so the tile's move is promised in full. */
+function matchedDelta(
+  resource: 'nugs' | 'cash', before: number, after: number,
+): RatePurchaseImpact['matched'] {
+  return changed(before, after) && after > before ? { resource, delta: after - before } : undefined
+}
+
+/** The cross-wire's before/after as the economy will actually pay it, and
+ * whether the ceiling is what stopped it growing. `capped` is judged on the
+ * AFTER state: the purchase pushed the cross-wire onto (or left it on) the
+ * ceiling, so the tile moved less than the row's share alone would say. */
+function crossWireDelta(
+  resource: 'nugs' | 'cash', before: number, after: number, ceilingAfter: number,
+): NonNullable<RatePurchaseImpact['crossWired']> {
+  const capped = after >= ceilingAfter * (1 - 1e-12)
+  return { resource, before, delta: after - before, after, capped }
 }
 
 export function jobPurchaseImpact(
@@ -196,19 +231,19 @@ export function jobPurchaseImpact(
     ...beforeSave,
     jobs: { ...beforeSave.jobs, [id]: owned + quantity },
   }).save
-  // The Standing Glass / The First Follower make a Work row pay nugs too.
+  const ratesBefore = computeRates(beforeSave, tuning)
+  const ratesAfter = computeRates(afterSave, tuning)
+  // The Standing Glass / The First Follower make a Work row pay nugs too —
+  // up to the garden's ceiling, which the preview must not promise past.
   const crossWired = mods.workNugShare > 0
-    ? {
-        resource: 'nugs' as const,
-        before: before * mods.workNugShare,
-        delta: (after - before) * mods.workNugShare,
-        after: after * mods.workNugShare,
-      }
+    ? crossWireDelta('nugs', ratesBefore.shelves.workToNugs, ratesAfter.shelves.workToNugs,
+        ratesAfter.shelves.grow * mods.workNugCeiling)
     : undefined
+  const matched = matchedDelta('cash', ratesBefore.shelves.growToCash, ratesAfter.shelves.growToCash)
   return {
     kind: 'rate', resource: 'cash', quantity, cost, affordable: save.cash >= cost,
-    before, delta: after - before, after, crossWired,
-    effects: ritualEffects(computeRates(beforeSave, tuning), computeRates(afterSave, tuning)),
+    before, delta: after - before, after, crossWired, matched,
+    effects: ritualEffects(ratesBefore, ratesAfter),
   }
 }
 

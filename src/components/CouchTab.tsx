@@ -13,8 +13,8 @@ import { Button, cx } from './ui'
  * is read from it here — the copy never restates a constant of its own. */
 export function describeEffect(e: KeepsakeEffect): string {
   switch (e.kind) {
-    case 'work-nugs': return `Your jobs bring nugs home too — ${Math.round(e.share * 100)}% of what they earn in cash.`
-    case 'grow-cash': return `Your plants pay cash too — ${Math.round(e.share * 100)}% of what they grow in nugs.`
+    case 'work-nugs': return `Your jobs bring nugs home too — ${Math.round(e.share * 100)}% of what they earn in cash, up to ${timesTheShelf(e.ceiling, 'the garden grows')}.`
+    case 'grow-cash': return `Your plants pay cash too — ${Math.round(e.share * 100)}% of what they grow in nugs, up to ${timesTheShelf(e.ceiling, 'your jobs earn')}.`
     case 'buzz-floor': return `Buzz never sinks below ${Math.round(e.share * 100)}% of the best you have felt this afternoon.`
     case 'return-gift': return `The first hit after you come back pays ${e.seconds} seconds of everything you were making.`
     case 'offline-uncap': return `Away time never runs out — but it all earns at ${Math.round(e.efficiency * 100)}%.`
@@ -27,6 +27,15 @@ export function describeEffect(e: KeepsakeEffect): string {
 }
 
 const ordinal = (n: number) => (n === 2 ? 'second' : n === 3 ? 'third' : n === 4 ? 'fourth' : n === 5 ? 'fifth' : `${n}th`)
+
+/** "as much again as the garden grows" · "three times what your jobs earn"
+ * — the ceiling in words, read from the content table like every other
+ * number here. */
+const timesTheShelf = (ceiling: number, shelf: string) =>
+  ceiling === 1 ? `as much again as ${shelf}`
+    : ceiling === 2 ? `twice what ${shelf}`
+      : ceiling === 3 ? `three times what ${shelf}`
+        : `${ceiling}× what ${shelf}`
 
 function chapterOf(k: KeepsakeDef): { index: number; name: string; arc: 1 | 2 | 3 } | null {
   const i = STAGES.findIndex(s => s.id === k.stage)

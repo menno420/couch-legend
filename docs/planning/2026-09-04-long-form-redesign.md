@@ -83,16 +83,16 @@ changes it. All 17 keepsakes are shipped and pinned by test.
 | 2 | Corner Store Nights | 1 | **Exact Change** · return-gift 45 s | none yet — it just works | offline return | yes | mastered at 16 |
 | 3 | Somebody's Cousin's Couch | 1 | **Valid Until Morning** · buzz floor 18 % | — | Buzz decay | yes | mastered at 13 |
 | 4 | The Couch | 2 | **The Spare Key** · every 5th hit twice | — | the hit | yes | mastered at 17 |
-| 5 | Rituals of the Room | 2 | **The Standing Glass** · Work also pays nugs · **+1 place** | first real choice: 2 of 4 | Work ↔ Grow | yes | mastered at 14 |
+| 5 | Rituals of the Room | 2 | **The Standing Glass** · Work also pays nugs, up to what the garden grows · **+1 place** | first real choice: 2 of 4 — and grow the garden to raise the ceiling | Work ↔ Grow | yes | mastered at 14 |
 | 6 | The Long Sunday | 2 | **The Sunday Ledger** · Clarity +12 % | prestige-facing | Wake & Bake | yes | mastered at 18 |
 | 7 | Green Thumbs | 2 | **The Cutting** · Grow doubles every 21 | favours depth over breadth | milestone curve | yes | pairs with 8 |
 | 8 | A Working Stiff | 2 | **The Name Tag Drawer** · Work doubles every 21 · **+1 place** | which shelf to deepen | milestone curve | yes | pairs with 7 |
 | 9 | The Operation | 2 | **The Evidence Tag** · offline uncapped at 30 % | a real trade: long absences win, short ones lose | offline rule | **yes — rewards being away** | — |
 | 10 | Local Legend | 2 | **The Window Placard** · Grow buys itself | the verb changes: configure, not tap | purchasing | yes | pairs with 11 |
 | 11 | Head in the Cloud | 2 | **The Standing Order** · Work buys itself · **+1 place** | both shelves automated? | purchasing | yes | pairs with 10 |
-| 12 | The Garden Upstairs | 2 | **Earth in the Window** · Grow also pays cash | the mirror of 5 | Grow ↔ Work | yes | — |
+| 12 | The Garden Upstairs | 2 | **Earth in the Window** · Grow also pays cash, up to what the jobs earn | the mirror of 5 | Grow ↔ Work | yes | — |
 | 13 | Mythic Canopy | 2 | **A Jar of That Light** · buzz floor 40 % | **retires ch 3** | Buzz decay | yes | frees a place |
-| 14 | The Civilization | 3 | **The First Follower** · Work pays 30 % nugs · **+1 place** | **retires ch 5** | Work ↔ Grow | yes | frees a place |
+| 14 | The Civilization | 3 | **The First Follower** · Work pays 30 % nugs, up to three gardens' worth · **+1 place** | **retires ch 5** | Work ↔ Grow | yes | frees a place |
 | 15 | The Archive | 3 | **The Accession Card** · takes one place, gives two | spend a place to gain places | the couch itself | yes | — |
 | 16 | The Long Now | 3 | **The Long Now Clock** · return-gift 300 s | **retires ch 2** | offline return | yes | frees a place |
 | 17 | Almost Everything | 3 | **The Overlap** · every 3rd hit twice · **+1 place** | **retires ch 4** | the hit | yes | frees a place |
@@ -105,6 +105,14 @@ and it is why the couch does not simply fill up and stop being a decision.
 
 **Deliberately not one new subsystem per row.** Ten effect *shapes* cover
 seventeen chapters; six chapters carry a mastered version of an earlier shape.
+
+**The cross-wires carry a ceiling (2026-09-04, #20).** Uncapped, The Standing
+Glass let a large Work shelf swamp the garden — measured as the one rail-5a
+breach in phase A's evidence — so each cross-wire now pays its share of the
+sending shelf *up to a multiple of what the receiving shelf makes itself*
+(1× for the glass and Earth in the Window, 3× for The First Follower). The
+two shelves need each other again; the rails re-measured clean on all 27
+runs (`../sim/2026-09-04-couch-balance.md` § 4).
 
 ## 5 · Onboarding and unlock cadence
 
@@ -144,8 +152,12 @@ infinite ladder.
 - No energy, no timers that demand attendance, no streaks, no FOMO, no
   daily-login anything, no maintenance cost, no decaying asset.
 - No randomness in any effect. No RNG-gated loss.
-- No mandatory active play: the optimiser lane ends 14 days with 4.9× the
-  currency and **+0.6 % story progress**.
+- No mandatory active play: on each of three seeds the optimiser lane peaks
+  at **1.8–1.9× the nugs** of the auto-arranging lane over the final three
+  days, cash a wash, and closes the story **2–4 % later** — currency, not
+  progress (`../sim/2026-09-04-couch-balance.md` § 3; an earlier version of
+  this line quoted a horizon-balance snapshot, "4.9× / +0.6 %", which the
+  regeneration showed to be timing noise).
 - No per-stage conditionals in components; no second simulator; no duplicated
   formula. One content table, one pure derivation, one action layer.
 - No real-money anything: no billing SDK, no store console, no receipts.
@@ -154,11 +166,12 @@ infinite ladder.
 
 | phase | what | gate |
 |---|---|---|
-| **A — done** | F1 keepsakes end to end + IAP preview + evidence | this PR |
-| B | Owner plays the couch and says whether arranging is interesting | **owner** |
+| **A — done** | F1 keepsakes end to end + IAP preview + evidence | #19 |
+| **A′ — done** | The one rail breach A stated, closed by tuning: the cross-wire ceiling, 27 runs regenerated | #20 |
+| B | Owner plays the couch and says whether arranging is interesting — **asked 2026-09-04** (fleet-manager `OQ-CL-COUCH-FEEL`); not answered as of #20 | **owner** |
 | C | F2 Morning Routine, designed against rail 6 (allocation, not spend) | needs B |
 | D | F5 arc-3 content batches; F6 mastery for the tail | needs B |
-| E | The remaining 15 scene packages (DESIGN § 9.8) | art lane, owner QA |
+| E | The remaining 15 scene packages (DESIGN § 9.8) — **chapters 4–6 prompted** (`../design/2026-09-04-arc-2-scene-prompts.md`, #20); generation and QA are his (`OQ-CL-SCENES-4-6`) | art lane, owner QA |
 | F | Real billing: StoreKit / Play Billing behind `BillingAdapter` | **owner-gated** |
 | G | Android milestone B (DESIGN § 7) | **owner-gated on device evidence** |
 

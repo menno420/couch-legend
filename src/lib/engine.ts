@@ -206,8 +206,12 @@ export const MILESTONE_STEP = 25
 export interface KeepsakeMods {
   /** Work rows also produce nugs at this share of their cash output. */
   workNugShare: number
+  /** ...but never more than this multiple of the garden's own base output. */
+  workNugCeiling: number
   /** Grow rows also produce cash at this share of their nug output. */
   growCashShare: number
+  /** ...but never more than this multiple of the Work shelf's own base output. */
+  growCashCeiling: number
   /** Buzz never decays below this share of the afternoon's peak Buzz. */
   buzzFloorShare: number
   /** The first hit after a return pays this many seconds of production. */
@@ -230,7 +234,8 @@ export interface KeepsakeMods {
 }
 
 export const NO_KEEPSAKES: KeepsakeMods = {
-  workNugShare: 0, growCashShare: 0, buzzFloorShare: 0, returnGiftSeconds: 0,
+  workNugShare: 0, workNugCeiling: 0, growCashShare: 0, growCashCeiling: 0,
+  buzzFloorShare: 0, returnGiftSeconds: 0,
   offlineUncapEff: null, hitEchoEveryNth: null,
   growMilestoneStep: MILESTONE_STEP, workMilestoneStep: MILESTONE_STEP,
   autoBuyGrowEvery: null, autoBuyWorkEvery: null,
@@ -261,8 +266,19 @@ export function keepsakeEffects(s: Pick<SaveState, 'lifeHigh' | 'equipped'>): Ke
     if (!k) continue
     const e = k.effect
     switch (e.kind) {
-      case 'work-nugs': m.workNugShare = best(m.workNugShare, e.share); break
-      case 'grow-cash': m.growCashShare = best(m.growCashShare, e.share); break
+      // A cross-wire's share and ceiling travel together: the keepsake with
+      // the larger share wins BOTH numbers, so a couch never mixes one
+      // keepsake's share with another's ceiling.
+      case 'work-nugs':
+        if (e.share > m.workNugShare || (e.share === m.workNugShare && e.ceiling > m.workNugCeiling)) {
+          m.workNugShare = e.share; m.workNugCeiling = e.ceiling
+        }
+        break
+      case 'grow-cash':
+        if (e.share > m.growCashShare || (e.share === m.growCashShare && e.ceiling > m.growCashCeiling)) {
+          m.growCashShare = e.share; m.growCashCeiling = e.ceiling
+        }
+        break
       case 'buzz-floor': m.buzzFloorShare = best(m.buzzFloorShare, e.share); break
       case 'return-gift': m.returnGiftSeconds = best(m.returnGiftSeconds, e.seconds); break
       case 'offline-uncap': m.offlineUncapEff = best(m.offlineUncapEff ?? 0, e.efficiency); break
@@ -292,8 +308,16 @@ export function isSuperseded(id: string, mods: KeepsakeMods): boolean {
   if (!k) return false
   const e = k.effect
   switch (e.kind) {
+    // The same order `keepsakeEffects` picks the winner by — share first,
+    // ceiling as the tie-break — so the couch never dims one keepsake while
+    // folding another. The content table is pinned to a Pareto order per
+    // kind (a later cross-wire is >= on both numbers), which is what makes
+    // "the larger share wins" safe at all; the tie-break covers the equal
+    // share case that pin still allows. (Codex CL#20 R1, P2.)
     case 'work-nugs': return mods.workNugShare > e.share
+      || (mods.workNugShare === e.share && mods.workNugCeiling > e.ceiling)
     case 'grow-cash': return mods.growCashShare > e.share
+      || (mods.growCashShare === e.share && mods.growCashCeiling > e.ceiling)
     case 'buzz-floor': return mods.buzzFloorShare > e.share
     case 'return-gift': return mods.returnGiftSeconds > e.seconds
     case 'offline-uncap': return (mods.offlineUncapEff ?? 0) > e.efficiency
@@ -386,6 +410,11 @@ export interface Rates {
   /** What the couch is doing right now — folded in above, exposed so the
    * UI and the simulator read ONE derivation rather than re-deriving it. */
   keepsakes: KeepsakeMods
+  /** The two shelves' own base outputs (before any global multiplier) and
+   * what each cross-wire actually adds to the other, after its ceiling —
+   * exposed so the purchase preview promises exactly what the economy pays
+   * rather than re-deriving the cap. */
+  shelves: { grow: number; work: number; workToNugs: number; growToCash: number }
   /** Buzz's decay floor this afternoon (0 when nothing holds it). */
   buzzFloor: number
 }
@@ -433,8 +462,14 @@ export function computeRates(s: SaveState, t: Tuning = DEFAULT_TUNING): Rates {
   // own cash output also arrives as nugs, and Grow's own nug output also
   // arrives as cash — each scaled by the multiplier stack of the currency it
   // lands in, so a cross-wired nug is worth exactly what a grown one is.
-  const nugRate = (growBase + workBase * ks.workNugShare) * nugMult
-  const cashRateBase = (workBase + growBase * ks.growCashShare) * cashMult
+  // A cross-wire never pays more than its ceiling times what the receiving
+  // shelf makes itself: the glass matches the garden, it does not replace
+  // it. That bound is what keeps a first Grow purchase visible on the nug/s
+  // tile for a player whose Work shelf dwarfs their garden (§ 9.6 rail 5a).
+  const workToNugs = crossWire(workBase, ks.workNugShare, growBase, ks.workNugCeiling)
+  const growToCash = crossWire(growBase, ks.growCashShare, workBase, ks.growCashCeiling)
+  const nugRate = (growBase + workToNugs) * nugMult
+  const cashRateBase = (workBase + growToCash) * cashMult
   let cashRate = cashRateBase
 
   const decay = 0.012 / (1 + water * 0.28) / (1 + snacks * 0.18)
@@ -460,7 +495,16 @@ export function computeRates(s: SaveState, t: Tuning = DEFAULT_TUNING): Rates {
     nugRate, cashRate, highRate, autoHits, lampBuzz, decay,
     buzzMult, nugMult, cashMult, highMult, hitPower, hitHigh, hitBuzz, hitCash,
     offlineCap, offlineEff, prestigeBonus, keepsakes: ks, buzzFloor,
+    shelves: { grow: growBase, work: workBase, workToNugs, growToCash },
   }
+}
+
+/** What one shelf sends the other: `share` of the sender's base output,
+ * capped at `ceiling` times the receiver's own. The ONE place the rule
+ * lives — the preview and the Couch tab read it through `Rates.shelves`. */
+export function crossWire(sender: number, share: number, receiver: number, ceiling: number): number {
+  if (share <= 0) return 0
+  return Math.min(sender * share, receiver * ceiling)
 }
 
 export const PRESTIGE_MIN_PEAK = 400

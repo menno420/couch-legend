@@ -20,18 +20,29 @@ dataset — evidence `docs/sim/2026-08-20-life-story-balance.md` +
 
 ## In flight
 
-- **The couch — keepsakes** (branch `claude/couch-legend-design-arch-iwpo96`):
-  every chapter after the first now leaves one permanent object with the
-  couch, there are always fewer places than objects, and every effect
-  transforms a system that already existed. Plus a store **design preview**
-  that cannot transact and is compiled out of production builds. Design:
-  [`DESIGN.md`](DESIGN.md) §§ 11–12 · plan:
+- **The glass and the garden** (branch `claude/couch-legend-phase-b-a9dpf8`,
+  #20): the one rail-5a breach #19 stated is closed by tuning — each
+  cross-wire now pays up to a *ceiling* times what the receiving shelf makes
+  itself — with the 27-run `couch` dataset regenerated and every § 9.6 rail
+  re-checked; plus paste-ready scene prompts for chapters 4–6
+  ([`design/2026-09-04-arc-2-scene-prompts.md`](design/2026-09-04-arc-2-scene-prompts.md)).
+  Phase B (the owner's feel pass on arranging) had **not** arrived when this
+  session started, so C and D stay gated.
+
+## Recently shipped (newest first)
+
+- **The couch — keepsakes, and a store that cannot take money** (#19,
+  2026-09-04): every chapter after the first leaves one permanent object with
+  the couch, there are always fewer places than objects, and every effect
+  transforms a system that already existed; plus a store **design preview**
+  behind a compile-time flag, with a checker proving production builds carry
+  none of it. Design: [`DESIGN.md`](DESIGN.md) §§ 11–12 · plan:
   [`planning/2026-09-04-long-form-redesign.md`](planning/2026-09-04-long-form-redesign.md) ·
   evidence: [`sim/2026-09-04-couch-balance.md`](sim/2026-09-04-couch-balance.md) ·
   research: [`research/2026-09-04-long-form-idle-research.md`](research/2026-09-04-long-form-idle-research.md)
-  and its [contract sheet](research/2026-09-04-CONTRACTS.md).
-
-## Recently shipped (newest first)
+  and its [contract sheet](research/2026-09-04-CONTRACTS.md). Census after:
+  14/18 chapters introduce a mechanic, 3/18 deepen one, 17/18 deliver
+  something new (`tools/stage-evolution.ts`).
 
 - **Plain-language purchase impact** (#17, 2026-08-23): usable Grow and Work
   rows now preview the exact selected quantity, including canonical Max,
@@ -106,10 +117,11 @@ dataset — evidence `docs/sim/2026-08-20-life-story-balance.md` +
 ## Next (the owner's stated order)
 
 **New, and it is a feel pass rather than a build:** the couch shipped with
-simulator evidence that it is fair, reachable and idle-safe (rails 1/3/4/6 all
-hold or improve; the one breach is stated in the balance doc § 4). Simulation
-cannot say whether *arranging* it is interesting. That is the owner's call and
-it gates the next family (the Morning Routine, DESIGN § 8.1).
+simulator evidence that it is fair, reachable and idle-safe (every § 9.6
+rail holds on all 27 runs since the cross-wire ceiling, #20). Simulation
+cannot say whether *arranging* it is interesting. That is the owner's call,
+**asked 2026-09-04** as fleet-manager `OQ-CL-COUCH-FEEL`, and it gates the
+next family (the Morning Routine, DESIGN § 8.1) and the arc-3 batches.
 
 
 **Milestone B — the working Android handoff** (DESIGN § 7's list), gated on the
