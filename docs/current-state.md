@@ -123,8 +123,9 @@ cannot say whether *arranging* it is interesting. That is the owner's call,
 **asked 2026-09-04** as fleet-manager `OQ-CL-COUCH-FEEL` — his answer that
 evening was *"haven't played yet"*, so it is still open — and it gates the
 next family. **Once it is a yes, the Morning Routine (DESIGN § 8.1) comes
-before the arc-3 batches — his order, [D-0005]**; the cross-wire ceiling
-stays as shipped, also his call ([D-0004]).
+before the arc-3 batches — his order**, and the cross-wire ceiling stays as
+shipped, also his call; both are stamped in the plan's § 8 table and § 4
+note, with the entries in `decisions.md`.
 
 
 **Milestone B — the working Android handoff** (DESIGN § 7's list), gated on the
