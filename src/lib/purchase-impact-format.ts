@@ -63,7 +63,16 @@ export function formatPurchaseImpact(impact: PurchaseImpact): string {
     const cross = impact.crossWired
       ? [crossWireLine(impact.crossWired)]
       : []
-    return [rate, ...cross, ...impact.effects.map(formatEffect)].join(' · ')
+    // And when this row's own currency ALSO rises because the other shelf's
+    // cross-wire had a ceiling this purchase just lifted, say that too — the
+    // tile will move by more than the row alone, and the preview promises
+    // the whole move.
+    const matched = impact.matched
+      ? [impact.matched.resource === 'nugs'
+          ? `+${fmtRate(impact.matched.delta)} more from the jobs — the garden lifted their ceiling`
+          : `+${fmtRate(impact.matched.delta)} more from the garden — the jobs lifted its ceiling`]
+      : []
+    return [rate, ...cross, ...matched, ...impact.effects.map(formatEffect)].join(' · ')
   }
   return impact.effects.map(formatEffect).join(' · ')
 }

@@ -145,7 +145,9 @@ first job. That is the trade the ceiling makes on purpose: the two shelves
 need each other again, and a bigger garden raises what the jobs may bring.
 The purchase preview says so in words when the ceiling is what stopped a
 job paying more ("the garden is the ceiling"), rather than promising nugs
-the cap withholds.
+the cap withholds — and, the other way round, a Grow row bought under the
+glass says how much *more* the jobs will bring home now that the garden has
+lifted their ceiling, so the tile's whole move is promised, never less.
 
 ## 4b · A rail the REVIEW round broke, and the mechanic change that fixed it
 

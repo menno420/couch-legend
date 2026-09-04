@@ -13,7 +13,7 @@ import {
   equipKeepsake, fillBudgetFor, hitPreview, unequipKeepsake, AUTO_BUY_CATCHUP_CAP,
   AUTO_BUY_RESERVE_SHARE, applyOfflineWithAutomation,
 } from '../src/lib/actions'
-import { jobPurchaseImpact } from '../src/lib/purchase-impact'
+import { generatorPurchaseImpact, jobPurchaseImpact } from '../src/lib/purchase-impact'
 import { formatPurchaseImpact } from '../src/lib/purchase-impact-format'
 import { POLICIES } from '../src/lib/sim/policies'
 import {
@@ -654,6 +654,30 @@ describe('the review round (Codex CL#19 R1) — regression pins', () => {
     const line = formatPurchaseImpact(impact)
     expect(line).toContain('the garden is the ceiling')
     expect(line).not.toContain('+0')
+  })
+
+  it('a Grow purchase under the glass promises the whole tile move, the lifted ceiling included', () => {
+    // Work dwarfs the garden, so the cross-wire sits on the ceiling; buying a
+    // generator lifts the ceiling and the nug/s tile moves by MORE than the
+    // row alone. The preview must say so, or it under-promises — the mirror
+    // of the over-promise `crossWired` exists to prevent.
+    const s = save({
+      high: 1e6, lifeHigh: Infinity, cash: 1e12, nugs: 1e12, jobs: { legend: 300 }, generators: { farm: 20 },
+      keepsakes: ['standing-glass'], equipped: ['standing-glass'],
+    })
+    const impact = generatorPurchaseImpact(s, 'farm', 1)!
+    if (impact.kind !== 'rate') throw new Error('rate impact expected')
+    expect(impact.matched?.resource).toBe('nugs')
+    expect(impact.matched!.delta).toBeGreaterThan(0)
+    const before = computeRates(s)
+    const after = computeRates({ ...s, generators: { farm: 21 } })
+    expect((impact.delta + impact.matched!.delta) * before.nugMult).toBeCloseTo(after.nugRate - before.nugRate, 6)
+    expect(formatPurchaseImpact(impact)).toContain('more from the jobs')
+    // and nothing of the kind when the couch is bare, or when the cap is slack
+    const bare = generatorPurchaseImpact({ ...s, equipped: [] }, 'farm', 1)!
+    expect(bare.kind === 'rate' && bare.matched).toBeUndefined()
+    const slack = generatorPurchaseImpact({ ...s, jobs: { thinker: 1 } }, 'farm', 1)!
+    expect(slack.kind === 'rate' && slack.matched).toBeUndefined()
   })
 
   it('the cross-wire delta the preview shows is exactly what the tile will move by', () => {
