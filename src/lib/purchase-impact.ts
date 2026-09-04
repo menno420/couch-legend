@@ -20,6 +20,13 @@ export interface RatePurchaseImpact extends PurchaseBase {
   before: number
   delta: number
   after: number
+  /**
+   * The OTHER currency this row also produces, when a keepsake has cross-wired
+   * the two shelves. Absent when nothing on the couch does that. Without it
+   * the preview promised half of what a job or a generator actually pays.
+   * (Codex CL#19 R1, P2.)
+   */
+  crossWired?: { resource: 'nugs' | 'cash'; before: number; delta: number; after: number }
   effects: RitualEffect[]
 }
 
@@ -144,16 +151,26 @@ export function generatorPurchaseImpact(
   const cost = bulkCost(def.baseCost, def.costScale, owned, quantity)
   // The couch can shorten this shelf's milestone step; the preview reads the
   // same derivation the economy does, so the promised number is the paid one.
-  const step = keepsakeEffects(beforeSave).growMilestoneStep
+  const mods = keepsakeEffects(beforeSave)
+  const step = mods.growMilestoneStep
   const before = generatorOutput(def, owned, tuning, step)
   const after = generatorOutput(def, owned + quantity, tuning, step)
   const afterSave = collectAchievements({
     ...beforeSave,
     generators: { ...beforeSave.generators, [id]: owned + quantity },
   }).save
+  // Earth in the Window makes a Grow row pay cash too; the preview must say so.
+  const crossWired = mods.growCashShare > 0
+    ? {
+        resource: 'cash' as const,
+        before: before * mods.growCashShare,
+        delta: (after - before) * mods.growCashShare,
+        after: after * mods.growCashShare,
+      }
+    : undefined
   return {
     kind: 'rate', resource: 'nugs', quantity, cost, affordable: save.nugs >= cost,
-    before, delta: after - before, after,
+    before, delta: after - before, after, crossWired,
     effects: ritualEffects(computeRates(beforeSave, tuning), computeRates(afterSave, tuning)),
   }
 }
@@ -171,16 +188,26 @@ export function jobPurchaseImpact(
   const quantity = selectedQuantity(amount, def.baseCost, def.costScale, owned, save.cash)
   if (quantity === 0) return { kind: 'empty-max', quantity: 0, cost: 0, affordable: false }
   const cost = bulkCost(def.baseCost, def.costScale, owned, quantity)
-  const step = keepsakeEffects(beforeSave).workMilestoneStep
+  const mods = keepsakeEffects(beforeSave)
+  const step = mods.workMilestoneStep
   const before = jobCashOutput(def, owned, tuning, step)
   const after = jobCashOutput(def, owned + quantity, tuning, step)
   const afterSave = collectAchievements({
     ...beforeSave,
     jobs: { ...beforeSave.jobs, [id]: owned + quantity },
   }).save
+  // The Standing Glass / The First Follower make a Work row pay nugs too.
+  const crossWired = mods.workNugShare > 0
+    ? {
+        resource: 'nugs' as const,
+        before: before * mods.workNugShare,
+        delta: (after - before) * mods.workNugShare,
+        after: after * mods.workNugShare,
+      }
+    : undefined
   return {
     kind: 'rate', resource: 'cash', quantity, cost, affordable: save.cash >= cost,
-    before, delta: after - before, after,
+    before, delta: after - before, after, crossWired,
     effects: ritualEffects(computeRates(beforeSave, tuning), computeRates(afterSave, tuning)),
   }
 }

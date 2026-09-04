@@ -9,7 +9,7 @@
     "build:shell": "VITE_BASE=./ pnpm build && cap sync android",
     "preview": "vite preview",
     "test": "vitest run",
-    "check": "tsc --noEmit && vitest run && vite build",
+    "check": "tsc --noEmit && vitest run && vite build && tsx tools/check-store-preview.ts",
     "check:shell": "tsx tools/check-shell-assets.ts",
     "check:apk-signer": "tsx tools/check-apk-signer.ts",
     "sim": "tsx tools/simulate.ts",

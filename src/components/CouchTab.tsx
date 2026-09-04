@@ -20,7 +20,7 @@ export function describeEffect(e: KeepsakeEffect): string {
     case 'offline-uncap': return `Away time never runs out — but it all earns at ${Math.round(e.efficiency * 100)}%.`
     case 'hit-echo': return `Every ${ordinal(e.everyNth)} hit lands twice.`
     case 'milestone-early': return `${e.target === 'grow' ? 'Grow' : 'Work'} rows double every ${25 - e.units} owned instead of every 25.`
-    case 'auto-buy': return `The cheapest ${e.target === 'grow' ? 'Grow' : 'Work'} row buys itself every ${e.everySeconds} seconds.`
+    case 'auto-buy': return `The cheapest ${e.target === 'grow' ? 'Grow' : 'Work'} row buys itself every ${e.everySeconds} seconds — but only out of spare change, never more than a quarter of what you are holding.`
     case 'clarity-yield': return `Wake & Bake pays ${Math.round((e.value - 1) * 100)}% more Clarity.`
     case 'shelf': return `Takes one place on the couch and makes ${e.slots}. One more than it costs.`
   }

@@ -30,6 +30,23 @@ export interface SaveState extends AchievementState {
   /** Production owed to the next hit after coming back (nugs). Set by the
    * offline pass when a return-gift keepsake is on the couch. */
   returnGift: number
+  /**
+   * Manual presses only — the cadence a hit-echo keepsake counts.
+   *
+   * It cannot ride `totalHits`: that counter also accrues the Roommate's
+   * auto-hits, which arrive as a FRACTION per tick (`autoHits * dt`), so an
+   * exact modulo against it stops matching the moment a player buys the
+   * Roommate, and an echo's own +2 would shift the cadence besides.
+   * (Codex CL#19 R1, P1.)
+   */
+  manualHits: number
+  /**
+   * Whether the couch has ever been arranged for this save. Load-time
+   * catch-up runs only while this is false, so a v3 player who deliberately
+   * leaves a place empty still finds it empty after a reload or an
+   * export/import. (Codex CL#19 R1, P2.)
+   */
+  couchSeeded: boolean
   totalHits: number
   playTime: number
   lastTick: number
@@ -58,6 +75,8 @@ export function defaultSave(now = Date.now()): SaveState {
     equipped: [],
     peakBuzz: 0,
     returnGift: 0,
+    manualHits: 0,
+    couchSeeded: false,
     lastTick: now,
     startedAt: now,
     sound: true,
@@ -74,8 +93,17 @@ export function migrateSave(raw: Partial<SaveState>): SaveState {
     jobs: { ...base.jobs, ...raw.jobs },
     rituals: { ...base.rituals, ...raw.rituals },
     achievements: Array.isArray(raw.achievements) ? raw.achievements : [],
-    keepsakes: Array.isArray(raw.keepsakes) ? raw.keepsakes.filter(id => keepsakeById(id) != null) : [],
-    equipped: Array.isArray(raw.equipped) ? raw.equipped.filter(id => keepsakeById(id) != null) : [],
+    keepsakes: [] as string[],
+    equipped: [] as string[],
+  }
+  // The couch fields are read ONLY from a save that could legitimately have
+  // them. A pre-v3 code carrying a hand-edited `equipped` would otherwise
+  // arrive equipped and change the offline pass that runs immediately after
+  // import — which is exactly the rate-neutrality this migration promises.
+  const fromVersion = Number.isFinite(raw.version) ? Number(raw.version) : 0
+  if (fromVersion >= 3) {
+    merged.keepsakes = Array.isArray(raw.keepsakes) ? raw.keepsakes.filter(id => keepsakeById(id) != null) : []
+    merged.equipped = Array.isArray(raw.equipped) ? raw.equipped.filter(id => keepsakeById(id) != null) : []
   }
   // v1 → v2: `lifeHigh`. A v1 save carries no record of prestiged
   // afternoons, so the conservative floor is the current one:
@@ -94,7 +122,18 @@ export function migrateSave(raw: Partial<SaveState>): SaveState {
   const earned = new Set(merged.keepsakes)
   for (const id of keepsakesEarnedBy(merged.lifeHigh)) earned.add(id)
   merged.keepsakes = KEEPSAKES.filter(k => earned.has(k.id)).map(k => k.id)
-  merged.equipped = merged.equipped.filter(id => merged.keepsakes.includes(id))
+  // Return a LEGAL arrangement rather than leaving `computeRates` to ignore
+  // overflow: a hand-edited save could otherwise list the same keepsake many
+  // times, and duplicate shelf keepsakes would each be counted for a place.
+  const seen = new Set<string>()
+  const unique = merged.equipped.filter(id => {
+    if (!merged.keepsakes.includes(id) || seen.has(id)) return false
+    seen.add(id)
+    return true
+  })
+  merged.equipped = unique.slice(0, Math.max(0, keepsakeSlots({ lifeHigh: merged.lifeHigh, equipped: unique })))
+  merged.manualHits = Number.isFinite(merged.manualHits) && merged.manualHits > 0 ? merged.manualHits : 0
+  merged.couchSeeded = merged.equipped.length > 0 ? true : merged.couchSeeded === true
   merged.peakBuzz = Number.isFinite(merged.peakBuzz) ? Math.max(merged.peakBuzz, merged.buzz, 0) : Math.max(merged.buzz, 0)
   merged.returnGift = Number.isFinite(merged.returnGift) && merged.returnGift > 0 ? merged.returnGift : 0
   return { ...merged, version: 3 }

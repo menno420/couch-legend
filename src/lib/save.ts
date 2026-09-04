@@ -9,9 +9,9 @@ export const BACKUP_KEY = 'couch-legend-save-bak'
 
 const SAVE_FIELDS: (keyof SaveState)[] = [
   'version', 'high', 'lifeHigh', 'peakHigh', 'buzz', 'peakBuzz', 'nugs', 'cash',
-  'enlightenment', 'returnGift', 'totalHits', 'playTime', 'generators', 'jobs',
-  'rituals', 'achievements', 'keepsakes', 'equipped', 'lastTick', 'startedAt',
-  'sound', 'booted',
+  'enlightenment', 'returnGift', 'totalHits', 'manualHits', 'playTime',
+  'generators', 'jobs', 'rituals', 'achievements', 'keepsakes', 'equipped',
+  'couchSeeded', 'lastTick', 'startedAt', 'sound', 'booted',
 ]
 
 export function pickSave(s: SaveState): SaveState {
@@ -78,7 +78,7 @@ export function importCode(code: string): SaveState | null {
     if (typeof parsed.version !== 'number') return null
     const save = migrateSave(parsed)
     // Reject saves that would decode to nonsense numbers.
-    for (const k of ['high', 'lifeHigh', 'peakHigh', 'buzz', 'peakBuzz', 'nugs', 'cash', 'enlightenment', 'returnGift', 'totalHits', 'playTime'] as const) {
+    for (const k of ['high', 'lifeHigh', 'peakHigh', 'buzz', 'peakBuzz', 'nugs', 'cash', 'enlightenment', 'returnGift', 'totalHits', 'manualHits', 'playTime'] as const) {
       if (typeof save[k] !== 'number' || !Number.isFinite(save[k]) || save[k] < 0) return null
     }
     return save

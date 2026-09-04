@@ -118,13 +118,20 @@ function arrangeByRank(s: SaveState): string[] | null {
   const ranked = [...owned].sort((a, b) => (KIND_RANK[b.effect.kind] ?? 0) - (KIND_RANK[a.effect.kind] ?? 0))
   const want: string[] = []
   const kinds = new Set<string>()
+  // A kind is superseded per SHELF, not per kind name: milestone-early and
+  // auto-buy each have independent Grow and Work targets that the engine
+  // applies at the same time. Deduping on the bare kind dropped The Name Tag
+  // Drawer and The Standing Order — two effects nothing supersedes — and so
+  // weakened the very lane that exists to bound the strong end.
+  // (Codex CL#19 R1, P2.)
+  const slotKey = (e: typeof owned[number]['effect']) =>
+    'target' in e ? `${e.kind}:${e.target}` : e.kind
   for (const k of ranked) {
-    // Kinds never stack, so a second one of a kind is a wasted slot.
-    if (k.effect.kind !== 'shelf' && kinds.has(k.effect.kind)) continue
+    if (k.effect.kind !== 'shelf' && kinds.has(slotKey(k.effect))) continue
     const next = [...want, k.id]
     if (next.length > keepsakeSlots({ lifeHigh: s.lifeHigh, equipped: next })) break
     want.push(k.id)
-    kinds.add(k.effect.kind)
+    kinds.add(slotKey(k.effect))
   }
   return want
 }

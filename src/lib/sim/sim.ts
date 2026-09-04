@@ -386,8 +386,12 @@ export function runSim(opts: SimOptions): SimResult {
       }
       if (t >= horizon) break
       const away = Math.min(policy.session.away, horizon - t)
+      const beforeAway = s
       const { save: back } = applyOffline({ ...s, lastTick: t * 1000 }, away, tuning)
-      s = back
+      // Automation settles the absence here, exactly as the store's hydrate
+      // does — otherwise the simulator measures a Window Placard that buys
+      // nothing at all while the player is away. (Codex CL#19 R1, P1.)
+      s = applyAutoBuy(beforeAway, back, tuning)
       t += away
       nextHitAt = policy.clickHz > 0 ? t + hitGap() : Infinity
       s = collectAchievements(s).save

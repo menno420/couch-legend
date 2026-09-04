@@ -612,9 +612,9 @@ the live state. Against the § 9.6 rails:
 
 | rail | before | after | verdict |
 |---|---|---|---|
-| 1 · reachability | balanced 12.5 d | **12.1 d** | holds; the ~2-week north star is protected |
-| 3 · attended dead time | worst 44.8 m (arc 3, bound 45 m) | **40.6 m** | improved where it was tightest |
-| 4 · check-ins with a move (≥ 90 %) | balanced 96.9 % | **98.0 %** | improved |
+| 1 · reachability | balanced 12.5 d | **12.0 d** | holds; the ~2-week north star is protected |
+| 3 · attended dead time | worst 44.8 m (arc 3, bound 45 m) | **38.0 m** | improved where it was tightest |
+| 4 · check-ins with a move (≥ 90 %) | balanced 96.9 % | **98.0 %** | improved; all playing lanes ≥ 97.5 % |
 | 5a · felt-upgrade floor (≥ 2 %) | 0 of 24 runs below | **1 of 27** | see the boundary below |
 | 6 · rebuild ≤ 0.95 (patient lanes) | 0.88 / 0.92 / 0.90 | **0.88 / 0.92 / 0.90** | unchanged |
 
@@ -630,10 +630,17 @@ chapters 2–4 may carry only rate-neutral effect kinds.
 
 **The load-bearing result:** arranging the couch well is worth a great deal of
 currency and *nothing* in story progress. `keepsake-optimizer` ends 14 days
-with **17.7× the nugs** of the auto-arranging `balanced` lane and **0.98×
-its lifeHigh** — a slightly *slower* life, not a faster one. Optimising pays
-inside an afternoon; it is not a route through the story, which is what keeps
-idle-first play whole.
+with **2.3× the nugs and 1 690× the cash** of the auto-arranging `balanced`
+lane, and **0.98× its lifeHigh** — a slightly *slower* life, not a faster one.
+Optimising pays inside an afternoon; it is not a route through the story,
+which is what keeps idle-first play whole.
+
+**Automation spends spare change only.** A row buys itself only while it costs
+at most 25 % of the balance (`AUTO_BUY_RESERVE_SHARE`). That bound is not
+decoration: with both auto-buy keepsakes equipped and no reserve, the
+optimiser lane's check-ins-offering-a-move fell to **64.7 %** against a 90 %
+rail, because the room had already bought everything the returning player
+might have. The rail stayed where it was and the mechanic changed.
 
 **One defect the simulator could not have found.** The behaviour smoke against
 the real bundle caught that a player could not take a keepsake off at all:

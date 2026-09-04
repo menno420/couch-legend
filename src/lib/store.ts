@@ -1,18 +1,20 @@
 import { create } from 'zustand'
 import {
-  advance, applyOffline, computeRates, defaultSave, prestigeGain,
+  advance, applyOffline, defaultSave, prestigeGain,
   type OfflineSummary, type SaveState,
 } from './engine'
 import {
-  applyAutoBuy, applyHit, applyPrestige, arrangeModeFor, collectKeepsakes,
-  equipKeepsake, purchaseGenerator, purchaseJob, purchaseRitual,
-  unequipKeepsake, collectAchievements as collectPure, type ArrangeMode,
+  applyAutoBuy, applyHit, applyOfflineAutoBuy, applyPrestige, arrangeModeFor,
+  collectKeepsakes, equipKeepsake, fillBudgetFor, hitPreview, purchaseGenerator,
+  purchaseJob, purchaseRitual, unequipKeepsake,
+  collectAchievements as collectPure, type ArrangeMode,
 } from './actions'
 import {
   ACHIEVEMENTS, INTERJECTIONS, MOODS, NEWS_LINES,
   keepsakeById, stageCrossed, type StageDef,
 } from './content'
 import { loadSave, persistSave, pickSave, requestPersistence, importCode } from './save'
+import { fmt } from './format'
 import { blipSound, chimeSound, ensureAudio, puffSound, setMuted } from './audio'
 
 export type Tab = 'grow' | 'work' | 'rituals' | 'couch' | 'lore'
@@ -64,8 +66,13 @@ function collectAchievements(save: SaveState, toasts: Toast[]): AchievementResul
 
 /** Mint any keepsake the story has just left, and say so. Auto-arranged
  * ones are announced too, so the couch never changes silently. */
-function collectCouch(save: SaveState, toasts: Toast[], mode: ArrangeMode = 'fresh-only'): { save: SaveState; toasts: Toast[]; fresh: boolean } {
-  const { save: next, fresh, arranged } = collectKeepsakes(save, mode)
+function collectCouch(
+  save: SaveState,
+  toasts: Toast[],
+  mode: ArrangeMode = 'fresh-only',
+  fillBudget = Infinity,
+): { save: SaveState; toasts: Toast[]; fresh: boolean } {
+  const { save: next, fresh, arranged } = collectKeepsakes(save, mode, fillBudget)
   if (fresh.length === 0 && arranged.length === 0) return { save: next, toasts, fresh: false }
   let out = toasts
   for (const id of fresh) {
@@ -168,9 +175,13 @@ export const useGame = create<GameStore>()((set, get) => ({
     }
     const elapsed = Math.max(0, (now - stored.lastTick) / 1000)
     const { save: progressed, summary } = applyOffline(stored, elapsed)
-    const withTick = { ...progressed, lastTick: now }
+    // Automation runs on the same clock whether the app was open or not.
+    const settled = applyOfflineAutoBuy(stored, progressed)
+    const withTick = { ...settled, lastTick: now }
     const ach = collectAchievements(withTick, [])
-    const couch = collectCouch(ach.save, ach.toasts, 'fill')
+    // Catch the couch up only for a save that has never had one arranged —
+    // otherwise a reload silently refills a place the player emptied.
+    const couch = collectCouch(ach.save, ach.toasts, ach.save.couchSeeded ? 'fresh-only' : 'fill')
     setMuted(!withTick.sound)
     requestPersistence()
     set({
@@ -195,17 +206,20 @@ export const useGame = create<GameStore>()((set, get) => ({
   hit: (x, y) => {
     ensureAudio()
     const s = get()
-    const r = computeRates(s)
+    // What this press ACTUALLY pays — an echo doubles it and a banked return
+    // gift rides along, and the floater is the display surface both keepsakes
+    // name. Reading hitPower alone under-reported it. (Codex CL#19 R1, P2.)
+    const preview = hitPreview(pickSave(s))
     const quote = INTERJECTIONS[Math.floor(Math.random() * INTERJECTIONS.length)]
     const floaters: Floater[] = [
       ...s.floaters,
-      { id: `f${serial++}`, text: `+${r.hitPower < 10 ? r.hitPower.toFixed(1) : Math.round(r.hitPower)}`, kind: 'nug' as const, x, y, born: performance.now() },
+      { id: `f${serial++}`, text: `+${preview.nugs < 10 ? preview.nugs.toFixed(1) : fmt(preview.nugs)}`, kind: 'nug' as const, x, y, born: performance.now() },
       { id: `f${serial++}`, text: quote, kind: 'quote' as const, x: x + (Math.random() * 40 - 20), y: y - 18, born: performance.now() },
     ].slice(-14)
     const base = pickSave(s)
     const next = applyHit(base)
     const ach = collectAchievements(next, s.toasts)
-    const couch = collectCouch(ach.save, ach.toasts, arrangeModeFor(base, ach.save))
+    const couch = collectCouch(ach.save, ach.toasts, arrangeModeFor(base, ach.save), fillBudgetFor(base, ach.save))
     const mood = collectRevelations(s.lifeHigh, couch.save, couch.toasts)
     const turn = stageCrossed(s.lifeHigh, couch.save.lifeHigh)
     if (s.sound) puffSound()
@@ -270,7 +284,7 @@ export const useGame = create<GameStore>()((set, get) => ({
     const advanced = advance(base, dt)
     const progressed = { ...applyAutoBuy(base, advanced), lastTick: Date.now() }
     const ach = collectAchievements(progressed, s.toasts)
-    const couch = collectCouch(ach.save, ach.toasts, arrangeModeFor(base, ach.save))
+    const couch = collectCouch(ach.save, ach.toasts, arrangeModeFor(base, ach.save), fillBudgetFor(base, ach.save))
     const mood = collectRevelations(s.lifeHigh, couch.save, couch.toasts)
     const turn = stageCrossed(s.lifeHigh, couch.save.lifeHigh)
     if ((ach.fresh || couch.fresh || mood.fresh || turn) && s.sound) chimeSound()
@@ -328,9 +342,10 @@ export const useGame = create<GameStore>()((set, get) => ({
     const now = Date.now()
     const elapsed = Math.max(0, (now - parsed.lastTick) / 1000)
     const { save: progressed, summary } = applyOffline(parsed, elapsed)
-    const withTick = { ...progressed, lastTick: now, booted: true }
+    const settled = applyOfflineAutoBuy(parsed, progressed)
+    const withTick = { ...settled, lastTick: now, booted: true }
     const ach = collectAchievements(withTick, [])
-    const couch = collectCouch(ach.save, ach.toasts, 'fill')
+    const couch = collectCouch(ach.save, ach.toasts, ach.save.couchSeeded ? 'fresh-only' : 'fill')
     setMuted(!withTick.sound)
     set({
       ...couch.save,

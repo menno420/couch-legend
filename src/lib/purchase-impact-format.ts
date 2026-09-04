@@ -45,7 +45,13 @@ export function formatPurchaseImpact(impact: PurchaseImpact): string {
   if (impact.kind === 'rate') {
     const resource = impact.resource === 'cash' ? ' cash' : ''
     const rate = `+${fmtRate(impact.delta)} · becomes ${fmtRate(impact.after)}${resource}`
-    return [rate, ...impact.effects.map(formatEffect)].join(' · ')
+    // When the couch has cross-wired the shelves, this row pays in BOTH
+    // currencies and the preview says both — otherwise it promises half of
+    // what the purchase delivers.
+    const cross = impact.crossWired
+      ? [`+${fmtRate(impact.crossWired.delta)} ${impact.crossWired.resource === 'cash' ? 'cash' : 'nugs'} too`]
+      : []
+    return [rate, ...cross, ...impact.effects.map(formatEffect)].join(' · ')
   }
   return impact.effects.map(formatEffect).join(' · ')
 }

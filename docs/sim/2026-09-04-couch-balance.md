@@ -24,17 +24,17 @@ deliberately, then arranging is strategy rather than a tax.
 
 | rail | bound | before (`adopted`) | after (`couch`) |
 |---|---|---|---|
-| 1 · story close, balanced | ≤ 16 d | 12.5 d | **12.1 d** |
+| 1 · story close, balanced | ≤ 16 d | 12.5 d | **12.0 d** |
 | 1 · eager (click-heavy) | ≤ 5 wk | ~29 d ext | ~29 d ext |
 | 1 · degenerate (save-for-tiers) | ≤ 11 wk | ~72 d ext | ~72 d ext |
-| 3 · attended dead, worst | 5 m / 25 m / 45 m | 0 s / 18.1 m / **44.8 m** | 0 s / 17.7 m / **40.6 m** |
-| 4 · check-ins with a move | ≥ 90 % | balanced 96.9 % | balanced **98.0 %**, all lanes ≥ 97.8 % |
+| 3 · attended dead, worst | 5 m / 25 m / 45 m | 0 s / 18.1 m / **44.8 m** | 0 s / 17.7 m / **38.0 m** |
+| 4 · check-ins with a move | ≥ 90 % | balanced 96.9 % | balanced **98.0 %**, all playing lanes ≥ 97.5 % |
 | 5a · felt-upgrade floor | ≥ 2 % | 0 of 24 runs below | **1 of 27** (see § 4) |
 | 6 · rebuild, patient lanes | ≤ 0.95 | 0.88 / 0.92 / 0.90 | **0.88 / 0.92 / 0.90** |
 
-**The ~2-week north star is protected**: 12.5 d → 12.1 d, a 3 % change, well
+**The ~2-week north star is protected**: 12.5 d → 12.0 d, a 4 % change, well
 inside rail 1's 16-day bound. Rail 3 improved where it was tightest (44.8 m of
-a 45 m bound → 40.6 m), because a keepsake arriving at a chapter turn is
+a 45 m bound → **38.0 m**), because a keepsake arriving at a chapter turn is
 itself a move, and rail 6 is unchanged to two decimal places.
 
 ## 3 · The load-bearing result: optimising pays in currency, not in story
@@ -43,15 +43,17 @@ At the 14-day horizon, seed 11, identical policies but for the arrangement:
 
 | | `balanced` (auto-arrange) | `keepsake-optimizer` |
 |---|---|---|
-| nugs | 2.74 × 10¹⁷ | **4.86 × 10¹⁸ — 17.7×** |
-| cash | 5.51 × 10¹⁷ | **1.24 × 10¹⁸ — 2.3×** |
-| Clarity | 229 074 | 274 677 |
-| **lifeHigh** (the story axis) | 3.035 × 10¹² | **2.971 × 10¹² — 0.98×** |
-| places used | 6 of 6 | **7 of 7** (The Accession Card) |
+| nugs | 2.71 × 10¹⁸ | **6.18 × 10¹⁸ — 2.3×** |
+| cash | 1.81 × 10¹⁴ | **3.05 × 10¹⁷ — 1 690×** |
+| Clarity | 229 563 | 272 823 |
+| **lifeHigh** (the story axis) | 3.084 × 10¹² | **3.013 × 10¹² — 0.98×** |
+| places used | 7 of 7 | 7 of 7 |
 
 `lifeHigh` — the axis chapters key on — is driven by job high-rate and hits,
 while most keepsake effects feed the nug and cash economies. So working the
-couch deliberately makes an afternoon **17.7× richer and the life 2 % SLOWER**.
+couch deliberately makes an afternoon **enormously richer and the life 2 %
+SLOWER**. The two lanes end with the same number of places and largely
+different sets; the currency gap is where the strategy lives.
 A player who curates the couch is not racing ahead through the story; they are
 having a much bigger afternoon inside it.
 
@@ -70,6 +72,22 @@ axis that actually gates content — is **0.98×**.
 The tightest *passing* lane is `balanced` at **2.1 %** (`gen:cloud`) — close
 enough to the bound that a future change touching the nug economy should
 re-measure this rail rather than assume it.
+
+## 4b · A rail the REVIEW round broke, and the mechanic change that fixed it
+
+Fixing Codex's finding that the optimiser wrongly deduped shelf-targeted
+effects let that lane equip **both** auto-buy keepsakes for the first time —
+and its check-in-with-a-move rate collapsed to **64.7 %** against a ≥ 90 %
+rail. Automation was spending every coin as it landed, so a third of
+check-ins offered the player nothing: the room had already bought it.
+
+The rail was not moved. The mechanic was: auto-buy now spends only **spare
+change** — a row is bought only while it costs at most
+`AUTO_BUY_RESERVE_SHARE` (25 %) of the balance, so the player always keeps
+the larger part of their money and something to spend it on. That lane
+measures **97.5 %** after the change, and worst attended dead time improved
+further (40.6 m → 38.0 m). Automation takes the boring purchases off the
+player's hands; it does not take the game off them.
 
 Cause: the `work-nugs` cross-wire raises global nug/s, so a mid-tier
 generator's *first* unit is a smaller fraction of a larger total. It affects

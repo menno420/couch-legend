@@ -39,7 +39,10 @@ export function collectAchievements(save: SaveState): AchievementCollect {
 export function applyHit(s: SaveState, t: Tuning = DEFAULT_TUNING): SaveState {
   const r = computeRates(s, t)
   const echo = r.keepsakes.hitEchoEveryNth
-  const times = echo != null && (s.totalHits + 1) % echo === 0 ? 2 : 1
+  // Counted on MANUAL presses, never on `totalHits`: that field also accrues
+  // the Roommate's fractional auto-hits, and an echo's own +2 would shift the
+  // cadence. (Codex CL#19 R1, P1.)
+  const times = echo != null && (s.manualHits + 1) % echo === 0 ? 2 : 1
   const gainedHigh = r.hitHigh * times
   const high = s.high + gainedHigh
   const buzz = s.buzz + r.hitBuzz * times
@@ -53,6 +56,7 @@ export function applyHit(s: SaveState, t: Tuning = DEFAULT_TUNING): SaveState {
     buzz,
     peakBuzz: Math.max(s.peakBuzz, buzz),
     returnGift: 0,
+    manualHits: s.manualHits + 1,
     totalHits: s.totalHits + times,
   }
 }
@@ -62,7 +66,7 @@ export function applyHit(s: SaveState, t: Tuning = DEFAULT_TUNING): SaveState {
 export function hitPreview(s: SaveState, t: Tuning = DEFAULT_TUNING): { nugs: number; times: number; gift: number } {
   const r = computeRates(s, t)
   const echo = r.keepsakes.hitEchoEveryNth
-  const times = echo != null && (s.totalHits + 1) % echo === 0 ? 2 : 1
+  const times = echo != null && (s.manualHits + 1) % echo === 0 ? 2 : 1
   return { nugs: r.hitPower * times + s.returnGift, times, gift: s.returnGift }
 }
 
@@ -175,6 +179,13 @@ export function arrangeModeFor(before: SaveState, after: SaveState): ArrangeMode
   return keepsakeSlots(after) > keepsakeSlots(before) ? 'fill' : 'fresh-only'
 }
 
+/** How many pre-existing keepsakes a `fill` pass may insert. A chapter that
+ * opens ONE place may fill one — not the whole couch, which would also
+ * repopulate a place the player deliberately emptied. (Codex CL#19 R1, P2.) */
+export function fillBudgetFor(before: SaveState, after: SaveState): number {
+  return Math.max(0, keepsakeSlots(after) - keepsakeSlots(before))
+}
+
 /**
  * Mint every keepsake the life has now earned, and arrange per `mode`.
  *
@@ -186,7 +197,14 @@ export function arrangeModeFor(before: SaveState, after: SaveState): ArrangeMode
  * space, never displaces a choice the player made, and skips a keepsake
  * something better already supersedes.
  */
-export function collectKeepsakes(save: SaveState, mode: ArrangeMode = 'fresh-only'): KeepsakeCollect {
+export function collectKeepsakes(
+  save: SaveState,
+  mode: ArrangeMode = 'fresh-only',
+  /** Cap on how many ALREADY-OWNED keepsakes a `fill` pass may add.
+   * Infinity is the load-time catch-up; a slot-delta budget is the in-play
+   * case, where only the newly opened places may be filled. */
+  fillBudget = Infinity,
+): KeepsakeCollect {
   const owned = new Set(save.keepsakes)
   const fresh = keepsakesEarnedBy(save.lifeHigh).filter(id => !owned.has(id))
   const keepsakes = fresh.length ? [...save.keepsakes, ...fresh] : save.keepsakes
@@ -194,18 +212,31 @@ export function collectKeepsakes(save: SaveState, mode: ArrangeMode = 'fresh-onl
   const slots = keepsakeSlots({ lifeHigh: save.lifeHigh, equipped: save.equipped })
   const equipped = save.equipped.filter(id => keepsakes.includes(id)).slice(0, slots)
   const arranged: string[] = []
+  // Fresh mints are always placed if there is room; already-owned keepsakes
+  // are placed only in `fill` mode and only up to the budget.
   const candidates = mode === 'fill' ? keepsakes : fresh
+  let budget = fillBudget
   for (const id of candidates) {
-    if (equipped.length >= keepsakeSlots({ lifeHigh: save.lifeHigh, equipped })) break
     if (equipped.includes(id)) continue
+    const isFresh = fresh.includes(id)
+    if (!isFresh && budget <= 0) continue
+    const tentative = [...equipped, id]
+    // Capacity is checked against the TENTATIVE arrangement, not the current
+    // one — a shelf keepsake takes one place and grants two, so on a full
+    // couch it is legal precisely because adding it widens the couch. The
+    // pre-insertion check skipped it and left auto-arrangers a place short.
+    // (Codex CL#19 R1, P2.)
+    if (tentative.length > keepsakeSlots({ lifeHigh: save.lifeHigh, equipped: tentative })) continue
     if (isSuperseded(id, keepsakeEffects({ lifeHigh: save.lifeHigh, equipped }))) continue
     equipped.push(id)
     arranged.push(id)
+    if (!isFresh) budget--
   }
-  if (!fresh.length && !arranged.length && equipped.length === save.equipped.length) {
+  const seeded = save.couchSeeded || equipped.length > 0
+  if (!fresh.length && !arranged.length && equipped.length === save.equipped.length && seeded === save.couchSeeded) {
     return { save, fresh, arranged }
   }
-  return { save: { ...save, keepsakes, equipped }, fresh, arranged }
+  return { save: { ...save, keepsakes, equipped, couchSeeded: seeded }, fresh, arranged }
 }
 
 /** Put a keepsake on the couch. Null when it is not owned, already there, or
@@ -235,11 +266,36 @@ export function unequipKeepsake(s: SaveState, id: string): SaveState | null {
 export const AUTO_BUY_CATCHUP_CAP = 10
 
 /**
+ * Automation buys a row only while it costs at most this share of the
+ * balance, so it always leaves the player the larger half of their money.
+ *
+ * Measured reason: without a reserve, a couch carrying BOTH auto-buy
+ * keepsakes spent every currency as it arrived, and the simulator's
+ * check-in-with-a-move rate for that lane fell to 64.7 % against a >= 90 %
+ * rail — a third of check-ins offered the player nothing, because the room
+ * had already bought it. Automation should take the boring purchases off the
+ * player's hands, not take the game off them.
+ */
+export const AUTO_BUY_RESERVE_SHARE = 0.25
+
+/**
  * The couch buying for you. Fires on the same schedule whether you are
  * watching or not, so it is automation rather than an attendance reward:
  * it buys the CHEAPEST affordable row on its shelf, which is the safe,
  * boring choice a player would not bother making by hand.
  */
+/**
+ * Settle the automatic purchases an absence is owed.
+ *
+ * The couch's automation promises the same schedule "watched or not", and
+ * `applyOffline` advances `playTime` — so the away transition owes exactly the
+ * same bounded catch-up an attended tick does. Without this, a Window Placard
+ * bought nothing at all while the app was closed. (Codex CL#19 R1, P1.)
+ */
+export function applyOfflineAutoBuy(before: SaveState, after: SaveState, t: Tuning = DEFAULT_TUNING): SaveState {
+  return applyAutoBuy(before, after, t)
+}
+
 export function applyAutoBuy(prev: SaveState, next: SaveState, t: Tuning = DEFAULT_TUNING): SaveState {
   const mods = keepsakeEffects(next)
   let s = next
@@ -261,21 +317,23 @@ export function applyAutoBuy(prev: SaveState, next: SaveState, t: Tuning = DEFAU
 }
 
 function buyCheapestGenerator(s: SaveState, t: Tuning): SaveState | null {
+  const ceiling = s.nugs * AUTO_BUY_RESERVE_SHARE
   let best: { id: string; cost: number } | null = null
   for (const g of GENERATORS) {
     if (s.high < g.unlockHigh || !stageUnlocked(s.lifeHigh, g.stage)) continue
     const cost = bulkCost(g.baseCost, g.costScale, s.generators[g.id] ?? 0, 1)
-    if (s.nugs >= cost && (!best || cost < best.cost)) best = { id: g.id, cost }
+    if (cost <= ceiling && (!best || cost < best.cost)) best = { id: g.id, cost }
   }
   return best ? purchaseGenerator(s, best.id, 1, t) : null
 }
 
 function buyCheapestJob(s: SaveState, t: Tuning): SaveState | null {
+  const ceiling = s.cash * AUTO_BUY_RESERVE_SHARE
   let best: { id: string; cost: number } | null = null
   for (const j of JOBS) {
     if (s.high < j.unlockHigh || !stageUnlocked(s.lifeHigh, j.stage)) continue
     const cost = bulkCost(j.baseCost, j.costScale, s.jobs[j.id] ?? 0, 1)
-    if (s.cash >= cost && (!best || cost < best.cost)) best = { id: j.id, cost }
+    if (cost <= ceiling && (!best || cost < best.cost)) best = { id: j.id, cost }
   }
   return best ? purchaseJob(s, best.id, 1, t) : null
 }
