@@ -537,10 +537,16 @@ balance or pacing also carries simulator evidence (`pnpm sim`, § 9.6).
 > to buy**. Sixteen chapters were the same loop with new scenery.
 >
 > **The same instrument, re-run after this change: `introduce a new MECHANIC`
-> goes from 0/18 to 17/18** (every chapter but the first), with the couch
-> growing from 0 to 6 places across the life. Its self-test grew from 13 to 18
-> checks in the same commit, so the after-number is not a looser measurement
-> than the before-number.
+> goes from 0/18 to 14/18**, with a further **3/18** *deepening* a shape an
+> earlier chapter introduced — so **17 of 18 chapters deliver something new**
+> and only First Light, the bare couch, delivers nothing. Its self-test grew
+> from 13 to **22** checks across the same work, so the after-number is
+> measured by a stricter instrument than the before-number.
+>
+> *(An earlier version of this line said 17/18 introduce a mechanic. That
+> conflated a stronger value of an existing shape with a new one — Codex
+> CL#19 R3, P1, conceded; the instrument now separates them and every
+> published copy of the inflated figure was corrected.)*
 >
 > Keepsakes are the answer to that, and they are deliberately not a fourth
 > economy. Research support and its limits:

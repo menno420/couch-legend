@@ -28,7 +28,7 @@ deliberately, then arranging is strategy rather than a tax.
 | 1 · eager (click-heavy) | ≤ 5 wk | ~29 d ext | ~29 d ext |
 | 1 · degenerate (save-for-tiers) | ≤ 11 wk | ~72 d ext | ~72 d ext |
 | 3 · attended dead, worst | 5 m / 25 m / 45 m | 0 s / 18.1 m / **44.8 m** | 0 s / 17.7 m / **38.0 m** |
-| 4 · check-ins with a move | ≥ 90 % | balanced 96.9 % | balanced **98.0 %**, all playing lanes ≥ 97.5 % |
+| 4 · check-ins with a move | ≥ 90 % | balanced 96.9 % | balanced **98.0 %**, all playing lanes ≥ 97.1 % |
 | 5a · felt-upgrade floor | ≥ 2 % | 0 of 24 runs below | **1 of 27** (see § 4) |
 | 6 · rebuild, patient lanes | ≤ 0.95 | 0.88 / 0.92 / 0.90 | **0.88 / 0.92 / 0.90** |
 
@@ -41,19 +41,32 @@ itself a move, and rail 6 is unchanged to two decimal places.
 
 At the 14-day horizon, seed 11, identical policies but for the arrangement:
 
+*(Read from the committed fixtures, not composed — an earlier version of this
+table was written from a previous run and left stale when the fixtures were
+regenerated. Codex CL#19 R3, P1, conceded.)*
+
 | | `balanced` (auto-arrange) | `keepsake-optimizer` |
 |---|---|---|
-| nugs | 2.71 × 10¹⁸ | **6.18 × 10¹⁸ — 2.3×** |
-| cash | 1.81 × 10¹⁴ | **3.05 × 10¹⁷ — 1 690×** |
-| Clarity | 229 563 | 272 823 |
-| **lifeHigh** (the story axis) | 3.084 × 10¹² | **3.013 × 10¹² — 0.98×** |
+| nugs | 2.40 × 10¹⁸ | **1.09 × 10¹⁹ — 4.52×** |
+| cash | 1.55 × 10¹⁸ | 4.57 × 10¹⁷ — 0.29× |
+| Clarity | 229 563 | 273 026 — 1.19× |
+| **lifeHigh** (the story axis) | 3.08 × 10¹² | **2.96 × 10¹² — 0.96×** |
 | places used | 7 of 7 | 7 of 7 |
+
+The two lanes end holding *different* couches: `balanced` (auto-arranged, in
+mint order) carries Exact Change · Valid Until Morning · The Name Tag Drawer ·
+The Spare Key · The Standing Glass · The Accession Card · The Overlap, while
+the optimiser carries The Cutting · The Name Tag Drawer · The Window Placard ·
+The Standing Order · The First Follower · The Accession Card · A Jar of That
+Light.
 
 `lifeHigh` — the axis chapters key on — is driven by job high-rate and hits,
 while most keepsake effects feed the nug and cash economies. So working the
-couch deliberately makes an afternoon **enormously richer and the life 2 %
-SLOWER**. The two lanes end with the same number of places and largely
-different sets; the currency gap is where the strategy lives.
+couch deliberately makes an afternoon **4.5× richer in nugs and the life 4 %
+SLOWER**. The cash figure moves the other way (0.29×) because the optimiser
+runs Work automation and converts cash into rows rather than holding it —
+which is the same story told from the other side: the strategy shows up as
+what the afternoon *does*, not as progress through the chapters.
 A player who curates the couch is not racing ahead through the story; they are
 having a much bigger afternoon inside it.
 
@@ -62,7 +75,8 @@ measurement, and it is why an idle-first player loses nothing by never opening
 the tab. It also bounds the shape the research named as resented: NGU
 Industries' active/idle gap is reported at ~8× **on progression**, and fans who
 otherwise recommend that game object to it. The equivalent gap here — on the
-axis that actually gates content — is **0.98×**.
+axis that actually gates content — is **0.96×**, i.e. slightly against the
+player who optimises.
 
 ## 4 · The one rail breach, stated rather than hidden
 
@@ -125,6 +139,22 @@ apart: fill a place **the story just opened** (a slot chapter crossed), leave
 alone a place **the player just emptied**. `arrangeModeFor` decides it from
 the slot count before and after, and three tests pin each branch.
 
+## 5b · What the third review round changed here
+
+Round 3 found that this document's own seed-11 table no longer matched the
+committed fixtures: it had been written from the round-2 run and left stale
+when the fixtures were regenerated for the offline-automation change. The
+table above is now generated from the fixtures rather than transcribed. That
+is the estate's TRAP-001 in its purest form — a number that was measured once
+and then quoted as though it still described the tree.
+
+It also found that `tools/stage-evolution.ts` counted **every** keepsake as a
+newly introduced mechanic, including five chapters that only supply a stronger
+value of a shape introduced earlier. The headline was inflated from **14/18 to
+17/18**, and 17/18 had been published in four places. The instrument now
+separates the two, and reports **14 introduce · 3 deepen · 17 deliver
+something new · 1 (the bare couch at First Light) delivers nothing**.
+
 ## 6 · What this does not establish
 
 - **Nothing about whether arranging the couch is fun.** Simulation bounds
@@ -139,3 +169,6 @@ the slot count before and after, and three tests pin each branch.
 - The optimiser lane's story figure being *slower* than the auto-arranger's is
   one seed's measurement, not a law: it says the couch does not accelerate the
   story, not that curating it is a penalty.
+- The optimiser's ranking is a plausible strong player with a strength
+  tie-break, not a solved optimum. A better arranger would widen the currency
+  gap; whether it would move the story figure is untested.

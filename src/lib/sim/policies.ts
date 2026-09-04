@@ -3,7 +3,7 @@
 // spend-all, camp vs check-in), not modeling any one human well.
 
 import { DEFAULT_TUNING, keepsakeEffects, keepsakeSlots, milestoneMult, type Tuning } from '../engine'
-import { GENERATORS, JOBS, KEEPSAKES, RITUALS, stageUnlocked } from '../content'
+import { GENERATORS, JOBS, KEEPSAKES, RITUALS, stageUnlocked, type KeepsakeDef } from '../content'
 import type { SaveState } from '../actions'
 import type { BuyAction, Policy } from './sim'
 
@@ -112,10 +112,33 @@ const KIND_RANK: Record<string, number> = {
   'offline-uncap': 10, // a real trade, and this lane plays attended
 }
 
+/** Relative strength within a kind, for the tie-break below. Bigger is
+ * better for every shape except the two counted in "every Nth" / "every N
+ * seconds", where smaller is. */
+function strength(e: KeepsakeDef['effect']): number {
+  switch (e.kind) {
+    case 'work-nugs': case 'grow-cash': case 'buzz-floor': return e.share
+    case 'return-gift': return e.seconds
+    case 'offline-uncap': return e.efficiency
+    case 'clarity-yield': return e.value
+    case 'milestone-early': return e.units
+    case 'shelf': return e.slots
+    case 'hit-echo': return -e.everyNth
+    case 'auto-buy': return -e.everySeconds
+  }
+}
+
 function arrangeByRank(s: SaveState): string[] | null {
   const owned = KEEPSAKES.filter(k => s.keepsakes.includes(k.id))
   if (owned.length === 0) return null
-  const ranked = [...owned].sort((a, b) => (KIND_RANK[b.effect.kind] ?? 0) - (KIND_RANK[a.effect.kind] ?? 0))
+  // Rank by kind, then by STRENGTH within the kind. Without the tie-break the
+  // stable sort kept mint order, so the "strong end" lane took Standing
+  // Glass's 10 % cross-wire over The First Follower's 30 % and Valid Until
+  // Morning's 18 % floor over the Jar's 40 % — measuring a systematically
+  // weaker arrangement than the lane exists to bound. (Codex CL#19 R3, P2.)
+  const ranked = [...owned].sort((a, b) =>
+    ((KIND_RANK[b.effect.kind] ?? 0) - (KIND_RANK[a.effect.kind] ?? 0))
+    || (strength(b.effect) - strength(a.effect)))
   const want: string[] = []
   const kinds = new Set<string>()
   // A kind is superseded per SHELF, not per kind name: milestone-early and

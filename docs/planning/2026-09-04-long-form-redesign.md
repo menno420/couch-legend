@@ -21,9 +21,12 @@
 So the eighteen chapters were eighteen *thresholds and paintings* over one
 loop. The mechanics did not evolve with the life; only the numbers did.
 
-**After phase A, the same instrument reports `17/18` chapters introducing a
-mechanic** (18/18 self-tests, up from 13 — the after-number is measured by a
-stricter instrument, not a looser one). What has *not* changed is the shelf:
+**After phase A, the same instrument reports `14/18` chapters introducing a
+new mechanic and a further `3/18` *deepening* one — so 17 of 18 deliver
+something new** (22 self-tests, up from 13 — the after-number is measured by a
+stricter instrument, not a looser one). The five late chapters that supply a
+stronger version of an earlier shape are mastery, not new mechanics, and the
+matrix's "later" column is where they belong. What has *not* changed is the shelf:
 still `2/18` chapters gating a content row, still `4 of 38` rows behind a
 stage. That is deliberate — the shelf is the tuned opening and arc-3 batches
 (F5) are the place to widen it, not the keepsake family.

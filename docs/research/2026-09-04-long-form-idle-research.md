@@ -33,7 +33,8 @@ hours**, leaving **13.7–14.0 days** of the story with nothing new on the shelf
 
 That is the redesign's reason to exist, in numbers rather than in a feeling.
 *(After the change: the same instrument, with its self-test grown from 13
-checks to 18, reports `introduce a new MECHANIC: 17/18`.)*
+checks to 22, reports `introduce a new MECHANIC: 14/18`, `DEEPEN an existing
+shape: 3/18`, `deliver ANYTHING new: 17/18`.)*
 
 ## 1 · Method, and what it deliberately discards
 

@@ -14,7 +14,7 @@
 import {
   GENERATORS, JOBS, RITUALS, STAGES, STAGE_FRAMING, ARC_NAMES, KEEPSAKES,
   SLOT_STAGES, baseSlotsFor,
-  type StageDef,
+  type KeepsakeDef, type StageDef,
 } from '../src/lib/content'
 import { STAGE_PRESENTATION } from '../src/lib/presentation'
 
@@ -36,6 +36,8 @@ export interface StageCensusRow {
   /** A stage introduces a MECHANIC when it adds a verb, a system or an
    * automation class — not merely another priced row on an existing shelf. */
   newMechanics: string[]
+  /** Effect shapes this chapter DEEPENS rather than introduces. */
+  deepens: string[]
   /** Places on the couch once this chapter is reached. */
   slots: number
 }
@@ -43,21 +45,51 @@ export interface StageCensusRow {
 /**
  * Verbs and systems a stage begins — derived from source, never asserted.
  *
- * A stage introduces a MECHANIC when some code path keys on that stage id
- * beyond the additive content gate. Two do:
- *  - a chapter that mints a keepsake gives the player a new permanent effect
- *    and (from the second one on) a new decision about what is on the couch;
- *  - a chapter in SLOT_STAGES widens the couch, which changes the decision
- *    rather than only adding to it.
- * Before 2026-09-04 this function returned [] for every stage, and that was
- * the honest measurement of the time: 0 of 18.
+ * A stage introduces a MECHANIC when it adds something the player could not
+ * do before: the FIRST appearance of an effect shape, or a widening of the
+ * couch (which changes the arrangement decision rather than only adding to
+ * it). A later chapter that supplies a STRONGER VALUE of a shape already
+ * introduced is a different thing — it deepens the family and can retire an
+ * earlier keepsake — and it is counted separately.
+ *
+ * That distinction is not cosmetic. Counting every keepsake as a new mechanic
+ * inflated the headline from 13/18 to 17/18, which is the central before/after
+ * claim of the whole change. (Codex CL#19 R3, P1 — conceded; every published
+ * copy of 17/18 was corrected.)
+ *
+ * Before 2026-09-04 this returned [] for every stage: 0 of 18, honestly.
  */
+const shapeKey = (e: KeepsakeDef['effect']): string =>
+  'target' in e ? `${e.kind}:${e.target}` : e.kind
+
+function firstIntroductions(): Map<string, string> {
+  // shape -> the first stage (in story order) that introduces it
+  const seen = new Map<string, string>()
+  for (const st of STAGES) {
+    const k = KEEPSAKES.find(x => x.stage === st.id)
+    if (!k) continue
+    const key = shapeKey(k.effect)
+    if (!seen.has(key)) seen.set(key, st.id)
+  }
+  return seen
+}
+
+const FIRST = firstIntroductions()
+
 function mechanicsBeginningAt(stage: StageDef): string[] {
   const out: string[] = []
   const k = KEEPSAKES.find(x => x.stage === stage.id)
-  if (k) out.push(`keepsake:${k.effect.kind}`)
+  if (k && FIRST.get(shapeKey(k.effect)) === stage.id) out.push(`keepsake:${shapeKey(k.effect)}`)
   if ((SLOT_STAGES as readonly string[]).includes(stage.id)) out.push('couch:+1 place')
   return out
+}
+
+/** A stage that supplies a stronger version of a shape introduced earlier. */
+function masteryAt(stage: StageDef): string[] {
+  const k = KEEPSAKES.find(x => x.stage === stage.id)
+  if (!k) return []
+  const key = shapeKey(k.effect)
+  return FIRST.get(key) === stage.id ? [] : [`deepens:${key} (first at ${FIRST.get(key)})`]
 }
 
 export function census(): StageCensusRow[] {
@@ -79,6 +111,7 @@ export function census(): StageCensusRow[] {
       slots: baseSlotsFor(st.minLifeHigh),
       newContentRows: newGenerators.length + newJobs.length + newRituals.length,
       newMechanics: mechanicsBeginningAt(st),
+      deepens: masteryAt(st),
     }
   })
 }
@@ -113,6 +146,14 @@ function selftest(): number {
     // POSITIVES for the mechanic lane — added 2026-09-04 when keepsakes made
     // it non-empty. Before then it returned [] for every stage by design.
     ['positive corner-store begins a mechanic (its keepsake)', by('corner-store').newMechanics.length >= 1],
+    // The distinction the P1 was about: a stronger value of an existing shape
+    // is mastery, not a new mechanic, and the census must not conflate them.
+    ['negative mythic-canopy DEEPENS buzz-floor rather than introducing it',
+      by('mythic-canopy').newMechanics.length === 0 && by('mythic-canopy').deepens.length === 1],
+    ['negative long-afternoon DEEPENS clarity-yield', by('long-afternoon').deepens.length === 1],
+    ['positive cousins-couch INTRODUCES buzz-floor', by('cousins-couch').newMechanics.some(m => m.includes('buzz-floor'))],
+    ['control every chapter either introduces, deepens, or gates content — except the first',
+      rows.filter(r => r.newMechanics.length === 0 && r.deepens.length === 0 && r.newContentRows === 0).length === 1],
     ['positive corner-store also widens the couch', by('corner-store').newMechanics.includes('couch:+1 place')],
     ['positive the-operation begins a mechanic despite gating no content row',
       by('the-operation').newContentRows === 0 && by('the-operation').newMechanics.length === 1],
@@ -139,15 +180,19 @@ function report(): void {
       String(r.framedItems.length).padEnd(7),
       String(r.slots).padEnd(7),
       (r.sceneDelivered ? 'delivered' : 'anchor').padEnd(12),
-      r.newMechanics.length ? r.newMechanics.join(', ') : '—',
+      r.newMechanics.length ? r.newMechanics.join(', ') : (r.deepens.join(', ') || '—'),
     )
   }
   const withContent = rows.filter(r => r.newContentRows > 0)
   const withMechanic = rows.filter(r => r.newMechanics.length > 0)
+  const withMastery = rows.filter(r => r.newMechanics.length === 0 && r.deepens.length > 0)
+  const withAnything = rows.filter(r => r.newMechanics.length > 0 || r.deepens.length > 0 || r.newContentRows > 0)
   const delivered = rows.filter(r => r.sceneDelivered)
   console.log(`\nCENSUS — ${rows.length} stages total`)
   console.log(`  gate ANY new content row : ${withContent.length}/${rows.length}  (${withContent.map(r => r.id).join(', ') || 'none'})`)
   console.log(`  introduce a new MECHANIC : ${withMechanic.length}/${rows.length}  (${withMechanic.map(r => r.id).join(', ') || 'none'})`)
+  console.log(`  DEEPEN an existing shape : ${withMastery.length}/${rows.length}  (${withMastery.map(r => r.id).join(', ') || 'none'})`)
+  console.log(`  deliver ANYTHING new     : ${withAnything.length}/${rows.length}`)
   console.log(`  have delivered scene art : ${delivered.length}/${rows.length}  (${delivered.map(r => r.id).join(', ')})`)
   console.log(`  content rows gated total : ${rows.reduce((a, r) => a + r.newContentRows, 0)} of ${GENERATORS.length + JOBS.length + RITUALS.length} shelf rows`)
   console.log(`  keepsakes minted total   : ${KEEPSAKES.length} across ${new Set(KEEPSAKES.map(k => k.stage)).size} chapters, into ${baseSlotsFor(Infinity)} places`)

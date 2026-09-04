@@ -22,6 +22,7 @@ import {
 } from '../src/lib/content'
 
 const save = (p: Partial<SaveState> = {}): SaveState => ({ ...defaultSave(0), ...p })
+const owned = (m: Record<string, number>): number => Object.values(m).reduce((a, b) => a + b, 0)
 const stageHigh = (id: string) => STAGES.find(s => s.id === id)!.minLifeHigh
 
 describe('keepsake content table', () => {
@@ -273,12 +274,12 @@ describe('automation buys on the clock, watched or not', () => {
   it('fires once per interval and not before', () => {
     expect(applyAutoBuy(s, { ...s, playTime: 44 }).generators).toEqual({})
     const one = applyAutoBuy(s, { ...s, playTime: 45 })
-    expect(Object.values(one.generators).reduce((a, b) => a + b, 0)).toBe(1)
+    expect(owned(one.generators)).toBe(1)
   })
 
   it('caps the catch-up after a long absence instead of buying hundreds silently', () => {
     const back = applyAutoBuy(s, { ...s, playTime: 45 * 500 })
-    expect(Object.values(back.generators).reduce((a, b) => a + b, 0)).toBe(AUTO_BUY_CATCHUP_CAP)
+    expect(owned(back.generators)).toBe(AUTO_BUY_CATCHUP_CAP)
   })
 
   it('does nothing at all when the keepsake is off the couch', () => {
@@ -453,7 +454,7 @@ describe('the review round (Codex CL#19 R1) — regression pins', () => {
     const { save: back } = applyOffline(s, 6 * 3600)
     expect(back.playTime).toBeGreaterThan(s.playTime)
     const settled = applyAutoBuy(s, back)
-    const bought = Object.values(settled.generators).reduce((a, b) => a + b, 0)
+    const bought = owned(settled.generators)
     expect(bought).toBeGreaterThan(0)
     expect(bought).toBeLessThanOrEqual(AUTO_BUY_CATCHUP_CAP)
   })
@@ -600,7 +601,7 @@ describe('the reserve is a hard bound per catch-up, not per round', () => {
       keepsakes: ['window-placard'], equipped: ['window-placard'],
     })
     const after = applyAutoBuy(s, { ...s, playTime: 45 * 20 })
-    expect(Object.values(after.generators).reduce((a, b) => a + b, 0)).toBeGreaterThan(0)
+    expect(owned(after.generators)).toBeGreaterThan(0)
   })
 
   it('never buys a row the player could not have afforded outright', () => {
@@ -655,8 +656,8 @@ describe('review round 2 (Codex CL#19 R2) — regression pins', () => {
     const cap = computeRates(s).offlineCap
     const scheduled = applyOfflineWithAutomation(s, cap * 4)
     // The purchases happen — and early ones produce for the later segments.
-    expect(Object.values(scheduled.save.generators).reduce((a, b) => a + b, 0))
-      .toBeGreaterThan(Object.values(s.generators).reduce((a, b) => a + b, 0))
+    expect(owned(scheduled.save.generators))
+      .toBeGreaterThan(owned(s.generators))
     // THE INVARIANT THAT MATTERS: splitting must never let the absence earn
     // more than one capped window. An upper bound is a single capped window
     // at the FINAL (richest) rates.
@@ -673,5 +674,75 @@ describe('review round 2 (Codex CL#19 R2) — regression pins', () => {
     const b = applyOffline(s, 3600)
     expect(a.save.nugs).toBeCloseTo(b.save.nugs, 6)
     expect(a.summary!.seconds).toBeCloseTo(b.summary!.seconds, 6)
+  })
+})
+
+describe('review round 3 (Codex CL#19 R3) — regression pins', () => {
+  it('the reserve is cumulative across a catch-up — Codex’s counterexample (P2)', () => {
+    // 100 nugs, no generators, ten due rounds. The per-purchase ceiling let
+    // this buy four trays and spend ~49 % of the starting balance while the
+    // commit message claimed a 25 % hard bound. The purse is the fix.
+    const s = save({
+      high: 1e5, lifeHigh: Infinity, nugs: 100, cash: 0, playTime: 0,
+      keepsakes: ['window-placard'], equipped: ['window-placard'],
+    })
+    const after = applyAutoBuy(s, { ...s, playTime: 45 * 10 })
+    const spent = s.nugs - after.nugs
+    expect(spent).toBeLessThanOrEqual(s.nugs * AUTO_BUY_RESERVE_SHARE + 1e-9)
+    expect(after.nugs).toBeGreaterThanOrEqual(75 - 1e-9)
+  })
+
+  it('automation never rewrites playTime (P1)', () => {
+    const s = save({
+      high: 1e5, lifeHigh: Infinity, nugs: 1e9, cash: 1e9, playTime: 98765,
+      keepsakes: ['window-placard'], equipped: ['window-placard'],
+    })
+    const next = { ...s, playTime: 98765 + 90 }
+    expect(applyAutoBuy(s, next).playTime).toBe(next.playTime)
+    // and across an absence
+    const back = applyOfflineWithAutomation({ ...s, lastTick: 0 }, 3600)
+    expect(back.save.playTime).toBeGreaterThan(s.playTime)
+  })
+
+  it('the return gift is banked exactly once per absence, not once per segment (P2)', () => {
+    const s = save({
+      high: 1e5, lifeHigh: Infinity, nugs: 1e8, cash: 1e8, lastTick: 0,
+      generators: { tray: 30 }, jobs: { thinker: 20 },
+      keepsakes: ['exact-change', 'window-placard'], equipped: ['exact-change', 'window-placard'],
+    })
+    const rate = computeRates(s).nugRate
+    const back = applyOfflineWithAutomation(s, 4 * 3600)
+    // exactly 45 s of the DEPARTURE rate, however many segments ran
+    expect(back.save.returnGift).toBeCloseTo(rate * 45, 3)
+  })
+
+  it('segments land on the automation’s real boundaries (P2)', () => {
+    // 90 s absence, 45 s interval: purchases belong at 45 and 90, not at
+    // 30 and 60 as equal-thirds segmenting produced.
+    const s = save({
+      high: 1e5, lifeHigh: Infinity, nugs: 1e6, cash: 1e6, lastTick: 0,
+      generators: { tray: 10 },
+      keepsakes: ['window-placard'], equipped: ['window-placard'],
+    })
+    const back = applyOfflineWithAutomation(s, 90)
+    const cap = computeRates(s).offlineCap
+    // The total window is unchanged and still one capped absence.
+    expect(back.summary!.seconds).toBeLessThanOrEqual(Math.min(90, cap) * computeRates(s).offlineEff + 1e-6)
+    expect(owned(back.save.generators)).toBeGreaterThan(owned(s.generators))
+  })
+
+  it('the optimizer takes the strongest of a ranked kind (P2)', () => {
+    const s = save({ lifeHigh: Infinity, keepsakes: KEEPSAKES.map(k => k.id) })
+    const want = POLICIES['keepsake-optimizer'].arrange!(s)!
+    // First Follower (30 %) over Standing Glass (10 %); the Jar (40 %) over
+    // Valid Until Morning (18 %).
+    if (want.some(id => keepsakeById(id)!.effect.kind === 'work-nugs')) {
+      expect(want).toContain('first-follower')
+      expect(want).not.toContain('standing-glass')
+    }
+    if (want.some(id => keepsakeById(id)!.effect.kind === 'buzz-floor')) {
+      expect(want).toContain('jar-of-that-light')
+      expect(want).not.toContain('valid-until-morning')
+    }
   })
 })

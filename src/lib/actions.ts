@@ -292,18 +292,103 @@ export const AUTO_BUY_RESERVE_SHARE = 0.25
  * boring choice a player would not bother making by hand.
  */
 /**
+ * One scheduled automation round: at most one purchase per automated shelf,
+ * each drawn from a purse that is decremented by what it actually spends.
+ *
+ * The purse is the whole point. An earlier version re-derived a 25 % ceiling
+ * from the CURRENT balance on every purchase, which is not a bound at all —
+ * ten rounds starting from 100 nugs spent ~49 %. (Codex CL#19 R3, P2, against
+ * a commit whose message claimed the purse existed: the edit had silently
+ * failed to apply and the test was too weak to notice.)
+ */
+function autoBuyRound(s: SaveState, purse: { nugs: number; cash: number }, t: Tuning): SaveState {
+  const mods = keepsakeEffects(s)
+  let cur = s
+  if (mods.autoBuyGrowEvery != null && purse.nugs > 0) {
+    const before = cur.nugs
+    const bought = buyCheapestGenerator(cur, t, purse.nugs)
+    if (bought) { purse.nugs -= before - bought.nugs; cur = bought }
+  }
+  if (mods.autoBuyWorkEvery != null && purse.cash > 0) {
+    const before = cur.cash
+    const bought = buyCheapestJob(cur, t, purse.cash)
+    if (bought) { purse.cash -= before - bought.cash; cur = bought }
+  }
+  return cur
+}
+
+const newPurse = (s: SaveState) => ({
+  nugs: s.nugs * AUTO_BUY_RESERVE_SHARE,
+  cash: s.cash * AUTO_BUY_RESERVE_SHARE,
+})
+
+function buyCheapestGenerator(s: SaveState, t: Tuning, purse: number): SaveState | null {
+  let best: { id: string; cost: number } | null = null
+  for (const g of GENERATORS) {
+    if (s.high < g.unlockHigh || !stageUnlocked(s.lifeHigh, g.stage)) continue
+    const cost = bulkCost(g.baseCost, g.costScale, s.generators[g.id] ?? 0, 1)
+    if (cost <= purse && cost <= s.nugs && (!best || cost < best.cost)) best = { id: g.id, cost }
+  }
+  return best ? purchaseGenerator(s, best.id, 1, t) : null
+}
+
+function buyCheapestJob(s: SaveState, t: Tuning, purse: number): SaveState | null {
+  let best: { id: string; cost: number } | null = null
+  for (const j of JOBS) {
+    if (s.high < j.unlockHigh || !stageUnlocked(s.lifeHigh, j.stage)) continue
+    const cost = bulkCost(j.baseCost, j.costScale, s.jobs[j.id] ?? 0, 1)
+    if (cost <= purse && cost <= s.cash && (!best || cost < best.cost)) best = { id: j.id, cost }
+  }
+  return best ? purchaseJob(s, best.id, 1, t) : null
+}
+
+/**
+ * The couch buying for you during ATTENDED play. Fires on the same schedule
+ * whether you are watching or not (the away half is
+ * `applyOfflineWithAutomation`), buying the CHEAPEST affordable row on its
+ * shelf — the safe, boring choice a player would not bother making by hand.
+ *
+ * It never touches `playTime`: an earlier version passed a synthetic state
+ * whose playTime was forced to the interval, and returning that object
+ * overwrote the real accumulated value — delaying the hour/day achievements
+ * and corrupting the Chronicle's session duration. (Codex CL#19 R3, P1.)
+ */
+export function applyAutoBuy(prev: SaveState, next: SaveState, t: Tuning = DEFAULT_TUNING): SaveState {
+  const mods = keepsakeEffects(next)
+  const due = (every: number | null) =>
+    every == null || every <= 0 ? 0
+      : Math.floor(next.playTime / every) - Math.floor(prev.playTime / every)
+  const rounds = Math.min(
+    AUTO_BUY_CATCHUP_CAP,
+    Math.max(0, due(mods.autoBuyGrowEvery), due(mods.autoBuyWorkEvery)),
+  )
+  if (rounds <= 0) return next
+  const purse = newPurse(next)
+  let s = next
+  for (let i = 0; i < rounds; i++) {
+    const before = s
+    s = autoBuyRound(s, purse, t)
+    if (s === before) break
+    if (purse.nugs <= 0 && purse.cash <= 0) break
+  }
+  return s
+}
+
+/**
  * Apply an absence, replaying the couch's automation AT ITS OWN BOUNDARIES.
  *
- * The naive version ran `applyOffline` over the whole absence and only then
- * settled every owed purchase, so a row bought at the first interval produced
- * nothing for the rest of the absence and the returning player was quietly
- * short-changed against the same schedule played watched. (Codex CL#19 R2.)
+ * The absence is walked in `every`-second steps — the automation's actual
+ * schedule — with one round bought at each, then a final tail segment. A row
+ * bought at the first boundary therefore produces for the rest of the
+ * absence, which is what "the same schedule watched or not" means.
  *
- * The absence is instead split at the auto-buy interval and each segment is
- * advanced, then bought against. **The offline cap is applied ONCE, to the
- * whole absence, before any splitting** — segmenting an uncapped elapsed and
- * letting each piece re-cap would multiply the cap, which is an exploit, not
- * a fidelity fix.
+ * Two invariants, both pinned by test because both were got wrong once:
+ *  - **The offline cap is applied ONCE**, to the whole absence, before any
+ *    splitting. Segmenting an uncapped elapsed and letting each piece re-cap
+ *    would multiply the cap, which is an exploit rather than a fidelity fix.
+ *  - **The return gift is banked ONCE.** Each segment's `applyOffline` would
+ *    otherwise add another `returnGiftSeconds` of production, so an eleven-
+ *    segment absence banked the gift eleven times. (Codex CL#19 R3.)
  */
 export function applyOfflineWithAutomation(
   s: SaveState,
@@ -315,77 +400,39 @@ export function applyOfflineWithAutomation(
     .filter((x): x is number => x != null && x > 0)
     .reduce((a, b) => Math.min(a, b), Infinity)
   const capped = Math.min(elapsed, rates.offlineCap)
-  const rounds = Number.isFinite(every) ? Math.min(AUTO_BUY_CATCHUP_CAP, Math.floor(capped / every)) : 0
+  const rounds = Number.isFinite(every) && every > 0
+    ? Math.min(AUTO_BUY_CATCHUP_CAP, Math.floor(capped / every))
+    : 0
   if (rounds <= 0) return applyOffline(s, elapsed, t)
 
-  // The whole capped window, split into equal segments summing to exactly it.
-  const segment = capped / (rounds + 1)
+  // The gift is a property of the absence, not of a segment: compute it once
+  // from the rates the player LEFT with, exactly as the unsegmented pass did.
+  const giftSeconds = rates.keepsakes.returnGiftSeconds
+  const giftOnce = giftSeconds > 0 ? rates.nugRate * giftSeconds : 0
+
+  const purse = newPurse(s)
   let cur = s
   let seconds = 0
   let nugs = 0
   let cash = 0
   let high = 0
-  for (let i = 0; i <= rounds; i++) {
-    const before = cur
-    const { save: advanced, summary } = applyOffline({ ...cur, lastTick: 0 }, segment, t)
+  const step = (dt: number) => {
+    if (dt <= 0) return
+    const { save: advanced, summary } = applyOffline({ ...cur, lastTick: 0 }, dt, t)
+    // playTime is carried by applyOffline itself; nothing here rewrites it.
     cur = advanced
-    if (summary) {
-      seconds += summary.seconds
-      nugs += summary.nugs
-      cash += summary.cash
-      high += summary.high
-    }
-    if (i < rounds) {
-      // One scheduled purchase per boundary, on the state that segment built.
-      cur = applyAutoBuy({ ...before, playTime: 0 }, { ...cur, playTime: every }, t)
-    }
+    if (summary) { seconds += summary.seconds; nugs += summary.nugs; cash += summary.cash; high += summary.high }
   }
+  for (let i = 0; i < rounds; i++) {
+    step(every)
+    cur = autoBuyRound(cur, purse, t)
+  }
+  step(capped - rounds * every)   // the tail; the segments sum to exactly `capped`
+
   return {
-    save: cur,
+    save: { ...cur, returnGift: s.returnGift + giftOnce },
     summary: seconds > 0 ? { seconds, nugs, cash, high, capped: elapsed > rates.offlineCap } : null,
   }
-}
-
-export function applyAutoBuy(prev: SaveState, next: SaveState, t: Tuning = DEFAULT_TUNING): SaveState {
-  const mods = keepsakeEffects(next)
-  let s = next
-  const shelves: [number | null, 'gen' | 'job'][] = [
-    [mods.autoBuyGrowEvery, 'gen'],
-    [mods.autoBuyWorkEvery, 'job'],
-  ]
-  for (const [every, kind] of shelves) {
-    if (every == null || every <= 0) continue
-    const due = Math.floor(next.playTime / every) - Math.floor(prev.playTime / every)
-    const rounds = Math.min(Math.max(0, due), AUTO_BUY_CATCHUP_CAP)
-    for (let i = 0; i < rounds; i++) {
-      const bought = kind === 'gen' ? buyCheapestGenerator(s, t) : buyCheapestJob(s, t)
-      if (!bought) break
-      s = bought
-    }
-  }
-  return s
-}
-
-function buyCheapestGenerator(s: SaveState, t: Tuning): SaveState | null {
-  const ceiling = s.nugs * AUTO_BUY_RESERVE_SHARE
-  let best: { id: string; cost: number } | null = null
-  for (const g of GENERATORS) {
-    if (s.high < g.unlockHigh || !stageUnlocked(s.lifeHigh, g.stage)) continue
-    const cost = bulkCost(g.baseCost, g.costScale, s.generators[g.id] ?? 0, 1)
-    if (cost <= ceiling && (!best || cost < best.cost)) best = { id: g.id, cost }
-  }
-  return best ? purchaseGenerator(s, best.id, 1, t) : null
-}
-
-function buyCheapestJob(s: SaveState, t: Tuning): SaveState | null {
-  const ceiling = s.cash * AUTO_BUY_RESERVE_SHARE
-  let best: { id: string; cost: number } | null = null
-  for (const j of JOBS) {
-    if (s.high < j.unlockHigh || !stageUnlocked(s.lifeHigh, j.stage)) continue
-    const cost = bulkCost(j.baseCost, j.costScale, s.jobs[j.id] ?? 0, 1)
-    if (cost <= ceiling && (!best || cost < best.cost)) best = { id: j.id, cost }
-  }
-  return best ? purchaseJob(s, best.id, 1, t) : null
 }
 
 /** Every keepsake with its live status, for the Couch surface and its tests. */
