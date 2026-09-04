@@ -2,7 +2,7 @@
 
 > **Status:** `complete` — merged via PR #19.
 
-- **📊 Model:** Opus 5 · xhigh · design + feature build
+- **📊 Model:** Opus 5 · xhigh · feature build
 - **📍 Venue:** cloud-container
 - **🔗 Session:** [session_01FAkSXD7ZQ7E7XzysZmLRbF](https://claude.ai/code/session_01FAkSXD7ZQ7E7XzysZmLRbF) · "Couch Legend game design and architecture"
 
