@@ -159,7 +159,7 @@ function median(xs: number[]): number {
   return s[Math.floor(s.length / 2)]
 }
 
-function analyze(stages: StageDef[], prefix: 'baseline' | 'tuned' | 'adopted') {
+function analyze(stages: StageDef[], prefix: 'baseline' | 'tuned' | 'adopted' | 'couch') {
   const runs = loadRuns(prefix)
   if (runs.length === 0) { console.log(`no ${prefix} data — run \`pnpm sim ${prefix}\` first`); return }
   console.log(`\n# analysis of the ${prefix} dataset (${runs.length} runs)`)
@@ -250,6 +250,14 @@ function analyze(stages: StageDef[], prefix: 'baseline' | 'tuned' | 'adopted') {
     console.log(`- ${p}: displayed-rate floor ${worst.kind}:${worst.id} at ${(worst.feltShown * 100).toFixed(1)}% on ${worst.axisShown} · deferred-visibility items: ${deferred.length ? deferred.map(id => `${id} (${DEFERRED_VISIBILITY[id] ?? 'NO NAMED SURFACE — F5 failure'})`).join(' · ') : 'none'}${unmapped.length ? ' ⚠' : ''}`)
   }
 
+  console.log('\n## The couch at the horizon (DESIGN § 11) — earned, arranged, and how full\n')
+  for (const [p, rs] of byPolicy) {
+    const r = rs[Math.floor(rs.length / 2)]
+    const k = r.keepsakes
+    if (!k) { console.log(`- ${p}: no keepsake record (pre-couch dataset)`); continue }
+    console.log(`- ${p}: earned ${k.earned}/17 · on the couch ${k.equipped.length}/${k.slots} — ${k.equipped.join(', ') || 'nothing'}`)
+  }
+
   console.log('\n## Mood ladder (median reach, balanced)\n')
   const bal = byPolicy.get('balanced') ?? []
   for (const m of MOODS) {
@@ -284,6 +292,12 @@ function analyze(stages: StageDef[], prefix: 'baseline' | 'tuned' | 'adopted') {
   }
 }
 
+// `adopted-*` joined them on 2026-09-04: it is the frozen PRE-KEEPSAKE
+// evidence set, the "before" half of the couch change's before/after, and
+// the 2026-08-21 adoption check reproduces from it. The live-state prefix is
+// now `couch`. Same rule as the two below: regenerating a frozen prefix from
+// today's tree would silently swap in a different content profile and
+// destroy the comparison it exists to support.
 // `baseline-*` and `tuned-*` are FROZEN pre-adoption evidence (the
 // 2026-08-20 balance doc reproduces from them, and they were generated
 // from the pre-adoption content tables). Regenerating them from today's
@@ -305,8 +319,11 @@ else if (cmd === 'sweep') sweep(Number(a1 ?? 3))
 else if (cmd === 'tuned') frozen('tuned')
 // Post-adoption evidence set: the adopted DEFAULT_TUNING on the live
 // content tables (arc-1 prologue included).
-else if (cmd === 'adopted') runSet('adopted', Number(a1 ?? 14), Number(a2 ?? 2), DEFAULT_TUNING)
+else if (cmd === 'adopted') frozen('adopted')
+// The live-state evidence set: the adopted tuning on today's content tables,
+// with the couch (DESIGN § 11) in play.
+else if (cmd === 'couch') runSet('couch', Number(a1 ?? 14), Number(a2 ?? 2), DEFAULT_TUNING)
 else if (cmd === 'invariance') invariance()
 else if (cmd === 'fit') fit()
-else if (cmd === 'analyze') analyze(STAGES, (a1 as 'baseline' | 'tuned' | 'adopted') ?? 'adopted')
-else console.log('usage: pnpm sim <dtsense|sweep [days]|adopted [days] [dt]|invariance|fit|analyze [baseline|tuned|adopted]> (baseline/tuned are frozen — see the note above)')
+else if (cmd === 'analyze') analyze(STAGES, (a1 as 'baseline' | 'tuned' | 'adopted' | 'couch') ?? 'couch')
+else console.log('usage: pnpm sim <dtsense|sweep [days]|couch [days] [dt]|invariance|fit|analyze [baseline|tuned|adopted|couch]> (baseline/tuned/adopted are frozen — see the note above)')

@@ -326,3 +326,111 @@ export function nextMood(high: number): MoodDef | null {
   for (const m of MOODS) if (high < m.minHigh) return m
   return null
 }
+
+// --- keepsakes: what the couch keeps ------------------------------------
+// The permanent side of the life story (DESIGN § 11). Entering a chapter for
+// the first time leaves ONE object with the couch, forever. Keepsakes are
+// never bought, never farmed and never lost: they are minted BY the story,
+// so no amount of grinding produces one and missing a day costs nothing.
+//
+// Slots are shelf space on the couch. There are always fewer slots than
+// keepsakes, so which ones are on the couch is a real, free, reversible
+// decision — the game's first strategy verb that is not "buy the next row".
+//
+// Effects TRANSFORM systems that already exist (Work income, Buzz decay, the
+// offline rule, the milestone curve, the hit) rather than adding a fourth
+// economy. Where a later chapter repeats an earlier effect KIND, the stronger
+// one wins and the weaker reads as superseded — a chapter can therefore
+// retire an earlier keepsake and free its slot, which is the family gaining
+// depth instead of gaining rows.
+
+export type KeepsakeEffect =
+  /** Work jobs also produce nugs, at `share` x their cash output. */
+  | { kind: 'work-nugs'; share: number }
+  /** Grow generators also produce cash, at `share` x their nug output. */
+  | { kind: 'grow-cash'; share: number }
+  /** Buzz never decays below `share` x the highest Buzz of this afternoon. */
+  | { kind: 'buzz-floor'; share: number }
+  /** The first hit after coming back pays `seconds` of current production. */
+  | { kind: 'return-gift'; seconds: number }
+  /** Offline time is uncapped, but earns at this flat efficiency. */
+  | { kind: 'offline-uncap'; efficiency: number }
+  /** Every `everyNth` hit lands twice. Deterministic — no dice. */
+  | { kind: 'hit-echo'; everyNth: number }
+  /** Milestone doublings arrive every (25 - `units`) owned, on this shelf. */
+  | { kind: 'milestone-early'; target: 'grow' | 'work'; units: number }
+  /** Buys the cheapest affordable row on this shelf every `everySeconds`. */
+  | { kind: 'auto-buy'; target: 'grow' | 'work'; everySeconds: number }
+  /** Wake & Bake yields `value` x the Clarity it otherwise would. */
+  | { kind: 'clarity-yield'; value: number }
+  /** Occupies one slot and grants `slots` — net shelf space. */
+  | { kind: 'shelf'; slots: number }
+
+export interface KeepsakeDef {
+  id: string
+  name: string
+  /** The chapter that leaves it. Minted on first entry, kept forever. */
+  stage: string
+  /** One literary line — the object, not the number. */
+  blurb: string
+  /** Plain-language effect copy. The number lives in `effect`, never here. */
+  effect: KeepsakeEffect
+  /** WHERE the player watches it work (DESIGN § 9.6 rail 5b — no effect
+   * without a named display surface). Pinned by test. */
+  surface: string
+}
+
+/** One keepsake per chapter from 2 onward. Chapter 1 is the bare couch. */
+export const KEEPSAKES: KeepsakeDef[] = [
+  // Chapter 2 is the first keepsake anyone ever sees, so it is deliberately
+  // the most legible one AND one that cannot touch a displayed rate: an
+  // early keepsake that raises nug/s dilutes how much the next small Grow row
+  // appears to add, which measurably broke the § 9.6 rail-5a felt-upgrade
+  // floor (idle-only fell to 0.3 %) when work-nugs sat here.
+  { id: 'exact-change', name: 'Exact Change', stage: 'corner-store', blurb: 'Counted out on the counter, night after night. Something is always waiting for you.', effect: { kind: 'return-gift', seconds: 45 }, surface: 'the first hit back pays one large floater' },
+  { id: 'valid-until-morning', name: 'Valid Until Morning', stage: 'cousins-couch', blurb: "A cousin's lighter, promised back by morning. It is still here.", effect: { kind: 'buzz-floor', share: 0.18 }, surface: 'the Buzz number and bar stop falling to nothing' },
+  { id: 'spare-key', name: 'The Spare Key', stage: 'the-couch', blurb: 'Cut badly, works anyway. Every fifth try the lock gives twice.', effect: { kind: 'hit-echo', everyNth: 5 }, surface: 'every fifth hit pays a double floater' },
+  // The cross-wire lands here rather than at chapter 2 for the rail-5a reason
+  // above: by this chapter every early Grow row has long since been bought.
+  { id: 'standing-glass', name: 'The Standing Glass', stage: 'rituals-of-the-room', blurb: 'Never empty, never washed. The room starts paying you in both directions.', effect: { kind: 'work-nugs', share: 0.1 }, surface: 'the nugs/s tile climbs when you buy a job' },
+  { id: 'sunday-ledger', name: 'The Sunday Ledger', stage: 'long-sunday', blurb: 'A notebook of afternoons, each one graded generously.', effect: { kind: 'clarity-yield', value: 1.12 }, surface: 'the Wake & Bake preview shows the larger Clarity gain' },
+  { id: 'the-cutting', name: 'The Cutting', stage: 'green-thumbs', blurb: 'Snipped from the first plant that survived you. It kept going.', effect: { kind: 'milestone-early', target: 'grow', units: 4 }, surface: 'Grow rows reach their next doubling sooner (the row meta and nugs/s)' },
+  { id: 'name-tag-drawer', name: 'The Name Tag Drawer', stage: 'working-stiff', blurb: 'Eleven jobs, eleven plastic rectangles, one drawer.', effect: { kind: 'milestone-early', target: 'work', units: 4 }, surface: 'Work rows reach their next doubling sooner (the row meta and cash/s)' },
+  { id: 'evidence-tag', name: 'The Evidence Tag', stage: 'the-operation', blurb: 'Wire-tied to one arm. Nobody ever came to cut it off.', effect: { kind: 'offline-uncap', efficiency: 0.3 }, surface: 'the offline report stops saying "capped"' },
+  { id: 'window-placard', name: 'The Window Placard', stage: 'local-legend', blurb: 'AS SEEN FROM THE STREET. It was not a joke for very long.', effect: { kind: 'auto-buy', target: 'grow', everySeconds: 45 }, surface: 'Grow rows buy themselves; the nugs/s tile ticks up unattended' },
+  { id: 'standing-order', name: 'The Standing Order', stage: 'head-in-the-cloud', blurb: 'Someone, somewhere, renews it. You have never seen the paperwork.', effect: { kind: 'auto-buy', target: 'work', everySeconds: 45 }, surface: 'Work rows buy themselves; the cash/s tile ticks up unattended' },
+  { id: 'earth-in-the-window', name: 'Earth in the Window', stage: 'garden-upstairs', blurb: 'Blue, slow, and entirely someone else’s problem this afternoon.', effect: { kind: 'grow-cash', share: 0.06 }, surface: 'the cash/s tile climbs when you buy a Grow row' },
+  { id: 'jar-of-that-light', name: 'A Jar of That Light', stage: 'mythic-canopy', blurb: 'Screwed shut before anyone could explain why it glows.', effect: { kind: 'buzz-floor', share: 0.4 }, surface: 'the Buzz number and bar hold much higher between hits' },
+  { id: 'first-follower', name: 'The First Follower', stage: 'the-civilization', blurb: 'Sat down on the other end without asking. Stayed a decade.', effect: { kind: 'work-nugs', share: 0.3 }, surface: 'the nugs/s tile climbs when you buy a job' },
+  { id: 'accession-card', name: 'The Accession Card', stage: 'the-archive', blurb: 'Catalogued, numbered, and returned to you with an apology.', effect: { kind: 'shelf', slots: 2 }, surface: 'the couch gains a slot (it takes one and gives two)' },
+  { id: 'long-now-clock', name: 'The Long Now Clock', stage: 'the-long-now', blurb: 'Ticks once a year. You have watched it do this twice.', effect: { kind: 'return-gift', seconds: 300 }, surface: 'the first hit back pays a very large floater' },
+  { id: 'the-overlap', name: 'The Overlap', stage: 'almost-everything', blurb: 'Two rooms at once, agreeing about the couch and nothing else.', effect: { kind: 'hit-echo', everyNth: 3 }, surface: 'every third hit pays a double floater' },
+  { id: 'the-long-afternoon', name: 'The Long Afternoon', stage: 'long-afternoon', blurb: 'It does not end. That was never the sad part.', effect: { kind: 'clarity-yield', value: 1.35 }, surface: 'the Wake & Bake preview shows the larger Clarity gain' },
+]
+
+/** Chapters that widen the couch. One slot to begin with, five more across
+ * the life — always fewer than the keepsakes, so the choice stays real. */
+export const SLOT_STAGES = ['corner-store', 'rituals-of-the-room', 'working-stiff', 'head-in-the-cloud', 'the-civilization', 'almost-everything'] as const
+
+/** Base shelf space at this point in the life (before `shelf` keepsakes). */
+export function baseSlotsFor(lifeHigh: number): number {
+  let slots = 0
+  for (const id of SLOT_STAGES) {
+    const st = STAGES.find(s => s.id === id)
+    if (st && lifeHigh >= st.minLifeHigh) slots++
+  }
+  return slots
+}
+
+/** Keepsakes the life has earned by now — the chapter left it, so reaching
+ * the chapter is the only way to have it. */
+export function keepsakesEarnedBy(lifeHigh: number): string[] {
+  return KEEPSAKES.filter(k => {
+    const st = STAGES.find(s => s.id === k.stage)
+    return st != null && lifeHigh >= st.minLifeHigh
+  }).map(k => k.id)
+}
+
+export function keepsakeById(id: string): KeepsakeDef | undefined {
+  return KEEPSAKES.find(k => k.id === id)
+}

@@ -184,10 +184,14 @@ describe('achievements', () => {
 })
 
 describe('lifeHigh — the story axis (DESIGN § 9.2)', () => {
-  it('a fresh save is v2 with a zero life', () => {
+  it('a fresh save is v3 with a zero life and a bare couch', () => {
     const s = defaultSave(0)
-    expect(s.version).toBe(2)
+    expect(s.version).toBe(3)
     expect(s.lifeHigh).toBe(0)
+    expect(s.keepsakes).toEqual([])
+    expect(s.equipped).toEqual([])
+    expect(s.peakBuzz).toBe(0)
+    expect(s.returnGift).toBe(0)
   })
 
   it('advance accumulates lifeHigh by exactly the high gained', () => {
@@ -204,9 +208,9 @@ describe('lifeHigh — the story axis (DESIGN § 9.2)', () => {
     expect(after.lifeHigh - s.lifeHigh).toBeCloseTo(summary!.high, 9)
   })
 
-  it('migrateSave lifts a v1 save to v2, flooring lifeHigh at max(high, peakHigh)', () => {
+  it('migrateSave lifts a v1 save to v3, flooring lifeHigh at max(high, peakHigh)', () => {
     const v1 = migrateSave({ version: 1, high: 120, peakHigh: 900 })
-    expect(v1.version).toBe(2)
+    expect(v1.version).toBe(3)
     expect(v1.lifeHigh).toBe(900)
     const fresh = migrateSave({ version: 1 })
     expect(fresh.lifeHigh).toBe(0)

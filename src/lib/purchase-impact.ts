@@ -2,6 +2,7 @@ import { GENERATORS, JOBS, RITUALS, stageUnlocked } from './content'
 import { collectAchievements } from './actions'
 import {
   bulkCost, computeRates, DEFAULT_TUNING, generatorOutput, jobCashOutput,
+  keepsakeEffects,
   maxAffordable, type Rates, type SaveState, type Tuning,
 } from './engine'
 
@@ -141,8 +142,11 @@ export function generatorPurchaseImpact(
   const quantity = selectedQuantity(amount, def.baseCost, def.costScale, owned, save.nugs)
   if (quantity === 0) return { kind: 'empty-max', quantity: 0, cost: 0, affordable: false }
   const cost = bulkCost(def.baseCost, def.costScale, owned, quantity)
-  const before = generatorOutput(def, owned, tuning)
-  const after = generatorOutput(def, owned + quantity, tuning)
+  // The couch can shorten this shelf's milestone step; the preview reads the
+  // same derivation the economy does, so the promised number is the paid one.
+  const step = keepsakeEffects(beforeSave).growMilestoneStep
+  const before = generatorOutput(def, owned, tuning, step)
+  const after = generatorOutput(def, owned + quantity, tuning, step)
   const afterSave = collectAchievements({
     ...beforeSave,
     generators: { ...beforeSave.generators, [id]: owned + quantity },
@@ -167,8 +171,9 @@ export function jobPurchaseImpact(
   const quantity = selectedQuantity(amount, def.baseCost, def.costScale, owned, save.cash)
   if (quantity === 0) return { kind: 'empty-max', quantity: 0, cost: 0, affordable: false }
   const cost = bulkCost(def.baseCost, def.costScale, owned, quantity)
-  const before = jobCashOutput(def, owned, tuning)
-  const after = jobCashOutput(def, owned + quantity, tuning)
+  const step = keepsakeEffects(beforeSave).workMilestoneStep
+  const before = jobCashOutput(def, owned, tuning, step)
+  const after = jobCashOutput(def, owned + quantity, tuning, step)
   const afterSave = collectAchievements({
     ...beforeSave,
     jobs: { ...beforeSave.jobs, [id]: owned + quantity },

@@ -48,11 +48,11 @@ describe('save codes', () => {
     expect(parsed!.sound).toBe(true)
   })
 
-  it('migrates a v1 code: lifeHigh floors at max(high, peakHigh), version becomes 2', () => {
+  it('migrates a v1 code: lifeHigh floors at max(high, peakHigh), version becomes 3', () => {
     const v1 = 'CL1.' + btoa(JSON.stringify({ version: 1, high: 120, peakHigh: 900 }))
     const parsed = importCode(v1)
     expect(parsed).not.toBeNull()
-    expect(parsed!.version).toBe(2)
+    expect(parsed!.version).toBe(3)
     expect(parsed!.lifeHigh).toBe(900)
   })
 
