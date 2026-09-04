@@ -580,7 +580,10 @@ balance or pacing also carries simulator evidence (`pnpm sim`, § 9.6).
 ### 11.2 The effect vocabulary — ten shapes, no new currency
 
 Every effect transforms a system that shipped before keepsakes did:
-`work-nugs` and `grow-cash` cross-wire the two shelves · `buzz-floor` holds
+`work-nugs` and `grow-cash` cross-wire the two shelves — at a `share` of the
+sending shelf and **never more than a `ceiling` times what the receiving
+shelf makes itself** (the glass matches the garden; it does not replace it —
+added 2026-09-04, couch-legend #20, for the reason § 11.4 gives) · `buzz-floor` holds
 decay above a share of the afternoon's own peak (it can never *add* buzz) ·
 `return-gift` banks production while away and pays it on the first hit back ·
 `offline-uncap` removes the offline cap at a deliberately worse flat rate ·
@@ -621,23 +624,44 @@ the live state. Against the § 9.6 rails:
 | 1 · reachability | balanced 12.5 d | **12.0 d** | holds; the ~2-week north star is protected |
 | 3 · attended dead time | worst 44.8 m (arc 3, bound 45 m) | **38.0 m** | improved where it was tightest |
 | 4 · check-ins with a move (≥ 90 %) | balanced 96.9 % | **98.0 %** | improved; all playing lanes ≥ 97.5 % |
-| 5a · felt-upgrade floor (≥ 2 %) | 0 of 24 runs below | **1 of 27** | see the boundary below |
+| 5a · felt-upgrade floor (≥ 2 %) | 0 of 24 runs below | **1 of 27** at `4934955` → **0 of 27** with the ceiling (#20) | closed by tuning — below |
 | 6 · rebuild ≤ 0.95 (patient lanes) | 0.88 / 0.92 / 0.90 | **0.88 / 0.92 / 0.90** | unchanged |
 
-**Stated boundary, not hidden:** the one sub-2 % reading is the *new*
-`keepsake-optimizer` archetype, one seed of three, two rows of 38
-(`collective` 0.14 %, `dispensary` 0.89 %, both at 1.25 h). It is the
-cross-wire diluting a global tile for a player who deliberately curates the
-couch; the affected rows' own displayed output still moves from "idle nugs"
-to a real rate on that purchase. An earlier version of this feature broke the
-same rail far more widely (idle-only fell to **0.3 %**) by minting the
-cross-wire at chapter 2; it now mints at chapter 5, and a test pins that
-chapters 2–4 may carry only rate-neutral effect kinds.
+**The one breach, and the ceiling that closed it (2026-09-04, #20).** At
+`4934955` one run was below 2 %: `keepsake-optimizer` seed 23, two rows of
+38 (`collective` 0.14 %, `dispensary` 0.89 %, both at 1.25 h), and
+`balanced` seed 47 sat on the bound at 2.1 %. Re-read from the fixtures it
+was structural, not a seed fluke: the run crossed into chapter 5 with three
+mid-tier Grow rows still unbought, the pass minted The Standing Glass, and
+10 % of a Work shelf ~30× the garden was ~3× the whole garden — every Grow
+row had become decoration for the player holding the glass. The rule that
+closed it: **a cross-wire never pays more than `ceiling ×` what the receiving
+shelf makes itself** (The Standing Glass 10 % up to 1× the garden; The First
+Follower 30 % up to 3×, still stronger on both numbers so it still retires
+the glass; Earth in the Window 6 % up to 1× the Work shelf). The dilution of
+a first Grow purchase is then bounded at `1 + ceiling` by construction. The
+27 runs regenerated: **0 of 27 below 2 %**, the seed-23 rows at 139–163 %,
+every lane's floor back at the pre-keepsake 4.0 %, and rails 1/3/4/6 within
+a tenth of their slack of where they were. The trade the ceiling makes on
+purpose: after a Wake & Bake the jobs bring nothing home until the first
+Grow row is bought, and the shop preview says "the garden is the ceiling"
+rather than promising nugs the cap withholds. An earlier version of this
+feature broke the same rail far more widely (idle-only fell to **0.3 %**) by
+minting the cross-wire at chapter 2; it now mints at chapter 5, and a test
+pins that chapters 2–4 may carry only rate-neutral effect kinds. Chapter
+placement protects the early rows; the ceiling protects every row after.
 
-**The load-bearing result:** arranging the couch well is worth a great deal of
-currency and *nothing* in story progress. `keepsake-optimizer` ends 14 days
-with **2.3× the nugs and 1 690× the cash** of the auto-arranging `balanced`
-lane, and **0.98× its lifeHigh** — a slightly *slower* life, not a faster one.
+**The load-bearing result:** arranging the couch well is worth currency and
+*nothing* in story progress. On each of three seeds, `keepsake-optimizer`
+peaks at **1.8–1.9× the nugs** of the auto-arranging `balanced` lane over the
+final three days, with cash a wash (0.9–1.0×), and closes the story **2–4 %
+later** (lifeHigh 0.96–0.98×) — a slightly *slower* life, not a faster one.
+*(An earlier version of this paragraph quoted horizon balances for one seed
+— "2.3× the nugs and 1 690× the cash" — and the sim record quoted a
+different pair from the same fixtures; a balance at the horizon is whatever
+was unspent when the run stopped and resets at every Wake & Bake, so the
+regeneration replaced it with the peak-over-the-last-three-days measure,
+read from all three seeds. The sim record § 3 carries the table.)*
 Optimising pays inside an afternoon; it is not a route through the story,
 which is what keeps idle-first play whole.
 

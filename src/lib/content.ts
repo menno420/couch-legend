@@ -409,7 +409,8 @@ export const KEEPSAKES: KeepsakeDef[] = [
   // that row's first unit move the nug/s tile by 0.14 % (measured, seed 23
   // of the couch dataset at 4934955). Capped at the garden, the same
   // purchase moves the tile by at least half of what it would on a bare
-  // couch — and the pin below this table's tests holds that bound.
+  // couch — pinned in tests/keepsakes.test.ts, "a cross-wire never outgrows
+  // the shelf it feeds".
   { id: 'standing-glass', name: 'The Standing Glass', stage: 'rituals-of-the-room', blurb: 'Never empty, never washed. The room starts paying you in both directions.', effect: { kind: 'work-nugs', share: 0.1, ceiling: 1 }, surface: 'the nugs/s tile climbs when you buy a job — and again when you grow the garden past it' },
   { id: 'sunday-ledger', name: 'The Sunday Ledger', stage: 'long-sunday', blurb: 'A notebook of afternoons, each one graded generously.', effect: { kind: 'clarity-yield', value: 1.12 }, surface: 'the Wake & Bake preview shows the larger Clarity gain' },
   { id: 'the-cutting', name: 'The Cutting', stage: 'green-thumbs', blurb: 'Snipped from the first plant that survived you. It kept going.', effect: { kind: 'milestone-early', target: 'grow', units: 4 }, surface: 'Grow rows reach their next doubling sooner (the row meta and nugs/s)' },
