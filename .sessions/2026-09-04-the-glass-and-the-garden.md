@@ -54,11 +54,13 @@ what the jobs bring home.
   flag; the formatter says "the garden is the ceiling" instead of "+0 nugs".
 - `CouchTab.tsx` — the ceiling in words ("up to as much again as the garden
   grows" / "three times what the garden grows").
-- `tests/keepsakes.test.ts` — 10 new pins (205 total): the content shape, the
+- `tests/keepsakes.test.ts` — 13 new pins (208 total): the content shape, the
   fold on both sides of the ceiling, the mirror, share+ceiling travelling
   together, the seed-23 shape swept across Work shelves 1×–1000×, the
-  uncapped arithmetic reproduced so the pin knows what it guards, and the
-  preview promising exactly what the tile moves by, capped and uncapped.
+  uncapped arithmetic reproduced so the pin knows what it guards, the
+  preview promising exactly what the tile moves by (capped, uncapped, and
+  the receiver-side lift on a Grow purchase), the Pareto order of same-kind
+  cross-wires, and supersession's ceiling tie-break.
 - `docs/sim/data/couch-*` regenerated (`pnpm sim couch 14 2`, 8 m 19 s, exit
   0) and `docs/sim/2026-09-04-couch-balance.md` rewritten from the fixtures;
   DESIGN § 11.2 / 11.4; the plan's § 4 rows and § 8 table (A′ done, B asked,
@@ -66,8 +68,10 @@ what the jobs bring home.
 
 ## Evidence at this head
 
-- `pnpm check` → exit 0 (tsc · 205 tests · build · store-preview clean).
-- `node tools/smoke-couch.mjs` against `dist/` → **30 passed, 0 failed**.
+- `pnpm check` → exit 0 (tsc · 208 tests · build · store-preview clean),
+  re-run at `dc590ec` after the round-1 fixes.
+- `node tools/smoke-couch.mjs` against `dist/` → **30 passed, 0 failed**,
+  re-run at `dc590ec`.
 - `pnpm exec tsx tools/stage-evolution.ts` → 14/18 · 3/18 · 17/18, exit 0
   (unchanged by the type change, as it should be).
 - Rails after regeneration, all 27 runs: story close 12.0 d (≤ 16) · worst

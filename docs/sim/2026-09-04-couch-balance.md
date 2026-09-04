@@ -229,9 +229,11 @@ something new · 1 (the bare couch at First Light) delivers nothing**.
   growth, labelled REASONED in the analyzer output, not measured crossings.
 - 27 runs, 3 seeds, one dt (2 s). The dt-sensitivity table is unchanged from
   the 2026-08-20 work and was not re-run.
-- The optimiser lane's story figure being *slower* than the auto-arranger's is
-  one seed's measurement, not a law: it says the couch does not accelerate the
-  story, not that curating it is a penalty.
+- The optimiser lane's story figure being *slower* than the auto-arranger's
+  is a three-seed observation (0.96× / 0.97× / 0.98×, § 3), not a law: it
+  says the couch does not accelerate the story, not that curating it is a
+  penalty — three seeds of one policy pair replicate the sign, they do not
+  bound it.
 - The optimiser's ranking is a plausible strong player with a strength
   tie-break, not a solved optimum. A better arranger would widen the currency
   gap; whether it would move the story figure is untested.
