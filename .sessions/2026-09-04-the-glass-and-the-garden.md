@@ -175,3 +175,15 @@ orders of magnitude in the sim record § 4 and DESIGN § 11.4 (and in the hub's
 Layer-2 thread, corrected there). The reason for a second PR: a published
 number was wrong on `main`, and leaving it until a next session is exactly
 the drift the estate's records rule exists to prevent.
+
+## Addendum — the owner's answers, live, 18:33Z
+
+Asked four questions after #20 and #21 landed; answered in one sitting.
+Recorded where the next session reads, not carried in a prompt:
+
+- **Phase B — "haven't played yet."** Still open; nothing is built on a
+  guess. `OQ-CL-COUCH-FEEL` stands.
+- **The ceiling — "keep it."** [D-0004] in `docs/decisions.md`.
+- **After B — C before D.** [D-0005]; the plan's § 8 table carries it.
+- **Chapters 4–6 art — he runs the prompts in the ChatGPT project himself.**
+  Design doc § 9; the Gemini prepay top-up is not needed for this.

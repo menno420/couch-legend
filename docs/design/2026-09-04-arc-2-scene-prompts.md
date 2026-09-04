@@ -271,6 +271,8 @@ Legend" ChatGPT project (the route that made the arc-1 pairs — attach
 same prompts here; the script that made the calls above is on the session
 card's evidence and reads the prompt out of this file so the two cannot
 drift. Both routes are queued in fleet-manager's `docs/owner-queue.md`
-(`OQ-CL-SCENES-4-6`, `OQ-GEMINI-PREPAY`). Candidates, when they exist, go to
+(`OQ-CL-SCENES-4-6`, `OQ-GEMINI-PREPAY`). **The owner chose route (a) the
+same evening, live:** he runs §§ 1–5 in the "Couch Legend" ChatGPT project
+himself; the prepay top-up is not needed for these three chapters. Candidates, when they exist, go to
 a review folder outside `public/` until a pair is accepted, and only an
 accepted pair becomes a `DELIVERED` registry entry.
