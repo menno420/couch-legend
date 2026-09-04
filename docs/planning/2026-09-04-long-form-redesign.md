@@ -152,8 +152,12 @@ infinite ladder.
 - No energy, no timers that demand attendance, no streaks, no FOMO, no
   daily-login anything, no maintenance cost, no decaying asset.
 - No randomness in any effect. No RNG-gated loss.
-- No mandatory active play: the optimiser lane ends 14 days with 4.9× the
-  currency and **+0.6 % story progress**.
+- No mandatory active play: on each of three seeds the optimiser lane peaks
+  at **1.8–1.9× the nugs** of the auto-arranging lane over the final three
+  days, cash a wash, and closes the story **2–4 % later** — currency, not
+  progress (`../sim/2026-09-04-couch-balance.md` § 3; an earlier version of
+  this line quoted a horizon-balance snapshot, "4.9× / +0.6 %", which the
+  regeneration showed to be timing noise).
 - No per-stage conditionals in components; no second simulator; no duplicated
   formula. One content table, one pure derivation, one action layer.
 - No real-money anything: no billing SDK, no store console, no receipts.

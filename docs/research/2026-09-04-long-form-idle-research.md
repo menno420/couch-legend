@@ -119,9 +119,13 @@ merely believed.
 - **An active/idle gap large enough to feel obligatory is resented even by
   fans.** An NGU Industries reviewer who *recommends* the game objects to
   needing ~20 active minutes a day; another names the offline penalty as
-  **~8×**. Couch Legend's measured optimiser-vs-auto-arranger gap is **4.9× in
-  currency and +0.6 % in story progress** — and the story is what gates
-  content, so the gap that matters is the small one.
+  **~8×**. Couch Legend's measured optimiser-vs-auto-arranger gap is
+  **1.8–1.9× in peak nugs, cash a wash, and 2–4 % *slower* through the
+  story** (three seeds, `../sim/2026-09-04-couch-balance.md` § 3; the
+  "4.9× / +0.6 %" this line first carried was a horizon-balance snapshot
+  that the fixture regeneration showed to be prestige-timing noise) — and
+  the story is what gates content, so the gap that matters is the small one,
+  and it points the other way.
 - **Return-from-absence should feel like anticipation paying off.** Anthony
   Pecorella, in Game Developer: *"The longer you're away from the game, the
   greater your incentive to return."* `return-gift` is that principle as a
