@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   computeRates, defaultSave, isSuperseded, keepsakeEffects, keepsakeSlots,
-  migrateSave, applyOffline, advance, MILESTONE_STEP, generatorOutput,
+  migrateSave, applyOffline, advance, MILESTONE_STEP, NO_KEEPSAKES, generatorOutput,
   type SaveState,
 } from '../src/lib/engine'
 import {
@@ -408,6 +408,46 @@ describe('a cross-wire never outgrows the shelf it feeds (§ 9.6 rail 5a, by con
     }
     expect(follower.share).toBeGreaterThan(glass.share)
     expect(follower.ceiling).toBeGreaterThan(glass.ceiling)
+  })
+
+  it('same-kind cross-wires form a Pareto order in chapter order — never a larger share with a smaller ceiling', () => {
+    // Why: `keepsakeEffects` lets the larger share win BOTH numbers. A later
+    // keepsake with a larger share and a smaller ceiling would transfer LESS
+    // whenever its ceiling binds, so auto-arranging it into a free place
+    // could lower production while the UI dims the better one. The table
+    // must not contain that shape, and this pin is what forbids it.
+    // (Codex CL#20 R1, P2.)
+    const order = (id: string) => STAGES.findIndex(s => s.id === keepsakeById(id)!.stage)
+    for (const kind of ['work-nugs', 'grow-cash'] as const) {
+      const wires = KEEPSAKES
+        .filter(k => k.effect.kind === kind)
+        .sort((a, b) => order(a.id) - order(b.id))
+        .map(k => k.effect as Extract<KeepsakeDef['effect'], { kind: typeof kind }>)
+      for (let i = 1; i < wires.length; i++) {
+        const earlier = wires[i - 1]; const later = wires[i]
+        expect(later.share, `${kind} #${i} share`).toBeGreaterThanOrEqual(earlier.share)
+        expect(later.ceiling, `${kind} #${i} ceiling`).toBeGreaterThanOrEqual(earlier.ceiling)
+        expect(later.share > earlier.share || later.ceiling > earlier.ceiling, `${kind} #${i} strictly stronger`).toBe(true)
+      }
+    }
+  })
+
+  it('supersession uses the same order the fold does: share first, ceiling as the tie-break', () => {
+    // An equal-share, larger-ceiling winner is folded by `keepsakeEffects`;
+    // `isSuperseded` must then dim the smaller-ceiling one, or it stays
+    // undimmed and eligible to waste a place. Synthetic mods, because the
+    // shipped table has no equal-share pair — the pin guards the rule, not
+    // today's rows.
+    const mods = { ...NO_KEEPSAKES, workNugShare: glass.share, workNugCeiling: glass.ceiling + 1 }
+    expect(isSuperseded('standing-glass', mods)).toBe(true)
+    const equal = { ...NO_KEEPSAKES, workNugShare: glass.share, workNugCeiling: glass.ceiling }
+    expect(isSuperseded('standing-glass', equal)).toBe(false)
+    const weakerCeiling = { ...NO_KEEPSAKES, workNugShare: glass.share, workNugCeiling: glass.ceiling - 0.5 }
+    expect(isSuperseded('standing-glass', weakerCeiling)).toBe(false)
+    // and the mirror
+    const earth = keepsakeById('earth-in-the-window')!.effect
+    if (earth.kind !== 'grow-cash') throw new Error('table shape changed')
+    expect(isSuperseded('earth-in-the-window', { ...NO_KEEPSAKES, growCashShare: earth.share, growCashCeiling: earth.ceiling + 1 })).toBe(true)
   })
 
   it('pays share × Work below the ceiling — the shipped behaviour, unchanged there', () => {

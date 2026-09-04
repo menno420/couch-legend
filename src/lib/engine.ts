@@ -308,8 +308,16 @@ export function isSuperseded(id: string, mods: KeepsakeMods): boolean {
   if (!k) return false
   const e = k.effect
   switch (e.kind) {
+    // The same order `keepsakeEffects` picks the winner by — share first,
+    // ceiling as the tie-break — so the couch never dims one keepsake while
+    // folding another. The content table is pinned to a Pareto order per
+    // kind (a later cross-wire is >= on both numbers), which is what makes
+    // "the larger share wins" safe at all; the tie-break covers the equal
+    // share case that pin still allows. (Codex CL#20 R1, P2.)
     case 'work-nugs': return mods.workNugShare > e.share
+      || (mods.workNugShare === e.share && mods.workNugCeiling > e.ceiling)
     case 'grow-cash': return mods.growCashShare > e.share
+      || (mods.growCashShare === e.share && mods.growCashCeiling > e.ceiling)
     case 'buzz-floor': return mods.buzzFloorShare > e.share
     case 'return-gift': return mods.returnGiftSeconds > e.seconds
     case 'offline-uncap': return (mods.offlineUncapEff ?? 0) > e.efficiency
