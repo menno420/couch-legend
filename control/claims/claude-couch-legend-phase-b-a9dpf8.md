@@ -1,1 +1,0 @@
-- `claude/couch-legend-phase-b-a9dpf8` · **cross-wire ceiling (rail 5a) + phase-E scene prompts** · src/lib/{content,engine,purchase-impact,purchase-impact-format}.ts, src/components/CouchTab.tsx, tests/, docs/sim, docs/design, docs/DESIGN.md · 2026-09-04

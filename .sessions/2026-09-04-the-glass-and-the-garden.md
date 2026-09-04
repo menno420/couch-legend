@@ -1,6 +1,6 @@
 # 2026-09-04 — The glass and the garden: the one rail breach, and the next scenes
 
-> **Status:** `in-progress`
+> **Status:** `complete` — landed via PR #20.
 
 - **📊 Model:** fable-5 · xhigh · feature build
 - **📍 Venue:** cloud-container
@@ -107,6 +107,32 @@ what the jobs bring home.
   and never grows the garden *to* raise the cap; a player who did would
   widen the nug gap, and the story figure under that play is untested
   (sim record § 6).
+
+## Review
+
+Two Codex rounds of the three the cap allows, both on heads that were
+pushed before the request: **round 1** at `3fa9785` — 2 findings, both P2,
+`[conceded]` × 2 (supersession must mirror the ceiling tie-break and the
+table needs a Pareto pin → `dc590ec`; the receiver-side ceiling gain must
+reach the preview → `e368b46`, which was already pushed when the finding
+arrived); **round 2** at `dc590ec` — 3 findings, all P2 copy,
+`[conceded]` × 3 (three surface lines named the wrong trigger; the § 6
+caveat said "one seed" of a three-seed result; the card's test count was
+stale → `94d5383`). **5 findings, 5 conceded, 0 survived.**
+
+**Residue, stated:** the head that lands carries `94d5383` (three
+content strings, one doc sentence, two card numbers) and this flip, which
+Codex has not seen; the third round was kept in reserve rather than spent
+on copy, per the owner's cadence rule. Verified instead directly against
+source: 208 tests, `pnpm check` exit 0 and the 30-check bundle smoke at
+`dc590ec`, and the suite re-run green after the copy commit.
+
+## PR
+
+[#20](https://github.com/menno420/couch-legend/pull/20) — flipped complete
+at this commit; merged by this session once `ci` reported green on the
+flip head (the hub card in fleet-manager records the merge SHA, read from
+the tree).
 
 ## ⚑ Owner asks (all in fleet-manager `docs/owner-queue.md`)
 
