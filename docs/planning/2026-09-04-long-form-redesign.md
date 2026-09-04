@@ -106,7 +106,8 @@ and it is why the couch does not simply fill up and stop being a decision.
 **Deliberately not one new subsystem per row.** Ten effect *shapes* cover
 seventeen chapters; six chapters carry a mastered version of an earlier shape.
 
-**The cross-wires carry a ceiling (2026-09-04, #20).** Uncapped, The Standing
+**The cross-wires carry a ceiling (2026-09-04, #20; owner-confirmed the same
+evening, [D-0004]).** Uncapped, The Standing
 Glass let a large Work shelf swamp the garden — measured as the one rail-5a
 breach in phase A's evidence — so each cross-wire now pays its share of the
 sending shelf *up to a multiple of what the receiving shelf makes itself*
@@ -168,10 +169,10 @@ infinite ladder.
 |---|---|---|
 | **A — done** | F1 keepsakes end to end + IAP preview + evidence | #19 |
 | **A′ — done** | The one rail breach A stated, closed by tuning: the cross-wire ceiling, 27 runs regenerated | #20 |
-| B | Owner plays the couch and says whether arranging is interesting — **asked 2026-09-04** (fleet-manager `OQ-CL-COUCH-FEEL`); not answered as of #20 | **owner** |
-| C | F2 Morning Routine, designed against rail 6 (allocation, not spend) | needs B |
-| D | F5 arc-3 content batches; F6 mastery for the tail | needs B |
-| E | The remaining 15 scene packages (DESIGN § 9.8) — **chapters 4–6 prompted** (`../design/2026-09-04-arc-2-scene-prompts.md`, #20); generation and QA are his (`OQ-CL-SCENES-4-6`) | art lane, owner QA |
+| B | Owner plays the couch and says whether arranging is interesting — **asked 2026-09-04** (fleet-manager `OQ-CL-COUCH-FEEL`); his answer the same evening: *"haven't played yet"* — still open | **owner** |
+| C | F2 Morning Routine, designed against rail 6 (allocation, not spend) — **first after B, owner's order** ([D-0005]) | needs B |
+| D | F5 arc-3 content batches; F6 mastery for the tail — after C ([D-0005]) | needs B, then C |
+| E | The remaining 15 scene packages (DESIGN § 9.8) — **chapters 4–6 prompted** (`../design/2026-09-04-arc-2-scene-prompts.md`, #20); **he runs them in the ChatGPT project himself** (chosen 2026-09-04) and QAs the pairs (`OQ-CL-SCENES-4-6`) | art lane, owner QA |
 | F | Real billing: StoreKit / Play Billing behind `BillingAdapter` | **owner-gated** |
 | G | Android milestone B (DESIGN § 7) | **owner-gated on device evidence** |
 

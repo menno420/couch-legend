@@ -59,3 +59,42 @@
 - provenance: toolchain probe recorded in `docs/CAPABILITIES.md`
   (2026-08-21); phone-controller + spider-swing signed-release precedent
   (fleet-manager `docs/repos/product-forge/README.md`).
+
+## [D-0004] The cross-wire ceiling stays
+
+- status: decided
+- date: 2026-09-04
+- verdict: `work-nugs` and `grow-cash` keep their ceiling — a cross-wire pays
+  its share of the sending shelf and never more than `ceiling ×` what the
+  receiving shelf makes itself (The Standing Glass 1×, The First Follower
+  3×, Earth in the Window 1×), as shipped in #20.
+- why: owner directive, given live on 2026-09-04 when asked whether to keep,
+  loosen (2× / 6×) or revert the cap that closed the one § 9.6 rail-5a
+  breach — *"Keep it"*. The evidence he chose on: every fairness rail holds
+  on all 27 regenerated runs (0 of 27 below the felt-upgrade floor, was 1 of
+  27), and the two shelves need each other again. He had not yet felt the
+  keepsake in play when he decided, and said so; the decision stands until
+  his phase-B feel pass says otherwise.
+- rules out: reverting to the uncapped shape, or re-tuning the ceilings,
+  without new sim evidence and a stated reason.
+- provenance: owner, live, 2026-09-04 (the four-question check after #20 and
+  #21 landed); `docs/sim/2026-09-04-couch-balance.md` § 4.
+
+## [D-0005] After phase B, the Morning Routine comes before the arc-3 batches
+
+- status: decided
+- date: 2026-09-04
+- verdict: once the owner's phase-B verdict on arranging the couch is a yes,
+  phase C (F2 — the Morning Routine, Clarity as a choice at Wake & Bake, by
+  allocation) is built before phase D (F5 arc-3 content batches and F6
+  mastery for the tail).
+- why: owner directive, live, 2026-09-04, choosing among C first · D first ·
+  art first. The plan already argued C as the natural second family
+  (`docs/planning/2026-09-04-long-form-redesign.md` § 3); this makes the
+  order his rather than the plan's inference. **It does not open C:** phase B
+  is still unanswered — he had not played the couch when he chose — so C
+  stays a sketch bounded by § 9.6 rail 6 (allocation, not expenditure) until
+  B arrives.
+- rules out: starting D or the remaining scene packages ahead of C once B is
+  a yes, unless he re-orders it.
+- provenance: owner, live, 2026-09-04; plan § 8 table.

@@ -120,8 +120,12 @@ dataset — evidence `docs/sim/2026-08-20-life-story-balance.md` +
 simulator evidence that it is fair, reachable and idle-safe (every § 9.6
 rail holds on all 27 runs since the cross-wire ceiling, #20). Simulation
 cannot say whether *arranging* it is interesting. That is the owner's call,
-**asked 2026-09-04** as fleet-manager `OQ-CL-COUCH-FEEL`, and it gates the
-next family (the Morning Routine, DESIGN § 8.1) and the arc-3 batches.
+**asked 2026-09-04** as fleet-manager `OQ-CL-COUCH-FEEL` — his answer that
+evening was *"haven't played yet"*, so it is still open — and it gates the
+next family. **Once it is a yes, the Morning Routine (DESIGN § 8.1) comes
+before the arc-3 batches — his order**, and the cross-wire ceiling stays as
+shipped, also his call; both are stamped in the plan's § 8 table and § 4
+note, with the entries in `decisions.md`.
 
 
 **Milestone B — the working Android handoff** (DESIGN § 7's list), gated on the
