@@ -40,6 +40,15 @@ function formatEffect(effect: RitualEffect): string {
   }
 }
 
+function crossWireLine(cross: NonNullable<Extract<PurchaseImpact, { kind: 'rate' }>['crossWired']>): string {
+  const other = cross.resource === 'cash' ? 'cash' : 'nugs'
+  const ceiling = cross.resource === 'nugs' ? 'the garden' : 'your jobs'
+  if (cross.delta <= 0) return `no more ${other} — ${ceiling} ${cross.resource === 'nugs' ? 'is' : 'are'} the ceiling`
+  return cross.capped
+    ? `+${fmtRate(cross.delta)} ${other} too, up to ${ceiling}`
+    : `+${fmtRate(cross.delta)} ${other} too`
+}
+
 export function formatPurchaseImpact(impact: PurchaseImpact): string {
   if (impact.kind === 'empty-max') return 'Nothing affordable yet.'
   if (impact.kind === 'rate') {
@@ -47,9 +56,12 @@ export function formatPurchaseImpact(impact: PurchaseImpact): string {
     const rate = `+${fmtRate(impact.delta)} · becomes ${fmtRate(impact.after)}${resource}`
     // When the couch has cross-wired the shelves, this row pays in BOTH
     // currencies and the preview says both — otherwise it promises half of
-    // what the purchase delivers.
+    // what the purchase delivers. And when the cross-wire's ceiling is what
+    // the other shelf makes, the preview says THAT rather than promising a
+    // number the cap withholds: the honest line is "the other shelf is the
+    // ceiling", not "+0 nugs too".
     const cross = impact.crossWired
-      ? [`+${fmtRate(impact.crossWired.delta)} ${impact.crossWired.resource === 'cash' ? 'cash' : 'nugs'} too`]
+      ? [crossWireLine(impact.crossWired)]
       : []
     return [rate, ...cross, ...impact.effects.map(formatEffect)].join(' · ')
   }

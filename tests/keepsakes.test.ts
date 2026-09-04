@@ -18,7 +18,7 @@ import { formatPurchaseImpact } from '../src/lib/purchase-impact-format'
 import { POLICIES } from '../src/lib/sim/policies'
 import {
   GENERATORS, JOBS, KEEPSAKES, RITUALS, SLOT_STAGES, STAGES, baseSlotsFor,
-  keepsakesEarnedBy, keepsakeById,
+  keepsakesEarnedBy, keepsakeById, type KeepsakeDef,
 } from '../src/lib/content'
 
 const save = (p: Partial<SaveState> = {}): SaveState => ({ ...defaultSave(0), ...p })
@@ -381,6 +381,102 @@ describe('the felt-upgrade floor survives the couch (§ 9.6 rail 5a)', () => {
   })
 })
 
+describe('a cross-wire never outgrows the shelf it feeds (§ 9.6 rail 5a, by construction)', () => {
+  // This describe exists because the shipped version had no ceiling, and the
+  // couch dataset at 4934955 measured what that costs: keepsake-optimizer,
+  // seed 23, reached chapter 5 with The Collective still unbought, equipped
+  // The Standing Glass, and that row's first unit then moved the nug/s tile
+  // by 0.14 % (dispensary 0.89 %) against a >= 2 % rail — the Work shelf was
+  // ~30× the garden, so a Grow row could not be felt. `balanced` seed 47 sat
+  // on the bound at 2.1 % for the same reason. The ceiling turns an unbounded
+  // dilution into one bounded at (1 + ceiling), whatever the Work shelf does.
+  const glass = keepsakeById('standing-glass')!.effect
+  const follower = keepsakeById('first-follower')!.effect
+  if (glass.kind !== 'work-nugs' || follower.kind !== 'work-nugs') throw new Error('table shape changed')
+
+  const state = (jobs: Record<string, number>, generators: Record<string, number>, equipped: string[]) => save({
+    high: 1e6, lifeHigh: Infinity, keepsakes: KEEPSAKES.map(k => k.id), equipped, jobs, generators,
+  })
+
+  it('every cross-wire in the table declares a ceiling, and the later of a kind is stronger in BOTH numbers', () => {
+    const wires = KEEPSAKES.filter(k => k.effect.kind === 'work-nugs' || k.effect.kind === 'grow-cash')
+    expect(wires.length).toBeGreaterThanOrEqual(3)
+    for (const k of wires) {
+      const e = k.effect as Extract<KeepsakeDef['effect'], { kind: 'work-nugs' | 'grow-cash' }>
+      expect(e.ceiling, k.id).toBeGreaterThan(0)
+      expect(e.share, k.id).toBeGreaterThan(0)
+    }
+    expect(follower.share).toBeGreaterThan(glass.share)
+    expect(follower.ceiling).toBeGreaterThan(glass.ceiling)
+  })
+
+  it('pays share × Work below the ceiling — the shipped behaviour, unchanged there', () => {
+    const r = computeRates(state({ thinker: 10 }, { farm: 20 }, ['standing-glass']))
+    expect(r.shelves.workToNugs).toBeCloseTo(r.shelves.work * glass.share, 9)
+    expect(r.shelves.workToNugs).toBeLessThan(r.shelves.grow * glass.ceiling)
+  })
+
+  it('never hands the garden more than ceiling × what it grows itself', () => {
+    const r = computeRates(state({ legend: 300 }, { farm: 20 }, ['standing-glass']))
+    expect(r.shelves.work * glass.share).toBeGreaterThan(r.shelves.grow * glass.ceiling) // the cap is live
+    expect(r.shelves.workToNugs).toBeCloseTo(r.shelves.grow * glass.ceiling, 9)
+    expect(r.nugRate).toBeCloseTo(r.shelves.grow * (1 + glass.ceiling) * r.nugMult, 6)
+  })
+
+  it('with no garden at all, the jobs bring nothing home — the glass matches the garden, it does not replace it', () => {
+    const r = computeRates(state({ legend: 300 }, {}, ['standing-glass']))
+    expect(r.shelves.workToNugs).toBe(0)
+    expect(r.nugRate).toBe(0)
+  })
+
+  it('the mirror obeys the same rule', () => {
+    const earth = keepsakeById('earth-in-the-window')!.effect
+    if (earth.kind !== 'grow-cash') throw new Error('table shape changed')
+    const r = computeRates(state({ thinker: 1 }, { myth: 300 }, ['earth-in-the-window']))
+    expect(r.shelves.grow * earth.share).toBeGreaterThan(r.shelves.work * earth.ceiling)
+    expect(r.shelves.growToCash).toBeCloseTo(r.shelves.work * earth.ceiling, 9)
+  })
+
+  it('the stronger keepsake wins share AND ceiling together, never one of each', () => {
+    const both = keepsakeEffects(state({}, {}, ['standing-glass', 'first-follower']))
+    expect(both.workNugShare).toBe(follower.share)
+    expect(both.workNugCeiling).toBe(follower.ceiling)
+    const reversed = keepsakeEffects(state({}, {}, ['first-follower', 'standing-glass']))
+    expect(reversed.workNugCeiling).toBe(follower.ceiling)
+  })
+
+  it('a first Grow purchase keeps at least 1/(1+ceiling) of its bare-couch felt impact, whatever the Work shelf', () => {
+    // The seed-23 shape, swept: a mid garden with The Collective unbought,
+    // and a Work shelf from modest to absurd. Bare-couch impact is the
+    // reference; the glass may halve it (ceiling 1) and no more.
+    for (const legend of [1, 10, 100, 1000]) {
+      const bare = state({ legend }, { farm: 20, closet: 40 }, [])
+      const glassOn = { ...bare, equipped: ['standing-glass'] }
+      const felt = (s: SaveState) => {
+        const b = computeRates(s).nugRate
+        const a = computeRates({ ...s, generators: { ...s.generators, collective: 1 } }).nugRate
+        return (a - b) / b
+      }
+      const ref = felt(bare)
+      const withGlass = felt(glassOn)
+      expect(ref).toBeGreaterThanOrEqual(0.02)
+      expect(withGlass, `legend×${legend}: ${withGlass} vs bare ${ref}`).toBeGreaterThanOrEqual(ref / (1 + glass.ceiling) - 1e-9)
+      expect(withGlass).toBeGreaterThanOrEqual(0.02)
+    }
+  })
+
+  it('the same purchase with the shipped uncapped rule would have breached — the pin knows what it guards', () => {
+    // Reproduce the defect arithmetic the ceiling removes: uncapped, the
+    // relative move of a first Grow unit is δ / (grow + share × work), which
+    // falls below 2 % once the Work shelf is ~30× the garden.
+    const s = state({ legend: 1000 }, { farm: 20, closet: 40 }, ['standing-glass'])
+    const r = computeRates(s)
+    const delta = computeRates({ ...s, generators: { ...s.generators, collective: 1 } }).shelves.grow - r.shelves.grow
+    const uncapped = delta / (r.shelves.grow + r.shelves.work * glass.share)
+    expect(uncapped).toBeLessThan(0.02)
+  })
+})
+
 describe('taking a keepsake off actually sticks (the tick must not refill)', () => {
   // This pin exists because the first version refilled every free place on
   // EVERY pass. In the built game that meant the next 50 ms tick put something
@@ -523,8 +619,11 @@ describe('the review round (Codex CL#19 R1) — regression pins', () => {
   })
 
   it('the preview names the cross-wired currency (P2)', () => {
+    // A garden exists here on purpose: the cross-wire is capped at what the
+    // garden grows, so a Work shelf with NO garden behind it hands over
+    // nothing — and the preview must say that too (the case below).
     const s = save({
-      high: 5e3, lifeHigh: Infinity, cash: 1e9, nugs: 1e9, jobs: { thinker: 10 },
+      high: 5e3, lifeHigh: Infinity, cash: 1e9, nugs: 1e9, jobs: { thinker: 10 }, generators: { tray: 30 },
       keepsakes: ['standing-glass'], equipped: ['standing-glass'],
     })
     const impact = jobPurchaseImpact(s, 'thinker', 1)!
@@ -532,10 +631,45 @@ describe('the review round (Codex CL#19 R1) — regression pins', () => {
     if (impact.kind !== 'rate') return
     expect(impact.crossWired?.resource).toBe('nugs')
     expect(impact.crossWired!.delta).toBeGreaterThan(0)
+    expect(impact.crossWired!.capped).toBe(false)
     expect(formatPurchaseImpact(impact)).toContain('nugs too')
     // and no cross-wire claim when the couch is bare
     const bare = jobPurchaseImpact({ ...s, equipped: [] }, 'thinker', 1)!
     expect(bare.kind === 'rate' && bare.crossWired).toBeUndefined()
+  })
+
+  it('the preview promises no cross-wired nugs the ceiling withholds', () => {
+    // A Work shelf that dwarfs the garden: the cross-wire already sits on
+    // the ceiling, so one more job hands the garden nothing extra. The old
+    // preview would have promised `share × the row's cash` here — nugs the
+    // purchase does not pay.
+    const s = save({
+      high: 5e3, lifeHigh: Infinity, cash: 1e12, nugs: 1e9, jobs: { thinker: 400 }, generators: { tray: 30 },
+      keepsakes: ['standing-glass'], equipped: ['standing-glass'],
+    })
+    const impact = jobPurchaseImpact(s, 'thinker', 1)!
+    if (impact.kind !== 'rate') throw new Error('rate impact expected')
+    expect(impact.crossWired!.capped).toBe(true)
+    expect(impact.crossWired!.delta).toBe(0)
+    const line = formatPurchaseImpact(impact)
+    expect(line).toContain('the garden is the ceiling')
+    expect(line).not.toContain('+0')
+  })
+
+  it('the cross-wire delta the preview shows is exactly what the tile will move by', () => {
+    // The whole point of threading the cap through the preview: promised ×
+    // multiplier === paid. Checked on both sides of the ceiling.
+    for (const thinker of [10, 400]) {
+      const s = save({
+        high: 5e3, lifeHigh: Infinity, cash: 1e12, nugs: 1e9, jobs: { thinker }, generators: { tray: 30 },
+        keepsakes: ['standing-glass'], equipped: ['standing-glass'],
+      })
+      const impact = jobPurchaseImpact(s, 'thinker', 1)!
+      if (impact.kind !== 'rate') throw new Error('rate impact expected')
+      const before = computeRates(s)
+      const after = computeRates({ ...s, jobs: { thinker: thinker + 1 } })
+      expect(impact.crossWired!.delta * before.nugMult).toBeCloseTo(after.nugRate - before.nugRate, 9)
+    }
   })
 
   it('the optimizer ranks shelf-targeted effects independently (P2)', () => {
