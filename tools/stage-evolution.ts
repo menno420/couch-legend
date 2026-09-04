@@ -62,14 +62,20 @@ export interface StageCensusRow {
 const shapeKey = (e: KeepsakeDef['effect']): string =>
   'target' in e ? `${e.kind}:${e.target}` : e.kind
 
+/** Every keepsake a chapter mints. The table happens to hold exactly one per
+ * chapter (pinned by test), but the census must not depend on that: reading
+ * only the first would silently drop a shape and mis-attribute its first
+ * appearance to a later chapter. (Independent review, Gemini.) */
+const keepsakesAt = (stageId: string) => KEEPSAKES.filter(x => x.stage === stageId)
+
 function firstIntroductions(): Map<string, string> {
   // shape -> the first stage (in story order) that introduces it
   const seen = new Map<string, string>()
   for (const st of STAGES) {
-    const k = KEEPSAKES.find(x => x.stage === st.id)
-    if (!k) continue
-    const key = shapeKey(k.effect)
-    if (!seen.has(key)) seen.set(key, st.id)
+    for (const k of keepsakesAt(st.id)) {
+      const key = shapeKey(k.effect)
+      if (!seen.has(key)) seen.set(key, st.id)
+    }
   }
   return seen
 }
@@ -78,18 +84,18 @@ const FIRST = firstIntroductions()
 
 function mechanicsBeginningAt(stage: StageDef): string[] {
   const out: string[] = []
-  const k = KEEPSAKES.find(x => x.stage === stage.id)
-  if (k && FIRST.get(shapeKey(k.effect)) === stage.id) out.push(`keepsake:${shapeKey(k.effect)}`)
+  for (const k of keepsakesAt(stage.id)) {
+    if (FIRST.get(shapeKey(k.effect)) === stage.id) out.push(`keepsake:${shapeKey(k.effect)}`)
+  }
   if ((SLOT_STAGES as readonly string[]).includes(stage.id)) out.push('couch:+1 place')
   return out
 }
 
 /** A stage that supplies a stronger version of a shape introduced earlier. */
 function masteryAt(stage: StageDef): string[] {
-  const k = KEEPSAKES.find(x => x.stage === stage.id)
-  if (!k) return []
-  const key = shapeKey(k.effect)
-  return FIRST.get(key) === stage.id ? [] : [`deepens:${key} (first at ${FIRST.get(key)})`]
+  return keepsakesAt(stage.id)
+    .filter(k => FIRST.get(shapeKey(k.effect)) !== stage.id)
+    .map(k => `deepens:${shapeKey(k.effect)} (first at ${FIRST.get(shapeKey(k.effect))})`)
 }
 
 export function census(): StageCensusRow[] {

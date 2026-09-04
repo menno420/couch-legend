@@ -301,15 +301,25 @@ export const AUTO_BUY_RESERVE_SHARE = 0.25
  * a commit whose message claimed the purse existed: the edit had silently
  * failed to apply and the test was too weak to notice.)
  */
-function autoBuyRound(s: SaveState, purse: { nugs: number; cash: number }, t: Tuning): SaveState {
+function autoBuyRound(
+  s: SaveState,
+  purse: { nugs: number; cash: number },
+  t: Tuning,
+  /** Which shelves are actually due this round. Both keepsakes carry a 45 s
+   * interval today, so the shelves are always due together — but buying both
+   * on every round regardless would over-buy the slower shelf the moment the
+   * two intervals differ, which is a latent defect rather than an academic
+   * one. (Independent review, Gemini, on the unreviewed round-3 head.) */
+  due: { grow: boolean; work: boolean } = { grow: true, work: true },
+): SaveState {
   const mods = keepsakeEffects(s)
   let cur = s
-  if (mods.autoBuyGrowEvery != null && purse.nugs > 0) {
+  if (due.grow && mods.autoBuyGrowEvery != null && purse.nugs > 0) {
     const before = cur.nugs
     const bought = buyCheapestGenerator(cur, t, purse.nugs)
     if (bought) { purse.nugs -= before - bought.nugs; cur = bought }
   }
-  if (mods.autoBuyWorkEvery != null && purse.cash > 0) {
+  if (due.work && mods.autoBuyWorkEvery != null && purse.cash > 0) {
     const before = cur.cash
     const bought = buyCheapestJob(cur, t, purse.cash)
     if (bought) { purse.cash -= before - bought.cash; cur = bought }
@@ -358,17 +368,17 @@ export function applyAutoBuy(prev: SaveState, next: SaveState, t: Tuning = DEFAU
   const due = (every: number | null) =>
     every == null || every <= 0 ? 0
       : Math.floor(next.playTime / every) - Math.floor(prev.playTime / every)
-  const rounds = Math.min(
-    AUTO_BUY_CATCHUP_CAP,
-    Math.max(0, due(mods.autoBuyGrowEvery), due(mods.autoBuyWorkEvery)),
-  )
+  const growRounds = Math.min(AUTO_BUY_CATCHUP_CAP, Math.max(0, due(mods.autoBuyGrowEvery)))
+  const workRounds = Math.min(AUTO_BUY_CATCHUP_CAP, Math.max(0, due(mods.autoBuyWorkEvery)))
+  const rounds = Math.max(growRounds, workRounds)
   if (rounds <= 0) return next
   const purse = newPurse(next)
   let s = next
   for (let i = 0; i < rounds; i++) {
     const before = s
-    s = autoBuyRound(s, purse, t)
-    if (s === before) break
+    // Each shelf is bought only for the rounds IT is owed.
+    s = autoBuyRound(s, purse, t, { grow: i < growRounds, work: i < workRounds })
+    if (s === before) continue
     if (purse.nugs <= 0 && purse.cash <= 0) break
   }
   return s
@@ -396,7 +406,9 @@ export function applyOfflineWithAutomation(
   t: Tuning = DEFAULT_TUNING,
 ): { save: SaveState; summary: OfflineSummary | null } {
   const rates = computeRates(s, t)
-  const every = [rates.keepsakes.autoBuyGrowEvery, rates.keepsakes.autoBuyWorkEvery]
+  const growEvery = rates.keepsakes.autoBuyGrowEvery
+  const workEvery = rates.keepsakes.autoBuyWorkEvery
+  const every = [growEvery, workEvery]
     .filter((x): x is number => x != null && x > 0)
     .reduce((a, b) => Math.min(a, b), Infinity)
   const capped = Math.min(elapsed, rates.offlineCap)
@@ -425,7 +437,13 @@ export function applyOfflineWithAutomation(
   }
   for (let i = 0; i < rounds; i++) {
     step(every)
-    cur = autoBuyRound(cur, purse, t)
+    // `every` is the SHORTEST active interval; a shelf on a longer one is due
+    // only when the elapsed offline time has crossed its own boundary.
+    const at = (i + 1) * every
+    cur = autoBuyRound(cur, purse, t, {
+      grow: growEvery != null && at % growEvery === 0,
+      work: workEvery != null && at % workEvery === 0,
+    })
   }
   step(capped - rounds * every)   // the tail; the segments sum to exactly `capped`
 

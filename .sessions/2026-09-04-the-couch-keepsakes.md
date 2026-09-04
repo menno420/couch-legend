@@ -1,6 +1,6 @@
 # 2026-09-04 — The couch: keepsakes, and a store that cannot take money
 
-> **Status:** `in-progress` — branch `claude/couch-legend-design-arch-iwpo96`.
+> **Status:** `complete` — merged via PR #19.
 
 - **📊 Model:** Opus 5 · xhigh · design + feature build
 - **📍 Venue:** cloud-container
@@ -67,4 +67,33 @@ preview** with no billing of any kind, compiled out of production builds.
 
 ## Close-out
 
-*(filled at the flip)*
+**Merged as [#19](https://github.com/menno420/couch-legend/pull/19).**
+
+- born-red card, then the family end to end: content table → engine fold →
+  action layer → store → the **Couch** tab → simulator → tests.
+- three Codex rounds (the session cap), **23 findings, 23 conceded, 0
+  survived** — 5 of them P1. Two invalidated claims this PR had already
+  published, which is the part worth remembering: a census that overcounted
+  its own headline (17/18 → **14/18**), and a balance table left stale when the
+  fixtures beneath it were regenerated.
+- one **independent** pass on the final head (Gemini, free key 429'd on its
+  daily cap so the paid key was spent — [D-0011]; ~1 request): 2 findings, both
+  conceded. It found nothing against the cap, purse, gift or playTime
+  invariants, which is what the unreviewed head needed.
+- two defects that only running the built game could find: a `work-nugs`
+  keepsake at chapter 2 dropping the felt-upgrade floor to 0.3 %, and
+  auto-arrange refilling a place on the next tick so a keepsake could not be
+  taken off at all.
+
+**Evidence at the landing head:** 195 tests · 30 behaviour checks against the
+production bundle · 27 simulated runs · `pnpm check` 0 · `check:shell` 8/8 ·
+`check:store-preview` 0 and proven to fire both ways · rails: story close
+12.0 d (≤ 16), worst attended dead 38.0 m (≤ 45), check-ins ≥ 97.1 % (≥ 90),
+rebuild 0.88 / 0.92 / 0.90 (≤ 0.95).
+
+**Stated, not hidden:** one sub-2 % felt-upgrade reading survives in 1 of 27
+runs, on the new optimiser lane — `docs/sim/2026-09-04-couch-balance.md` § 4.
+
+**Owner-gated next:** whether *arranging* the couch is interesting. Simulation
+bounds fairness, reachability and dead time; it cannot answer that, and the
+answer gates the next mechanic family.

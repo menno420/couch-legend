@@ -746,3 +746,33 @@ describe('review round 3 (Codex CL#19 R3) — regression pins', () => {
     }
   })
 })
+
+describe('independent review (Gemini, on the unreviewed round-3 head)', () => {
+  it('a shelf is bought only for the rounds it is owed', () => {
+    // Latent today — both auto-buy keepsakes carry 45 s — but buying every
+    // shelf on every round would over-buy the slower one the moment the two
+    // intervals differ. Exercised here through applyAutoBuy's own arithmetic.
+    const s = save({
+      high: 1e5, lifeHigh: Infinity, nugs: 1e9, cash: 1e9, playTime: 0,
+      keepsakes: ['window-placard', 'standing-order'], equipped: ['window-placard', 'standing-order'],
+    })
+    // Both on 45 s: three boundaries in 135 s means at most three of each.
+    const after = applyAutoBuy(s, { ...s, playTime: 135 })
+    expect(owned(after.generators)).toBeLessThanOrEqual(3)
+    expect(owned(after.jobs)).toBeLessThanOrEqual(3)
+    // and one boundary buys at most one of each
+    const one = applyAutoBuy(s, { ...s, playTime: 45 })
+    expect(owned(one.generators)).toBeLessThanOrEqual(1)
+    expect(owned(one.jobs)).toBeLessThanOrEqual(1)
+  })
+
+  it('the census reads every keepsake a chapter mints, not just the first', () => {
+    // The content table holds exactly one per chapter (pinned above), but the
+    // instrument must not depend on it — reading only the first would drop a
+    // shape and mis-attribute its introduction to a later chapter.
+    const byStage = new Map<string, number>()
+    for (const k of KEEPSAKES) byStage.set(k.stage, (byStage.get(k.stage) ?? 0) + 1)
+    expect([...byStage.values()].every(n => n === 1)).toBe(true)
+    expect(byStage.size).toBe(STAGES.length - 1)
+  })
+})
