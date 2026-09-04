@@ -161,3 +161,17 @@ If a future keepsake adds to a displayed rate, the felt-upgrade bound is
 sibling describe. The instrument is `feltImpact` in `src/lib/sim/sim.ts`
 (`SHOWN_AXES`), and the rail is read in `pnpm sim analyze couch` § "Upgrade
 felt impact".
+
+## Post-merge correction (same evening, a second PR — exception to the one-PR guideline, D-0024)
+
+The hub's owner-review hook asked what established "a Work shelf ~30× the
+garden" in § 4 of the sim record. Nothing had: it was inferred from the
+0.14 % reading alone. Measured by instrumenting `4934955`'s simulator at the
+first Collective buy (optimiser, seed 23, `t` 1.25 h): Work base
+**3.47 × 10⁸**, garden **3.45 × 10⁴** — the Work shelf was **~10 000×** the
+garden and its 10 % **~1 000×** the garden, reproducing the felt reading at
+0.138 %. The mechanism and the fix are untouched; the ratio was wrong by two
+orders of magnitude in the sim record § 4 and DESIGN § 11.4 (and in the hub's
+Layer-2 thread, corrected there). The reason for a second PR: a published
+number was wrong on `main`, and leaving it until a next session is exactly
+the drift the estate's records rule exists to prevent.

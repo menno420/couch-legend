@@ -110,8 +110,13 @@ schedule slipped, so The Collective, the Corner Dispensary and The Cloud were
 first bought in the same decision pass that crossed into chapter 5 — the pass
 that minted The Standing Glass and, on this lane, put it straight on the
 couch. The Work shelf at that moment (Couch Legend and the Envoy bought at
-0.87 h) was ~30× the garden, so 10 % of it was ~3× the whole garden, and a
-first Grow unit could not be felt on the nug/s tile. Seeds 11 and 47 bought
+0.87 h) was **~10 000× the garden** (Work base 3.47 × 10⁸ against a garden
+of 3.45 × 10⁴, measured at `4934955` by instrumenting the first Collective
+buy — a probe reproducing the 0.138 % exactly), so 10 % of it was **~1 000×
+the whole garden**, and a first Grow unit could not be felt on the nug/s
+tile. *(An earlier version of this sentence said "~30× / ~3×"; that was
+inferred from the felt reading alone, and the fleet-manager owner-review
+hook caught it after the merge — corrected the same evening.)* Seeds 11 and 47 bought
 those rows at 0.96 h, one pass earlier, and passed at 75–153 %. `balanced`
 s47's 2.1 % on The Cloud is the same shape one row later. So it was not a
 seed fluke: **an uncapped cross-wire lets one shelf swamp the other, and for

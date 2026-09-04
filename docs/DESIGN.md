@@ -633,8 +633,10 @@ the live state. Against the § 9.6 rails:
 `balanced` seed 47 sat on the bound at 2.1 %. Re-read from the fixtures it
 was structural, not a seed fluke: the run crossed into chapter 5 with three
 mid-tier Grow rows still unbought, the pass minted The Standing Glass, and
-10 % of a Work shelf ~30× the garden was ~3× the whole garden — every Grow
-row had become decoration for the player holding the glass. The rule that
+10 % of a Work shelf ~10 000× the garden was ~1 000× the whole garden
+(measured at `4934955`: Work base 3.47 × 10⁸, garden 3.45 × 10⁴ — an
+earlier "~30× / ~3×" here was inferred, not measured) — every Grow row had
+become decoration for the player holding the glass. The rule that
 closed it: **a cross-wire never pays more than `ceiling ×` what the receiving
 shelf makes itself** (The Standing Glass 10 % up to 1× the garden; The First
 Follower 30 % up to 3×, still stronger on both numbers so it still retires
